@@ -1,7 +1,10 @@
 // Version 2.0 of the comand line for the G machine
 // 
 
-#include "stdafx.h"
+#include <ctype.h>
+#include <stdio.h> 
+#include <stdlib.h> 
+#include <string.h> 
 typedef struct sqlite3_stmt sqlite3_stmt;
 typedef struct sqlite3 sqlite3;
 #include "g.h"
@@ -162,3 +165,4 @@ char * gchar(char * start,TRIPLE *tp) {
   }
   return(start+1);
 }
+void* G_malloc(size_t size) {return malloc(size);}
