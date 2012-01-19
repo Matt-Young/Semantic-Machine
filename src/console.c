@@ -167,10 +167,17 @@ char * gchar(char * start,TRIPLE *tp) {
   return(start+1);
 }
 void* G_malloc(int size) {return malloc(size);}
-void G_print(const char *s, char *fmt, ...) 
+void G_printf( char *fmt, ...) 
 {    
  va_list argptr;
  va_start(argptr,fmt);
- print(s,fmt, argptr);
+ printf(fmt, argptr);
+ va_end(argptr);
+}
+void G_sprintf(const char *s, char *fmt, ...) 
+{    
+ va_list argptr;
+ va_start(argptr,fmt);
+ sprintf(s,fmt, argptr);
  va_end(argptr);
 }
