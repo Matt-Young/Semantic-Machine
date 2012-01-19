@@ -5,6 +5,7 @@
 #include <stdio.h> 
 #include <stdlib.h> 
 #include <string.h> 
+#include <stdarg.h>
 typedef struct sqlite3_stmt sqlite3_stmt;
 typedef struct sqlite3 sqlite3;
 #include "g.h"
@@ -165,4 +166,11 @@ char * gchar(char * start,TRIPLE *tp) {
   }
   return(start+1);
 }
-void* G_malloc(size_t size) {return malloc(size);}
+void* G_malloc(int size) {return malloc(size);}
+void G_print(const char *s, char *fmt, ...) 
+{    
+ va_list argptr;
+ va_start(argptr,fmt);
+ print(s,fmt, argptr);
+ va_end(argptr);
+}
