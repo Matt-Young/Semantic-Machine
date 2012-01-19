@@ -181,3 +181,8 @@ void G_sprintf(const char *s, char *fmt, ...)
  sprintf(s,fmt, argptr);
  va_end(argptr);
 }
+void* G_malloc(int size){return malloc(size);}
+void* G_calloc(int size){return calloc(size,1);}
+void G_free(void* p){free(p);}
+char* G_strncpy(char* s, const char* ct, int n){strncpy(s,ct,n);}
+char * G_strcpy(char* s, const char* ct){strcpy(s, ct);}
