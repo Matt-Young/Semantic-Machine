@@ -172,14 +172,14 @@ void G_printf( const char *fmt, ...)
 {    
  va_list argptr;
  va_start(argptr,fmt);
- printf(fmt, argptr);
+ vprintf(fmt, argptr);
  va_end(argptr);
 }
 void G_sprintf(char *s, const char *fmt, ...) 
 {  
  va_list argptr;
  va_start(argptr,fmt);
- sprintf(s,fmt, argptr);
+ vsprintf(s,fmt, argptr);
  va_end(argptr);
 }
 void* G_malloc(int size){return malloc(size);}
