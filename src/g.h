@@ -15,7 +15,7 @@ typedef struct {
 typedef struct {
   int col_count;
   int rowid;
-  char * name[8]; 
+  const char * name[8]; 
   int type[8];
   int index;
 } COLINFO;

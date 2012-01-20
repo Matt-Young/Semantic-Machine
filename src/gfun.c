@@ -1,9 +1,5 @@
 
-typedef struct sqlite3 sqlite3;
-typedef struct sqlite3_stmt sqlite3_stmt;
-typedef struct sqlite3_context sqlite3_context;
-typedef struct Mem sqlite3_value;
-typedef struct sqlite3_stmt sqlite3_stmt;
+
 #include "sqlite3.h"
 #include "g.h"
 #include "graphs.h"

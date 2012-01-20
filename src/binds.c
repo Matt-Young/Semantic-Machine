@@ -1,9 +1,5 @@
 
-typedef struct sqlite3 sqlite3;
-typedef struct sqlite3_stmt sqlite3_stmt;
-typedef struct sqlite3_context sqlite3_context;
-typedef struct Mem sqlite3_value;
-typedef struct sqlite3_stmt sqlite3_stmt;
+
 #include "sqlite3.h"
 #include "g.h"
 #include "graphs.h"
@@ -62,6 +58,7 @@ TRIPLE install(int index,int opid,int format) {
   int i,status;
   TRIPLE t = {buff,G_CONFIG,0};
   G_sprintf(buff,"%d",opid);
+ 
   status = triple(t,0);
   G_sprintf(buff,pre_installed[format].sql, tables[index].name);
   t.pointer++; 

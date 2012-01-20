@@ -108,7 +108,7 @@ int pop_handler(TRIPLE node) {
 }
 int script_handler(TRIPLE node) {  
   int id;
-  id = atoi(node.key);
+  id = G_atoi(node.key);
   G_printf("Script: \n%s\n",sqlite3_sql(operands[id].stmt));
   return SQLITE_OK;
 }
