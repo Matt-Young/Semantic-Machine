@@ -55,10 +55,6 @@ int  config_handler(TRIPLE t) {
         variable = G_atoi(ch);
         if((OPERMAX < variable) ) 
           return(SQLITE_MISUSE);
-        //if(operands[variable].stmt)
-        //  sqlite3_finalize(operands[variable].stmt);
-        
-          
       break;
       case 1: // install user script
         ch = newkey(t.key);
@@ -86,7 +82,7 @@ int sql_handler(TRIPLE node) {
 int call_handler(TRIPLE node) {
   int pointer;
   pointer  =  incr_row(0);
-  set_row(atoi(node.key));
+  set_row(G_atoi(node.key));
   set_row(pointer);
   return SQLITE_OK;
 }
@@ -117,7 +113,7 @@ int script_handler(TRIPLE node) {
   return SQLITE_OK;
 }
 int echo_handler(TRIPLE node) {  
-  printf("Echo: \n%s %d \n",node.key,node.link);
+  G_printf("Echo: \n%s %d \n",node.key,node.link);
   return SQLITE_OK;
 }
 int dup_handler(TRIPLE node){

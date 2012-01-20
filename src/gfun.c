@@ -148,8 +148,9 @@ int add_opcode(char a,char b,char c,char d) {
   op->g_action[1] = c;
   return 0;
 }
+
 int reset_ready_set() {
-  memset((void *) &ready,0,sizeof(ready));
+  G_memset((void *) &ready,0,sizeof(ready));
   return 0;
 }
 PGRAPH  set_ready_graph(FILTER *f) {

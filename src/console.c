@@ -13,6 +13,7 @@ typedef struct sqlite3 sqlite3;
 void gerror(char * c,int i) {printf("error %d\n",c); exit(i);}
 int init_gbase();
 
+
 void * context;
 int main(int argc, char * argv[])
 {
@@ -176,7 +177,6 @@ void G_printf( const char *fmt, ...)
 }
 void G_sprintf(char *s, const char *fmt, ...) 
 {  
-	int  x;
  va_list argptr;
  va_start(argptr,fmt);
  sprintf(s,fmt, argptr);
@@ -190,4 +190,4 @@ char * G_strcpy(char* s, const char* ct){return strcpy(s, ct);}
 int G_strcmp(const char* cs, const char* ct){return strcmp( cs, ct);}
 int G_strlen(const char* cs){return strlen(cs);}
 int G_atoi(const char* s){ return atoi(s);}
-void G_memset(void* s, int c, size_t n) {memset(s,c,n);}
+void G_memset(void* s, int c, int n) {memset(s,c,n);}
