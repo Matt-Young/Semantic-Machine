@@ -1,7 +1,4 @@
 // G engine
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include "sqlite3.h"
 #include "g.h"
 M m;
@@ -11,7 +8,7 @@ TRIPLE triple_var;
 OP operands[OPERMAX];
 const TRIPLE SCRATCH_TRIPLE = {"Scratch",G_SCRATCH,0};
 //triple bind, unbind
-void print_triple(TRIPLE t) { printf(" %s %d %d\n",t.key,t.link,t.pointer);}
+void print_triple(TRIPLE t) { G_printf(" %s %d %d\n",t.key,t.link,t.pointer);}
 void unbind_triple(sqlite3_stmt *stmt,TRIPLE *t) {
    t->key = (const char *) sqlite3_column_text( stmt, 0);
   t->link= sqlite3_column_int(stmt, 1);
@@ -22,21 +19,21 @@ void unbind_triple(sqlite3_stmt *stmt,TRIPLE *t) {
 int newcount=0;
 int oldcount=0;
 char * newkey(const char * key) {
-    int size = strlen(key)+1;
-    char * p = (char *) malloc(size);
-    strncpy(p,key,size);
+    int size = G_strlen(key)+1;
+    char * p = (char *) G_malloc(size);
+    G_strncpy(p,key,size);
     newcount++;
     return(p);
   }
 void delkey(const char * key) { 
   if(oldcount < newcount) 
-  {oldcount++; free( (void *) key);}
+  {oldcount++; G_free( (void *) key);}
 }
 int output_filter(TRIPLE t);
 int install_sql_script(char * ch,int opid) {
   int status;
   status =
-    sqlite3_prepare_v2(m.db,ch,strlen(ch)+1, 
+    sqlite3_prepare_v2(m.db,ch,G_strlen(ch)+1, 
         &operands[opid].stmt,0);
   operands[opid].handler=output_filter;
         operands[opid].vp[0] = 0;
@@ -55,7 +52,7 @@ int  config_handler(TRIPLE t) {
     //printf("Configure: \n");
     switch(t.pointer)  {
       case 0: //opcode pointer
-        variable = atoi(ch);
+        variable = G_atoi(ch);
         if((OPERMAX < variable) ) 
           return(SQLITE_MISUSE);
         //if(operands[variable].stmt)
@@ -75,7 +72,7 @@ int  config_handler(TRIPLE t) {
       default: // parameters
         ivar = t.pointer - 2;
         if(0 <= ivar && ivar < NVARS) 
-          operands[variable].vp[ivar] = atoi(t.key);
+          operands[variable].vp[ivar] = G_atoi(t.key);
         break;
     }
     return status;
@@ -116,7 +113,7 @@ int pop_handler(TRIPLE node) {
 int script_handler(TRIPLE node) {  
   int id;
   id = atoi(node.key);
-  printf("Script: \n%s\n",sqlite3_sql(operands[id].stmt));
+  G_printf("Script: \n%s\n",sqlite3_sql(operands[id].stmt));
   return SQLITE_OK;
 }
 int echo_handler(TRIPLE node) {  
@@ -128,7 +125,7 @@ int dup_handler(TRIPLE node){
   char buff[400];
   int status;
   id = atoi(node.key);
-  strcpy_s(buff,400,sqlite3_sql(operands[id].stmt));
+  G_strcpy(buff,sqlite3_sql(operands[id].stmt));
   status = install_sql_script(buff,G_SCRATCH);
   if(status != SQLITE_OK) gerror("Dup",G_ERR_DUP);
   for(i=0;operands[id].vp[i];i++) 

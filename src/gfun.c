@@ -1,4 +1,4 @@
-#include "stdafx.h"
+
 typedef struct sqlite3 sqlite3;
 typedef struct sqlite3_stmt sqlite3_stmt;
 typedef struct sqlite3_context sqlite3_context;
@@ -33,8 +33,7 @@ FILTER *filter_list=0;
 int newfilter=0;
 int oldfilter=0;
 FILTER * new_filter() {
-    FILTER * f = (FILTER *) malloc(sizeof(FILTER) + 1);
-    memset(f,0,sizeof(FILTER));
+    FILTER * f = (FILTER *) G_calloc(sizeof(FILTER));
     newfilter++;
     if(filter_list)
         f->prev = filter_list;
@@ -58,7 +57,7 @@ FILTER *delete_filter(FILTER * f) {
     gerror("Filter",G_ERR_FILTER);
   g = (FILTER *) f->prev; 
   oldfilter++; 
-  free( (void *) f);
+  G_free( (void *) f);
   return g;
   }
 FILTER * close_filter(FILTER * f) {
@@ -201,7 +200,7 @@ void gfunction(sqlite3_context* context,int n,sqlite3_value** v) {
     sqlite3_result_int(context, 1);
     break;
   default:
-    printf("gfun: %d %d\n",x,ready.self->row);
+    G_printf("gfun: %d %d\n",x,ready.self->row);
     sqlite3_result_int(context, 0);
   }
 }
@@ -229,9 +228,9 @@ int insert_opcode(FILTER *f) {
     return 0;
   }
 int key_match(const char * k,const char * g) {
-  int klen = strlen(k);
-  int glen = strlen(g);
-  if((klen == glen) && !strcmp(k,g))
+  int klen = G_strlen(k);
+  int glen = G_strlen(g);
+  if((klen == glen) && !G_strcmp(k,g))
     return 1;
   else
     return 0;

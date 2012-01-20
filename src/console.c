@@ -14,7 +14,7 @@ void gerror(char * c,int i) {printf("error %d\n",c); exit(i);}
 int init_gbase();
 
 void * context;
-int main(int argc, _TCHAR* argv[])
+int main(int argc, char * argv[])
 {
   int status; 
   //status = init_dll(); 
@@ -166,16 +166,17 @@ char * gchar(char * start,TRIPLE *tp) {
   }
   return(start+1);
 }
-void* G_malloc(int size) {return malloc(size);}
-void G_printf( char *fmt, ...) 
+
+void G_printf( const char *fmt, ...) 
 {    
  va_list argptr;
  va_start(argptr,fmt);
  printf(fmt, argptr);
  va_end(argptr);
 }
-void G_sprintf(const char *s, char *fmt, ...) 
-{    
+void G_sprintf(char *s, const char *fmt, ...) 
+{  
+	int  x;
  va_list argptr;
  va_start(argptr,fmt);
  sprintf(s,fmt, argptr);
@@ -184,5 +185,9 @@ void G_sprintf(const char *s, char *fmt, ...)
 void* G_malloc(int size){return malloc(size);}
 void* G_calloc(int size){return calloc(size,1);}
 void G_free(void* p){free(p);}
-char* G_strncpy(char* s, const char* ct, int n){strncpy(s,ct,n);}
-char * G_strcpy(char* s, const char* ct){strcpy(s, ct);}
+char* G_strncpy(char* s, const char* ct, int n){return strncpy(s,ct,n);}
+char * G_strcpy(char* s, const char* ct){return strcpy(s, ct);}
+int G_strcmp(const char* cs, const char* ct){return strcmp( cs, ct);}
+int G_strlen(const char* cs){return strlen(cs);}
+int G_atoi(const char* s){ return atoi(s);}
+void G_memset(void* s, int c, size_t n) {memset(s,c,n);}
