@@ -1,5 +1,4 @@
 
-
 #include "../include/sqlite3.h"
 #include "g.h"
 #include "graphs.h"
@@ -62,28 +61,27 @@ FILTER * close_filter(FILTER * f) {
   delete_graph((PGRAPH *) f->g[1]->table->list);
   return delete_filter(f);
 }
-// doing the full schema thingie
-const char mod_keys[] = "!:*?";
-char isin(const char * str,char ch)
-{while(*str && ((*str) != ch)) str++; return *str;}
+
 int deliver_output(TRIPLE t) {
   PGRAPH output = *LIST(m.output);
   append_graph(&output,t);
   return SQLITE_OK;
 }
-// dispatch on sqlite done
-int insert_opcode(FILTER * );
+
 PGRAPH  set_ready_graph(FILTER *f); 
 // called when sqlite_done asses through to
 // the primary caller in triple s
 FILTER * f;
 
 sqlite3_stmt *Statement;
+// events and properties
+#define EV_Null 0x01
+#define EV_Wild_Triple 0x02
+#define EV_Incomplete 0x04
+#define EV_Set 0x08
+#define EV_Sql_Done EV_Null
 
-typedef struct { 
-  char g_event;
-  char g_action[3];  
- } OPCODE; 
+
 typedef struct {
   int count;
   PGRAPH self;
@@ -108,25 +106,8 @@ int set_row(int ivar) {
   ready.self->row = ivar;
   return(ready.self->row);
 }
-//G function call backs from inside sql
-#define SELF_ROW 0
-#define OTHER_ROW 1
-#define RESULT_ROW 2
-#define GET_NEXT_ROW 3
-#define SET_NEXT_ROW 4
-#define GET_ROW 5
-#define SET_ROW 6
-#define SET_LINK 7
-/*
-int add_opcode(char a,char b,char c,char d) {
-  OPCODE *op;
-  op = &ready.opset[ready.pc++];
-  op->g_event = a;
-  op->g_action[0] = b;
-  op->g_action[1] = c;
-  return 0;
-}
-*/
+
+
 int reset_ready_set() {
   G_memset((void *) &ready,0,sizeof(ready));
   return 0;
@@ -156,16 +137,82 @@ int dispatch() {
   }while(g);
   if(g) {
     graph = set_ready_graph(g);
-	/*
-    do {  
-      insert_opcode(g);
-      g = g->prev;
-    } while(g);
-	*/
+
   }
   triple(graph->table->pop_triple,0);
   return(SQLITE_OK);
 }
+
+int key_match(const char * k,const char * g) {
+  int klen = G_strlen(k);
+  int glen = G_strlen(g);
+  if((klen == glen) && !G_strcmp(k,g))
+    return 1;
+  else
+    return 0;
+}
+int events(FILTER * f) {
+  int g_event=0;
+ if(f->g[1]->end > f->g[1]->row) 
+    g_event |= EV_Incomplete;
+ if(f->g[2]->end  > f->g[2]->row) 
+    g_event |= EV_Incomplete;
+  return (g_event | f->properties);
+}
+int default_sub_query() {
+  FILTER *f = new_filter();
+  f->g[0] = *LIST(G_TABLE_SELF);
+  f->g[1] = *LIST(G_TABLE_OTHER);
+  f->status = G_UNREADY;
+  return 0;
+}
+int event_exec(FILTER * f) {
+  int g_event = events(f);
+  switch(g_event) {
+  case EV_Null:
+            g_event |= parser();
+			//g_event |= set_ready_graph();
+            break;
+        }
+    return(g_event);
+  }
+ void reset_G_columns(TABLE *t) { 
+   t->info.col_count = 0;
+ }
+ int do_square(int mode,FILTER *f);
+ 
+// If the result lands here, the query is done
+// go search the filter list for something to do
+// otr else
+// we are getting a row from some square table.
+// then we take the row and run the machine triplet/column mode
+// top is the initiationg query, in most cases, the originating triplet.
+// Normal action, find an event to call this, then go up the filter chain, 
+// srtarting with the calling triplet
+int event_handler(TRIPLE t) {
+	FILTER *f;
+  f = ready_filter();
+  f->properties = operands[t.link].properties;
+  if(f->g[0]->table->attribute == G_SQUARE)  do_square(0,f);
+  else if(f->g[1]->table->attribute == G_SQUARE) do_square(1,f);
+  else {
+		  f->properties = operands[t.link].properties;
+        event_exec(f);
+      }
+  return 0;
+    }
+ //int output_filter(TRIPLE t) {
+ //return handler(ready.filter);
+//}
+//G function call backs from inside sql
+#define SELF_ROW 0
+#define OTHER_ROW 1
+#define RESULT_ROW 2
+#define GET_NEXT_ROW 3
+#define SET_NEXT_ROW 4
+#define GET_ROW 5
+#define SET_ROW 6
+#define SET_LINK 7
 void gfunction(sqlite3_context* context,int n,sqlite3_value** v) {
 
   int op = sqlite3_value_int(v[0]);
@@ -206,52 +253,20 @@ void gfunction(sqlite3_context* context,int n,sqlite3_value** v) {
   }
 }
 
-// events and properties
-#define EV_Null 0x01
-#define EV_Wild_Triple 0x02
-#define EV_Incomplete 0x04
-#define EV_Set 0x08
-#define EV_Sql_Done EV_Null
 
 
-int key_match(const char * k,const char * g) {
-  int klen = G_strlen(k);
-  int glen = G_strlen(g);
-  if((klen == glen) && !G_strcmp(k,g))
-    return 1;
-  else
-    return 0;
+int bind_schema(sqlite3_stmt *stmt,TRIPLE top);
+int new_filter_graph(FILTER *f,TRIPLE t) {
+  schema_graph->match_state = G_SCHEMA;
+  schema_graph = dup_graph(schema_graph,ready.self);
+  schema_graph->end = t.pointer;
+  schema_graph->start = ready.self->row;
+  pass_parent_graph(schema_graph);
+  //if(ATTRIBUTE(current_graph->table->atrribute) == G_SQUARE) 
+  //  bind_schema(operands[t.link].stmt,t);
+  return SQLITE_OK;
 }
-int events(FILTER * f) {
-  int g_event=0;
- if(f->g[1]->end > f->g[1]->row) 
-    g_event |= EV_Incomplete;
- if(f->g[2]->end  > f->g[2]->row) 
-    g_event |= EV_Incomplete;
-  return (g_event | f->properties);
-}
-int default_sub_query() {
-  FILTER *f = new_filter();
-  f->g[0] = *LIST(G_TABLE_SELF);
-  f->g[1] = *LIST(G_TABLE_OTHER);
-  f->status = G_UNREADY;
-  return 0;
-}
-int event_exec(FILTER * f) {
-  int g_event = events(f);
-  switch(g_event) {
-  case EV_Null:
-            g_event |= parser();
-			//g_event |= set_ready_graph();
-            break;
-        }
-    return(g_event);
-  }
- void reset_G_columns(TABLE *t) { 
-   t->info.col_count = 0;
- }
-
- void sql_column_info(sqlite3_stmt * stmt, COLINFO *cinfo) {
+void sql_column_info(sqlite3_stmt * stmt, COLINFO *cinfo) {
   int i;
   cinfo->col_count = sqlite3_column_count(stmt);
   for(i=0;i< cinfo->col_count;i++) {
@@ -297,39 +312,3 @@ TRIPLE ct,dt;
 	return 0;
       }
 
-
-// If the result lands here, the query is done
-// go search the filter list for something to do
-// otr else
-// we are getting a row from some square table.
-// then we take the row and run the machine triplet/column mode
-// top is the initiationg query, in most cases, the originating triplet.
-// Normal action, find an event to call this, then go up the filter chain, 
-// srtarting with the calling triplet
-int event_handler(TRIPLE t) {
-	FILTER *f;
-  f = ready_filter();
-  f->properties = operands[t.link].properties;
-  if(f->g[0]->table->attribute == G_SQUARE)  do_square(0,f);
-  else if(f->g[1]->table->attribute == G_SQUARE) do_square(1,f);
-  else {
-		  f->properties = operands[t.link].properties;
-        event_exec(f);
-      }
-  return 0;
-    }
- //int output_filter(TRIPLE t) {
- //return handler(ready.filter);
-//}
-
-int bind_schema(sqlite3_stmt *stmt,TRIPLE top);
-int new_filter_graph(FILTER *f,TRIPLE t) {
-  schema_graph->match_state = G_SCHEMA;
-  schema_graph = dup_graph(schema_graph,ready.self);
-  schema_graph->end = t.pointer;
-  schema_graph->start = ready.self->row;
-  pass_parent_graph(schema_graph);
-  //if(ATTRIBUTE(current_graph->table->atrribute) == G_SQUARE) 
-  //  bind_schema(operands[t.link].stmt,t);
-  return SQLITE_OK;
-}
