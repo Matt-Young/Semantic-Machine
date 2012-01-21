@@ -100,7 +100,7 @@ int init_table(int index,char * name) {
   //g->table = table;
   table->pop_triple = make_stmt(index,G_POP,0);
   table->insert_triple = make_stmt(index,G_INSERT,1);
-  table->update_triple = make_stmt(index,G_UPDATE +,2);  
+  table->update_triple = make_stmt(index,G_UPDATE ,2);  
   table->select_triple = table->pop_triple;  //default until posted 
                         //differenty by an attribute
   return status;
