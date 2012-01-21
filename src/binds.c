@@ -80,11 +80,13 @@ int bind_graph_var(sqlite3_stmt *stmt,TRIPLE top,int i,int j) {
 
 // Get bound up for a n sql step
 
-int bind_sql(OP *op,TRIPLE top) {
+ sqlite3_stmt * bind_sql(OP *op,TRIPLE top) {
   int status=SQLITE_OK;
   int i,j;
+  // Get the right statement
   sqlite3_stmt *stmt;
-  stmt = operands[top.link].stmt;
+  stmt = fetch_stmt(op,top);
+
   for(i=0; op->vp[i]; i++ ) {
     j = op->vp[i];
     if(j) {
@@ -102,7 +104,7 @@ int bind_sql(OP *op,TRIPLE top) {
       bind_schema(stmt,top);
     }
     }
-  return status;
+  return stmt;
 }
 
 

@@ -23,10 +23,11 @@ typedef struct {
 typedef struct  {
   char * name;
   int attribute;
-  TRIPLE pop_triple,update_triple,insert_triple,select_triple;
+  TRIPLE pop_triple,update_triple,insert_triple,select_triple,stmt_triple;
   int index;
   struct g * list;  //points to the innermost current graph
   COLINFO  info;
+  sqlite3_stmt * stmt;
 } TABLE;
 typedef TABLE *PTABLE;
 char * NAME(TABLE *);
@@ -118,7 +119,7 @@ int set_row(int ivar);
 int _row();
 int stopped_row();
 int key_op(char * key);
-int bind_sql(OP *op,TRIPLE top);
+sqlite3_stmt * bind_sql(OP *op,TRIPLE top);
 void set_table_name(char * name,int index);
 int init_table(int,char *);
 int init_gbase();
@@ -143,3 +144,4 @@ int G_atoi(const char* s);
 void G_memset(void* s, int c, int n);
 int G_ispunct(int c);
 char *  G_gets(char * line);
+

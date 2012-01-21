@@ -20,6 +20,7 @@ int counter=0;
 #define EV_Matched 0x100
 #define EV_Square 0x100
 #define EV_Sql_Done EV_Null
+#define EV_Overide 0x200
 typedef struct f { 
 	int status;
   PGRAPH g[2];
@@ -92,7 +93,15 @@ typedef struct {
   TRIPLE input_node;
 }  READYSET;
 READYSET ready;
-
+sqlite3_stmt * fetch_stmt(OP *op,TRIPLE top) {
+sqlite3_stmt *stmt;
+  if(ready.other->table->attribute & EV_Overide)
+	  stmt = ready.other->table->stmt;
+  else if(ready.self->table->attribute & EV_Overide)
+	  stmt = ready.self->table->stmt;
+  else stmt = operands[top.link].stmt;
+  return stmt;
+}
 FILTER * ready_filter() { return ready.filter;}
 // msthods on graph pointers
 int stopped_row() {

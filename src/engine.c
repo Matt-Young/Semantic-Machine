@@ -31,6 +31,7 @@ void delkey(const char * key) {
   if(oldcount < newcount) 
   {oldcount++; G_free( (void *) key);}
 }
+
 int output_filter(TRIPLE t);
 int install_sql_script(char * ch,int opid) {
   int status;
@@ -153,6 +154,7 @@ int ghandler(TRIPLE top,int status,int (*handler)(TRIPLE)) {
 int triple(TRIPLE top,int (*handler)(TRIPLE)) {
   OP *op;
   int status= SQLITE_OK;
+  sqlite3_stmt * stmt; 
   void * key;
   key = 0;
   if(top.link >= OPERMAX) 
@@ -162,14 +164,18 @@ int triple(TRIPLE top,int (*handler)(TRIPLE)) {
     key = newkey(top.key);
     top.key = (char *) key;
     status = bind_sql(op,top);
+	//stmt = bind_sql(op,top);
     if(status != SQLITE_OK) 
       G_error("bind \n",G_ERR_BIND);
   }  
+  else stmt = op->stmt;
   do {
     if(op->stmt) {
+	//if(stmt) {
       status = sqlite3_step(op->stmt );
       if(status == SQLITE_DONE)
         sqlite3_reset(op->stmt);
+	    //sqlite3_reset(stmt);
       }
     status = ghandler(top,status,handler);
     }  while( status == SQLITE_ROW );
