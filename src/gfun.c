@@ -1,6 +1,6 @@
 
 
-#include "sqlite3.h"
+#include "../include/sqlite3.h"
 #include "g.h"
 #include "graphs.h"
 extern OP operands[];
@@ -9,6 +9,7 @@ extern TABLE tables[];
 PGRAPH schema_graph=0;
 extern TABLE tables[];
 const TRIPLE NULL_TRIPLE={"_",96,0};
+// 
 PGRAPH other(PGRAPH  g) {
   if(g != tables[2].list)
     return (PGRAPH) tables[G_TABLE_SELF].list;
@@ -41,6 +42,8 @@ FILTER * new_filter() {
     f->status |= G_SELECTED + G_CONTINUE;
     return(f);
   }
+FILTER *f;
+
 void * start_select() {
 FILTER *f = new_filter();
 f->g[0] = *LIST(0);
@@ -75,26 +78,8 @@ int insert_opcode(FILTER * );
 PGRAPH  set_ready_graph(FILTER *f); 
 // called when sqlite_done asses through to
 // the primary caller in triple s
-int dispatch(FILTER *f,TRIPLE s) {
-  FILTER * g;
-  PGRAPH graph;
-//next ready filter
-  g = f;
-  do {
-    if(g->status == G_UNREADY) 
-      break;
-    g = g->prev;
-  }while(g);
-  if(g) {
-    graph = set_ready_graph(g);
-    do {  
-      insert_opcode(g);
-      g = g->prev;
-    } while(g);
-  }
-  triple(graph->table->pop_triple,0);
-  return(SQLITE_OK);
-}
+FILTER * f;
+
 sqlite3_stmt *Statement;
 
 typedef struct { 
@@ -162,6 +147,26 @@ PGRAPH  set_ready_graph(FILTER *f) {
     ready.other =f->g[0];}
   return ready.self;
 }
+int dispatch() {
+  FILTER * g;
+  PGRAPH graph;
+//next ready filter
+  g = f;
+  do {
+    if(g->status == G_UNREADY) 
+      break;
+    g = g->prev;
+  }while(g);
+  if(g) {
+    graph = set_ready_graph(g);
+    do {  
+      insert_opcode(g);
+      g = g->prev;
+    } while(g);
+  }
+  triple(graph->table->pop_triple,0);
+  return(SQLITE_OK);
+}
 void gfunction(sqlite3_context* context,int n,sqlite3_value** v) {
 
   int op = sqlite3_value_int(v[0]);
@@ -201,7 +206,7 @@ void gfunction(sqlite3_context* context,int n,sqlite3_value** v) {
     sqlite3_result_int(context, 0);
   }
 }
-// micro ops in opcode
+// micro ops in opcode, this is a confused mess.
 #define OP_Print  0 // match operands 
 #define OP_Console 1     
 #define OP_Subquery 2
@@ -265,6 +270,7 @@ int event_exec(int g_event) {
             break;
           case OP_Console:
             status = parser();
+			 set_ready_graph();
             break;
           case OP_Subquery:
             status = default_sub_query();

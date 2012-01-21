@@ -12,9 +12,6 @@ an index system built on the sqlite_master
 extern OP operands[];
 extern M m;
 
-
-
-
 struct {
   void * p;int t; } default_pointers[10];
 int bind_default(sqlite3_stmt *stmt,TRIPLE top,int j,int i) {

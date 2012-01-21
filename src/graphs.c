@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <tchar.h>
-
 typedef struct sqlite3_stmt sqlite3_stmt;
 typedef struct sqlite3 sqlite3;
 #include "g.h"

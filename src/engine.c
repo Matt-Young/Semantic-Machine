@@ -1,11 +1,13 @@
 // G engine
-#include "sqlite3.h"
+#include "../include/sqlite3.h"
 #include "g.h"
 M m;
-// Another cheat to trip up re-entry
-TRIPLE triple_var;
 #define NVARS 5
 OP operands[OPERMAX];
+
+// Another cheat to trip up re-entry
+TRIPLE triple_var;
+
 const TRIPLE SCRATCH_TRIPLE = {"Scratch",G_SCRATCH,0};
 //triple bind, unbind
 void print_triple(TRIPLE t) { G_printf(" %s %d %d\n",t.key,t.link,t.pointer);}
@@ -120,7 +122,7 @@ int dup_handler(TRIPLE node){
   int id,i;
   char buff[400];
   int status;
-  id = atoi(node.key);
+  id = G_atoi(node.key);
   G_strcpy(buff,sqlite3_sql(operands[id].stmt));
   status = install_sql_script(buff,G_SCRATCH);
   if(status != SQLITE_OK) gerror("Dup",G_ERR_DUP);
@@ -199,6 +201,14 @@ int init_gbase() {
   init_handlers();
   status = init_gfun();
   return status;
+}
+int main(int argc, char * argv[])
+{
+  int status; 
+  //status = init_dll(); 
+  status = init_gbase();
+  for(;;) status = dispatch();
+  G_exit(0);
 }
 
 

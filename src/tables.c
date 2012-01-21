@@ -4,7 +4,7 @@
 #include "binds.h"
 extern OP operands[];
 extern M m;
-// Table stuff
+// Table stuff, this will change fast and become part of named graphs
 TABLE tables[] =
   { {"console",0,0},{"config",0,0},{"self",0,0},{"other",0,0},{"result",0,0}};
 

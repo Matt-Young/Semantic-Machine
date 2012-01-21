@@ -125,8 +125,10 @@ int install_sql_script(char * ch,int opid);
 void print_triple(TRIPLE t);
 int init_gfun();
 void * start_select();
-int dispatch(void *f,TRIPLE s);
+int dispatch();
 int parser();
+
+void G_exit();
 void* G_malloc(int size);
 void* G_calloc(int size);
 void G_free(void* p);
@@ -138,3 +140,5 @@ int G_strcmp(const char* cs, const char* ct);
 int G_strlen(const char* cs);
 int G_atoi(const char* s);
 void G_memset(void* s, int c, int n);
+int G_ispunct(int c);
+char *  G_gets(char * line);
