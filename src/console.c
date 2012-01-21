@@ -1,56 +1,4 @@
 // Console, set up
-// 
-#include "../include/sqlite3.h"
-#include "g.h"
-#include "graphs.h"
-void gerror(char * c,int i) {printf("error %d\n",c); exit(i);}
-char * process_block(PGRAPH *list)
-int parser() {
-  char * start;
-  TRIPLE t = {"Start",'_',0};
-  for(;;) {
-    printf("%s","P: ");
-    del_table_graph(LIST(2));
-    start = process_block(LIST(2));
-    reset_graphs(2);
-    reset_graphs(3);
-
-  }
-  return(0);
-}
-#ifdef DEBUG
-//
-//
-//Taking the ackward approach on accessing G internals with grammar
-char * gchar(char * start,TRIPLE *tp) { 
-  int nchars;
-  start++;
-  if(*start == '.')
-    return start;
-  if(*start == 'q')
-    exit(0);
-  nchars=0;
-  while(start[nchars] != ';') nchars++;
-  nchars++;
-  if(strncmp(start,"op",2)) {
-    tp->link = G_SQL;
-    tp->key = start;
-    start+=nchars;
-    return(start);
-  } else {
-  start+=2;
-  if(isdigit(*start) ) {
-    int i = atoi(start);
-    int j = atoi(start+3);
-    sprintf_s(gbuffer,4,"%d",j);
-    tp->key = gbuffer;
-    tp->link = i;
-    return(start+6);
-    }
-  }
-  return(start+1);
-}
-#endif
 
 // These are here just to keep the std lib includes in one spot
 #include <ctype.h>
@@ -84,3 +32,4 @@ void G_memset(void* s, int c, int n) {memset(s,c,n);}
 void G_exit() { exit(0);}
 int G_ispunct(int c){return ispunct(c);}
 char * G_gets(char * line) { return gets(line);};
+void G_error(char * c,int i) {G_printf("error %d\n",c); G_exit();}

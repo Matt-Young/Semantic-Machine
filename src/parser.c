@@ -22,6 +22,7 @@ char * process_block(PGRAPH *list) {
     G_gets(line);
     if(line[0] == 0)
       break;
+	done = 0;
     while(!done ) {
       int i,op;
       i=0;
@@ -37,7 +38,7 @@ char * process_block(PGRAPH *list) {
         append_graph(list,ts);
         if(next.link == '{')
           next.link = DISCARD;
-       } else if(next.link == '(') {
+       } else if(next.link == '{') {
          if(ts.link != DISCARD) {
            if(ts.link == ',') {
             append_graph(list,ts);
@@ -60,14 +61,14 @@ char * process_block(PGRAPH *list) {
 	  //proces_block
       new_graph(list);
       } 
-    else if(ts.link == ')') {
+	else if(ts.link == '}') {
       if(G_strlen(ts.key) > 0) {
         next.link = '.';
         append_graph(list,ts);
       }
     close_update_graph(list);
   }
-    else if(ts.link != DISCARD ) { // dunno, give it its own segment
+    else if(ts.link != DISCARD ) { 
       append_graph(list,ts);
       close_update_graph(list);
 	  //process block
@@ -76,6 +77,7 @@ char * process_block(PGRAPH *list) {
      ts = next;
   }  
   }
+  // finish up
   while((*list)->parent) {
     if(empty_graph(*list))
       delete_graph(list);
@@ -85,3 +87,17 @@ char * process_block(PGRAPH *list) {
 
   return(0);
 }
+
+
+int parser() {
+  char * start;
+  for(;;) {
+    G_printf("%s","_");
+    del_table_graph(LIST(2));
+    start = process_block(LIST(2));
+    reset_graphs(2);
+    reset_graphs(3);
+  }
+  return(0);
+}
+

@@ -16,14 +16,29 @@ PGRAPH other(PGRAPH  g) {
     return (PGRAPH) tables[G_TABLE_OTHER].list;
 }
 int counter=0;
+// events and properties
+#define EV_Null 0x01
+#define EV_Wild_Triple 0x02
+#define EV_Incomplete 0x04
+#define EV_Set 0x08
+#define EV_Sql_Done EV_Null
 typedef struct f { 
+	int status;
   PGRAPH g[2];
   int properties;
-  int status;
   struct f *prev,*next;
 } FILTER;
-
-FILTER *filter_list=0;
+// Null is alwys operational
+FILTER null_filter;
+PGRAPH  set_ready_graph(FILTER *f) ;
+int init_gfun() {
+	null_filter.g[0]=*LIST(2);
+	null_filter.g[1]=*LIST(3);
+	operands['_'].properties= EV_Null;
+	set_ready_graph(&null_filter);
+	return 0;
+}
+FILTER *filter_list=&null_filter;
 int newfilter=0;
 int oldfilter=0;
 FILTER * new_filter() {
@@ -50,7 +65,7 @@ return (void *) f;
 FILTER *delete_filter(FILTER * f) {
   FILTER * g;
   if(oldfilter >= newfilter) 
-    gerror("Filter",G_ERR_FILTER);
+    G_error("Filter",G_ERR_FILTER);
   g = (FILTER *) f->prev; 
   oldfilter++; 
   G_free( (void *) f);
@@ -74,12 +89,7 @@ PGRAPH  set_ready_graph(FILTER *f);
 FILTER * f;
 
 sqlite3_stmt *Statement;
-// events and properties
-#define EV_Null 0x01
-#define EV_Wild_Triple 0x02
-#define EV_Incomplete 0x04
-#define EV_Set 0x08
-#define EV_Sql_Done EV_Null
+
 
 
 typedef struct {
@@ -91,6 +101,7 @@ typedef struct {
   TRIPLE input_node;
 }  READYSET;
 READYSET ready;
+
 FILTER * ready_filter() { return ready.filter;}
 // msthods on graph pointers
 int stopped_row() {
@@ -113,13 +124,14 @@ int reset_ready_set() {
   return 0;
 }
 PGRAPH  set_ready_graph(FILTER *f) {
+	ready.filter = f;
   if(!f->g[0])
-    gerror("Ready",97);
+    G_error("Ready",97);
   if(f->g[0]->match_state != G_READY) {
     ready.self = f->g[0];
     ready.other = f->g[1];
   } else if(!f->g[1])
-    gerror("Ready",98);
+    G_error("Ready",98);
   else { 
     ready.self =f->g[1];
     ready.other =f->g[0];}
@@ -253,7 +265,7 @@ void gfunction(sqlite3_context* context,int n,sqlite3_value** v) {
   }
 }
 
-
+// square table adapter
 
 int bind_schema(sqlite3_stmt *stmt,TRIPLE top);
 int new_filter_graph(FILTER *f,TRIPLE t) {
