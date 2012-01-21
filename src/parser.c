@@ -9,13 +9,13 @@ int key_op(char * key) {
       while(!G_ispunct(key[i]) && (key[i] != 0) ) i++; 
       return i;
     }
-char * process_block(PGRAPH *list) {
+char * process_block(PGRAPH *inner) {
   TRIPLE ts,next;
   char line[200],*start;
   int nchars,done;
   ts.link = DISCARD;
   done = 0;
-  new_graph(list); // starting SET
+  new_graph(inner); // starting SET
   for(;;) {
     G_memset(line,0,200);
     start =  line;
@@ -30,59 +30,59 @@ char * process_block(PGRAPH *list) {
       op = start[nchars];
       if((nchars == 0) && (op == 0)) done=1;
       if((nchars > 0) && (op == 0)) op='.'; // default operator
-	  next.key=start;next.link=op;next.pointer=(*list)->row+1;
+	  next.key=start;next.link=op;next.pointer=(*inner)->row+1;
       start[nchars]=0;
       start+=nchars+1;
       if(ts.link == ':' )  {  
-        new_graph(list);  
-        append_graph(list,ts);
+        new_graph(inner);  
+        append_graph(inner,ts);
         if(next.link == '{')
           next.link = DISCARD;
        } else if(next.link == '{') {
          if(ts.link != DISCARD) {
            if(ts.link == ',') {
-            append_graph(list,ts);
-            close_update_graph(list);
-            new_graph(list);
+            append_graph(inner,ts);
+            close_update_graph(inner);
+            new_graph(inner);
             } else if(ts.link == '.') {
-            new_graph(list);
-            append_graph(list,ts);
+            new_graph(inner);
+            append_graph(inner,ts);
           }
         }
       next.link = DISCARD;
     } 
     else if((ts.link == '.') || (ts.link < G_USERMIN) )   {
       if(G_strlen(ts.key) > 0)
-        append_graph(list,ts); }
+        append_graph(inner,ts); }
     else if(ts.link == ',' ) {
       if(G_strlen(ts.key) > 0)
-        append_graph(list,ts);
-      close_update_graph(list);
+        append_graph(inner,ts);
+      close_update_graph(inner);
 	  //proces_block
-      new_graph(list);
+      new_graph(inner);
       } 
 	else if(ts.link == '}') {
       if(G_strlen(ts.key) > 0) {
         next.link = '.';
-        append_graph(list,ts);
+        append_graph(inner,ts);
       }
-    close_update_graph(list);
+    close_update_graph(inner);
   }
     else if(ts.link != DISCARD ) { 
-      append_graph(list,ts);
-      close_update_graph(list);
+      append_graph(inner,ts);
+      close_update_graph(inner);
 	  //process block
-      new_graph(list);
+      new_graph(inner);
     }
      ts = next;
   }  
   }
   // finish up
-  while((*list)->parent) {
-    if(empty_graph(*list))
-      delete_graph(list);
+  while((*inner)->parent) {
+    if(empty_graph(*inner))
+      delete_graph(inner);
      else  
-      close_update_graph(list);  
+      close_update_graph(inner);  
   }
 
   return(0);
@@ -95,8 +95,7 @@ int parser() {
     G_printf("%s","_");
     del_table_graph(LIST(2));
     start = process_block(LIST(2));
-    reset_graphs(2);
-    reset_graphs(3);
+    //reset_graphs(LIST(2));
   }
   return(0);
 }

@@ -5,6 +5,7 @@ typedef struct {
   int pointer;
 } TRIPLE;
 typedef int (*HANDLER)(TRIPLE);
+extern TRIPLE G_null_graph;
 typedef struct {
   int vp[4]; //maps
   int overload_operator;
@@ -24,10 +25,10 @@ typedef struct  {
   int attribute;
   TRIPLE pop_triple,update_triple,insert_triple,select_triple;
   int index;
-  void * list;
+  struct g * list;  //points to the innermost current graph
   COLINFO  info;
 } TABLE;
-
+typedef TABLE *PTABLE;
 char * NAME(TABLE *);
 int ATTRIBUTE(TABLE *);
 TABLE * TABLE_POINTER(int i);
@@ -119,7 +120,7 @@ int stopped_row();
 int key_op(char * key);
 int bind_sql(OP *op,TRIPLE top);
 void set_table_name(char * name,int index);
-int init_table(int);
+int init_table(int,char *);
 int init_gbase();
 int install_sql_script(char * ch,int opid);
 void print_triple(TRIPLE t);

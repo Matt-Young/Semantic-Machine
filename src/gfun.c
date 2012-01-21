@@ -9,12 +9,7 @@ PGRAPH schema_graph=0;
 extern TABLE tables[];
 const TRIPLE NULL_TRIPLE={"_",96,0};
 // 
-PGRAPH other(PGRAPH  g) {
-  if(g != tables[2].list)
-    return (PGRAPH) tables[G_TABLE_SELF].list;
-  else
-    return (PGRAPH) tables[G_TABLE_OTHER].list;
-}
+PGRAPH other(PGRAPH  g);
 int counter=0;
 // events and properties
 #define EV_Null 0x01
@@ -22,7 +17,8 @@ int counter=0;
 #define EV_Incomplete 0x04
 #define EV_Set 0x08
 #define EV_Matchable 0x08
-#define EV_Matched 0x100;
+#define EV_Matched 0x100
+#define EV_Square 0x100
 #define EV_Sql_Done EV_Null
 typedef struct f { 
 	int status;
@@ -34,8 +30,8 @@ typedef struct f {
 FILTER null_filter;
 PGRAPH  set_ready_graph(FILTER *f) ;
 int init_gfun() {
-	null_filter.g[0]=*LIST(2);
-	null_filter.g[1]=*LIST(3);
+	null_filter.g[0]=0;
+	null_filter.g[1]=0;
 	operands['_'].properties= EV_Null;
 	set_ready_graph(&null_filter);
 	return 0;
@@ -85,14 +81,7 @@ int deliver_output(TRIPLE t) {
   return SQLITE_OK;
 }
 
-PGRAPH  set_ready_graph(FILTER *f); 
-// called when sqlite_done asses through to
-// the primary caller in triple s
-FILTER * f;
-
 sqlite3_stmt *Statement;
-
-
 
 typedef struct {
   int count;
@@ -126,17 +115,10 @@ int reset_ready_set() {
   return 0;
 }
 PGRAPH  set_ready_graph(FILTER *f) {
-	ready.filter = f;
-  if(!f->g[0])
-    G_error("Ready",97);
-  if(f->g[0]->match_state != G_READY) {
-    ready.self = f->g[0];
-    ready.other = f->g[1];
-  } else if(!f->g[1])
-    G_error("Ready",98);
-  else { 
-    ready.self =f->g[1];
-    ready.other =f->g[0];}
+	G_memset(&ready,0,sizeof(ready));
+		ready.filter = f;
+  if(f->g[0]) 
+	 ready.self = f->g[0];
   return ready.self;
 }
 int dispatch() {
@@ -172,7 +154,7 @@ int events(FILTER * f) {
  if(f->g[1]->end  > f->g[1]->row) 
     g_event |= EV_Incomplete;
  //if((f->properties & EV_Matchable) && key_match(f->
-  return (g_event | f->properties);
+  return (g_event);
 }
 int default_sub_query() {
   FILTER *f = new_filter();
@@ -182,13 +164,16 @@ int default_sub_query() {
   return 0;
 }
 int event_exec(FILTER * f) {
-  int g_event = events(f);
+  int g_event =f->properties;
   switch(g_event) {
   case EV_Null:
             g_event |= parser();
 			//g_event |= set_ready_graph();
             break;
-        }
+  default:
+	  g_event |=events(f);
+	  break;
+  }
     return(g_event);
   }
  void reset_G_columns(TABLE *t) { 
@@ -208,10 +193,14 @@ int event_handler(TRIPLE t) {
 	FILTER *f;
   f = ready_filter();
   f->properties = operands[t.link].properties;
-  if(f->g[0]->table->attribute == G_SQUARE)  do_square(0,f);
-  else if(f->g[1]->table->attribute == G_SQUARE) do_square(1,f);
-  else
-        event_exec(f);
+  if(f->properties & EV_Null)
+	  event_exec(f);
+  else if(f->properties & EV_Square)  {
+	if(f->g[0]->table->attribute == G_SQUARE)  do_square(0,f);
+	else if(f->g[1]->table->attribute == G_SQUARE) do_square(1,f);
+  } else
+    event_exec(f);
+ 
   return 0;
     }
  //int output_filter(TRIPLE t) {

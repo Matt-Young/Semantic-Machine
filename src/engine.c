@@ -207,13 +207,13 @@ int init_gbase() {
   return status;
 }
 // do the default _
-TRIPLE _ = {"_",'_',0};
+TRIPLE G_null_graph = {"_",'_',0};
 int main(int argc, char * argv[])
 {
   int status; 
   //status = init_dll(); 
   status = init_gbase();
-  for(;;) triple(_,0);
+  for(;;) triple(G_null_graph,0);
   //for(;;) status = dispatch();
   G_exit(0);
 }

@@ -1,6 +1,7 @@
 // Console, set up
 
 // These are here just to keep the std lib includes in one spot
+// and run test sequences
 #include <ctype.h>
 #include <stdio.h> 
 #include <stdlib.h> 
@@ -31,5 +32,20 @@ int G_atoi(const char* s){ return atoi(s);}
 void G_memset(void* s, int c, int n) {memset(s,c,n);}
 void G_exit() { exit(0);}
 int G_ispunct(int c){return ispunct(c);}
-char * G_gets(char * line) { return gets(line);};
+
 void G_error(char * c,int i) {G_printf("error %d\n",c); G_exit();}
+#define DEBUG
+#ifdef DEBUG
+int debug_counter=0;
+char * G_gets(char * line) {
+	if(debug_counter == 0) {
+		debug_counter++;
+		G_strcpy(line,"{abc}");
+	} else
+	G_strcpy(line,"");
+return(line);
+}
+#else
+char * G_gets(char * line) { return gets(line);};
+#endif
+#undef DEBUG
