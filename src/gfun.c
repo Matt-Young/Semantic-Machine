@@ -309,7 +309,13 @@ int column_decoder(COLINFO *c,TRIPLE s) {
       s.pointer++;
       return(1);
   }
-int handler(FILTER * f) {
+// If the reult lands here, the query is done
+// go search the filter list for something to do
+// otr else
+// we are getting a row from some square table.
+// then we take the row and run the machine triplet/column mode
+// top is the initiationg query, in most cases, the originating triplet.
+int handler(TRIPLE t) {
   COLINFO *c;
   COLINFO *d;
   int g_event=0;
