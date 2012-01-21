@@ -18,12 +18,10 @@ PGRAPH other(PGRAPH  g) {
 }
 int counter=0;
 typedef struct f { 
-  TRIPLE t[2];
   PGRAPH g[2];
-  TRIPLE sum;
-  TRIPLE caller;
+  int properties;
   int status;
-  struct f* prev;
+  struct f *prev,*next;
 } FILTER;
 
 FILTER *filter_list=0;
@@ -92,11 +90,10 @@ typedef struct {
   PGRAPH other;
   PGRAPH result;
   FILTER *filter;
-  int pc;
-  OPCODE opset[4];
   TRIPLE input_node;
 }  READYSET;
 READYSET ready;
+FILTER * ready_filter() { return ready.filter;}
 // msthods on graph pointers
 int stopped_row() {
 if(ready.self->row == ready.self->end)
@@ -120,7 +117,7 @@ int set_row(int ivar) {
 #define GET_ROW 5
 #define SET_ROW 6
 #define SET_LINK 7
-
+/*
 int add_opcode(char a,char b,char c,char d) {
   OPCODE *op;
   op = &ready.opset[ready.pc++];
@@ -129,7 +126,7 @@ int add_opcode(char a,char b,char c,char d) {
   op->g_action[1] = c;
   return 0;
 }
-
+*/
 int reset_ready_set() {
   G_memset((void *) &ready,0,sizeof(ready));
   return 0;
@@ -159,10 +156,12 @@ int dispatch() {
   }while(g);
   if(g) {
     graph = set_ready_graph(g);
+	/*
     do {  
       insert_opcode(g);
       g = g->prev;
     } while(g);
+	*/
   }
   triple(graph->table->pop_triple,0);
   return(SQLITE_OK);
@@ -206,29 +205,15 @@ void gfunction(sqlite3_context* context,int n,sqlite3_value** v) {
     sqlite3_result_int(context, 0);
   }
 }
-// micro ops in opcode, this is a confused mess.
-#define OP_Print  0 // match operands 
-#define OP_Console 1     
-#define OP_Subquery 2
-//states
-#define STATE_Collect  0// select and repeat?
-#define STATE_Unready  G_UNREADY
-// events
+
+// events and properties
 #define EV_Null 0x01
 #define EV_Wild_Triple 0x02
+#define EV_Incomplete 0x04
+#define EV_Set 0x08
 #define EV_Sql_Done EV_Null
 
-int insert_opcode(FILTER *f) {
-    switch(f->caller.link) {
-      case '_':
-        add_opcode(EV_Null,STATE_Unready,OP_Console,OP_Console);
-        break;
-      default:
-        add_opcode(EV_Wild_Triple,STATE_Collect,OP_Print,0);
-        break;
-    }
-    return 0;
-  }
+
 int key_match(const char * k,const char * g) {
   int klen = G_strlen(k);
   int glen = G_strlen(g);
@@ -238,14 +223,12 @@ int key_match(const char * k,const char * g) {
     return 0;
 }
 int events(FILTER * f) {
-  int g_event;
- if(f->t[1].pointer > f->g[1]->row) {
-    g_event |= EV_Wild_Triple;
-  if(f->t[0].link == '*')
-    g_event |= EV_Wild_Triple;
-  return (g_event);
- }
-  return EV_Wild_Triple;
+  int g_event=0;
+ if(f->g[1]->end > f->g[1]->row) 
+    g_event |= EV_Incomplete;
+ if(f->g[2]->end  > f->g[2]->row) 
+    g_event |= EV_Incomplete;
+  return (g_event | f->properties);
 }
 int default_sub_query() {
   FILTER *f = new_filter();
@@ -254,33 +237,15 @@ int default_sub_query() {
   f->status = G_UNREADY;
   return 0;
 }
-int event_exec(int g_event) {
-  int status = SQLITE_OK;
-  int index = ready.pc;
-  char  *ptr;
-  do {
-    if(ready.opset[index].g_event & g_event) 
-      // we have an opcode for the event
-      ptr = ready.opset[index].g_action; 
-      while(*ptr) {
-        switch(*ptr) {
-          case OP_Print:
-            print_triple(ready.filter->t[0]);
-            print_triple(ready.filter->t[1]);
-            break;
-          case OP_Console:
-            status = parser();
-			 set_ready_graph();
-            break;
-          case OP_Subquery:
-            status = default_sub_query();
+int event_exec(FILTER * f) {
+  int g_event = events(f);
+  switch(g_event) {
+  case EV_Null:
+            g_event |= parser();
+			//g_event |= set_ready_graph();
             break;
         }
-     ptr++;
-    }
-    index--;
-  } while(index);
-    return(status);
+    return(g_event);
   }
  void reset_G_columns(TABLE *t) { 
    t->info.col_count = 0;
@@ -303,49 +268,59 @@ COLINFO *init_col_info(TABLE * t) {
   return(&t->info);
 }
 
-int column_decoder(COLINFO *c,TRIPLE s) {
+TRIPLE column_decoder(COLINFO *c) {
+	TRIPLE s={0,0,0};
       s.key = sqlite3_column_text(Statement,c->index);
       c->index++;
       s.pointer++;
-      return(1);
+	  s.link = 0;
+      return(s);
   }
-// If the reult lands here, the query is done
+// defaut grammar is to descend a row with the default Dot
+int do_square(int mode,FILTER *f) {
+COLINFO *c,*d;
+TRIPLE ct,dt;
+    c = init_col_info(f->g[0]->table);
+    while(c->index < c->col_count) {
+		ct = column_decoder(c); 
+      if(f->g[1]->table->attribute == G_SQUARE) { 
+        d = init_col_info(f->g[1]->table);
+        while(d->index < d->col_count) {
+			dt = column_decoder(d); 
+			f->properties = operands[dt.link].properties;
+           event_exec(f);
+          }
+	  }
+	  else 
+		  event_exec(f);
+	  }
+	return 0;
+      }
+
+
+// If the result lands here, the query is done
 // go search the filter list for something to do
 // otr else
 // we are getting a row from some square table.
 // then we take the row and run the machine triplet/column mode
 // top is the initiationg query, in most cases, the originating triplet.
-int handler(TRIPLE t) {
-  COLINFO *c;
-  COLINFO *d;
-  int g_event=0;
-  if(f->g[0]->table->attribute == G_SQUARE) {
-    c = init_col_info(f->g[0]->table);
-    while(column_decoder(c,f->t[0])) {
-      if(f->g[1]->table->attribute == G_SQUARE) { 
-        d = init_col_info(f->g[1]->table);
-        while(column_decoder(d,f->t[1])) {
-           g_event = events(f);
-           event_exec(g_event);
-          }
+// Normal action, find an event to call this, then go up the filter chain, 
+// srtarting with the calling triplet
+int event_handler(TRIPLE t) {
+	FILTER *f;
+  f = ready_filter();
+  f->properties = operands[t.link].properties;
+  if(f->g[0]->table->attribute == G_SQUARE)  do_square(0,f);
+  else if(f->g[1]->table->attribute == G_SQUARE) do_square(1,f);
+  else {
+		  f->properties = operands[t.link].properties;
+        event_exec(f);
       }
-      else
-        event_exec(g_event);
-      }
+  return 0;
     }
-  else if(f->g[1]->table->attribute == G_SQUARE) {
-      d = init_col_info(f->g[1]->table);
-        while(column_decoder(d,f->t[1])) {
-          g_event = events(f);
-          event_exec(g_event);
-       }
-      } else
-        event_exec(g_event);
-      return g_event;
-  }
- int output_filter(TRIPLE t) {
- return handler(ready.filter);
-}
+ //int output_filter(TRIPLE t) {
+ //return handler(ready.filter);
+//}
 
 int bind_schema(sqlite3_stmt *stmt,TRIPLE top);
 int new_filter_graph(FILTER *f,TRIPLE t) {
