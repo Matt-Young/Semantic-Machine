@@ -100,12 +100,12 @@ typedef struct {
   int status;
   int output;
   } M;
+int init_tables();
 int init_gfun();
-
 
 int triple(TRIPLE top,HANDLER);
 int gfun_callback(TRIPLE t);
-void gerror(char * c,int i);
+void G_error(char * c,int i);
 int bind_index(sqlite3_stmt *stmt,int i,int j);
 void print_triple(TRIPLE t);
 //int swap();
@@ -123,11 +123,11 @@ int init_table(int);
 int init_gbase();
 int install_sql_script(char * ch,int opid);
 void print_triple(TRIPLE t);
-int init_gfun();
+int init_tables();
 void * start_select();
 int dispatch();
 int parser();
-
+int event_handler(TRIPLE t);
 void G_exit();
 void* G_malloc(int size);
 void* G_calloc(int size);

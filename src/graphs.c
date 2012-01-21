@@ -61,7 +61,7 @@ PGRAPH delete_graph(PGRAPH *list) {
   PGRAPH parent,child;
   child = *list;
   if(del_count >= new_count)
-    gerror("Bad graph",G_ERR_GRAPH);
+    G_error("Bad graph",G_ERR_GRAPH);
   parent = child->parent;
   if(parent)
     parent->row = child->row;

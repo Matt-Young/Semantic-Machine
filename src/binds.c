@@ -24,7 +24,7 @@ int bind_default(sqlite3_stmt *stmt,TRIPLE top,int j,int i) {
   else if(t ==  SQLITE_TEXT)
       status = sqlite3_bind_text(stmt,i+1,(char *) p,G_strlen((char *) p),0);
   else
-    gerror("No parameter",G_ERR_BIND);
+    G_error("No parameter",G_ERR_BIND);
   return status;
 }
 // various binds

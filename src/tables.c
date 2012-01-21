@@ -74,7 +74,7 @@ int init_table(int index) {
   return status;
 }
 void gfunction(sqlite3_context* context,int n,sqlite3_value** v);
-int init_gfun() {
+int init_tables() {
   int status;
      status = sqlite3_create_function_v2(m.db,GFUN,2,SQLITE_UTF8 ,0,gfunction,0,0,0);
   init_table(1);  init_table(2); init_table(3); init_table(4); // skipping schema,console

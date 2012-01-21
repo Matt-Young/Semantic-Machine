@@ -21,6 +21,8 @@ int counter=0;
 #define EV_Wild_Triple 0x02
 #define EV_Incomplete 0x04
 #define EV_Set 0x08
+#define EV_Matchable 0x08
+#define EV_Matched 0x100;
 #define EV_Sql_Done EV_Null
 typedef struct f { 
 	int status;
@@ -165,10 +167,11 @@ int key_match(const char * k,const char * g) {
 }
 int events(FILTER * f) {
   int g_event=0;
- if(f->g[1]->end > f->g[1]->row) 
+ if(f->g[0]->end > f->g[0]->row) 
     g_event |= EV_Incomplete;
- if(f->g[2]->end  > f->g[2]->row) 
+ if(f->g[1]->end  > f->g[1]->row) 
     g_event |= EV_Incomplete;
+ //if((f->properties & EV_Matchable) && key_match(f->
   return (g_event | f->properties);
 }
 int default_sub_query() {
@@ -207,10 +210,8 @@ int event_handler(TRIPLE t) {
   f->properties = operands[t.link].properties;
   if(f->g[0]->table->attribute == G_SQUARE)  do_square(0,f);
   else if(f->g[1]->table->attribute == G_SQUARE) do_square(1,f);
-  else {
-		  f->properties = operands[t.link].properties;
+  else
         event_exec(f);
-      }
   return 0;
     }
  //int output_filter(TRIPLE t) {

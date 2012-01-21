@@ -37,7 +37,7 @@ int install_sql_script(char * ch,int opid) {
   status =
     sqlite3_prepare_v2(m.db,ch,G_strlen(ch)+1, 
         &operands[opid].stmt,0);
-  operands[opid].handler=output_filter;
+  operands[opid].handler=event_handler;
         operands[opid].vp[0] = 0;
         return (SQLITE_OK);
 }
@@ -62,10 +62,10 @@ int  config_handler(TRIPLE t) {
         ch = newkey(t.key);
         status = install_sql_script((char *) ch,variable);
         if(status != SQLITE_OK)
-          gerror("Prepare",G_ERR_PREPARE);
+          G_error("Prepare",G_ERR_PREPARE);
         delkey(ch);
         if(status != SQLITE_OK)
-          gerror("Prepare",G_ERR_PREPARE);
+          G_error("Prepare",G_ERR_PREPARE);
         break;
       default: // parameters
         ivar = t.pointer - 2;
@@ -125,7 +125,7 @@ int dup_handler(TRIPLE node){
   id = G_atoi(node.key);
   G_strcpy(buff,sqlite3_sql(operands[id].stmt));
   status = install_sql_script(buff,G_SCRATCH);
-  if(status != SQLITE_OK) gerror("Dup",G_ERR_DUP);
+  if(status != SQLITE_OK) G_error("Dup",G_ERR_DUP);
   for(i=0;operands[id].vp[i];i++) 
     operands[G_SCRATCH].vp[i] = operands[id].vp[i];
   return SQLITE_OK;
@@ -134,11 +134,11 @@ int dup_handler(TRIPLE node){
 int ghandler(TRIPLE top,int status,int (*handler)(TRIPLE)) { 
   m.status = status;
   if( (status != SQLITE_ROW) && (status != SQLITE_DONE) && (status != SQLITE_OK)  )
-     gerror("ghandle entry",G_ERR_ENTRY);
+     G_error("ghandle entry",G_ERR_ENTRY);
   else if(status == SQLITE_DONE && top.link <= G_POP_MAX ) 
       m.status =  G_DONE;  
   else if(status != SQLITE_ROW && status != SQLITE_OK) 
-    gerror("Ghandle ",G_ERR_HANDLER);
+    G_error("Ghandle ",G_ERR_HANDLER);
   else if(handler)
     handler(top);
   else if(operands[top.link].handler)
@@ -147,6 +147,9 @@ int ghandler(TRIPLE top,int status,int (*handler)(TRIPLE)) {
 }
 
 #define LINKMASK 0xff
+// We get here when a graph produces a triplet that heads a subsequence
+// The link then holds the specified graph operator, 
+// this sifts through and finds a handler
 int triple(TRIPLE top,int (*handler)(TRIPLE)) {
   OP *op;
   int status= SQLITE_OK;
@@ -160,7 +163,7 @@ int triple(TRIPLE top,int (*handler)(TRIPLE)) {
     top.key = (char *) key;
     status = bind_sql(op,top);
     if(status != SQLITE_OK) 
-      gerror("bind \n",G_ERR_BIND);
+      G_error("bind \n",G_ERR_BIND);
   }  
   do {
     if(op->stmt) {
@@ -197,17 +200,21 @@ int init_gbase() {
   int status,i;
    status = sqlite3_open(GBASE,&m.db);
   for(i=G_USERMIN;i < OPERMAX;i++)
-    operands[i].handler = output_filter;
+    operands[i].handler = event_handler;
   init_handlers();
-  status = init_gfun();
+  status = init_tables();
+  init_gfun();
   return status;
 }
+// do the default _
+TRIPLE _ = {"_",'_',0};
 int main(int argc, char * argv[])
 {
   int status; 
   //status = init_dll(); 
   status = init_gbase();
-  for(;;) status = dispatch();
+  for(;;) triple(_,0);
+  //for(;;) status = dispatch();
   G_exit(0);
 }
 
