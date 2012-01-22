@@ -1,5 +1,5 @@
 // Console, set up
-
+int init_console() { return 0;}
 // These are here just to keep the std lib includes in one spot
 // and run test sequences
 #include <ctype.h>

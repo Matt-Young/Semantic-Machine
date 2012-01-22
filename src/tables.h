@@ -19,3 +19,4 @@ char * NAME(TABLE *);
 int ATTRIBUTE(TABLE *);
 TABLE * TABLE_POINTER(int i);
 int DELETE_TABLE(TABLE *);
+int init_table(int index,char * name);

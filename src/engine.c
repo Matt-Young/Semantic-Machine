@@ -190,33 +190,37 @@ const MAP map[CALLS] = {
   {G_EXEC,exec_handler},{G_SQL,sql_handler},
   {G_SCRIPT,script_handler},{G_CONFIG,config_handler}
 };
-void init_handlers() {
+int init_handlers() {
   int i;
    for(i=0;i < CALLS;i++) {
      operands[map[i].index].handler = map[i].handler;
 	 operands[map[i].index].properties = EV_No_bind;
 	 operands[map[i].index].stmt=0; 
    }
+   return 0;
 }
-int init_gbase() {
+int init_machine() {
   int status,i;
-  init_binders();
-   status = sqlite3_open(GBASE,&m.db);
   for(i=G_USERMIN;i < OPERMAX;i++) 
     operands[i].handler = event_handler;
+
+   status = sqlite3_open(GBASE,&m.db);
+  init_binders();
   init_handlers();
-  status = init_tables();
+  init_tables();
   init_gfun();
+  init_console();
 
   return status;
 }
 // do the default _
 TRIPLE G_null_graph = {"_",'_',0};
+
 int main(int argc, char * argv[])
 {
   int status; 
   //status = init_dll(); 
-  status = init_gbase();
+  status = init_machine();
   for(;;) triple(&G_null_graph,0);
   //for(;;) status = dispatch();
   G_exit(0);

@@ -73,9 +73,6 @@ typedef struct {
   int output;
   } M;
 
-extern M m;
-int init_tables();
-int init_gfun();
 
 int triple(TRIPLE top[],HANDLER);
 int bind_sql(TRIPLE top[],Code *);
@@ -96,13 +93,9 @@ int key_op(char * key);
 void set_table_name(char * name,int index);
 TABLE * get_table_name(const char * name);
 PGRAPH get_table_graph(int index);
-int init_table(int,char *);
-int init_gbase();
 int install_sql_script(char * ch,int opid);
 void print_triple(TRIPLE t);
-int init_tables();
 
-int dispatch();
 int parser();
 int event_handler(TRIPLE t);
 int event_exec(FILTER *f);
