@@ -1,15 +1,6 @@
 
-typedef struct  g {
-  int row;
-  int start;
-  int end;
-  TABLE * table;
-  struct g * parent;
-  int match_state;
-  TRIPLE pending_triple;
-} GRAPH;
-typedef GRAPH * PGRAPH; 
 
+PGRAPH self_graph();
 PGRAPH new_graph(PGRAPH *);
 PGRAPH delete_graph(PGRAPH *);
 void close_update_graph(PGRAPH *);
@@ -28,12 +19,13 @@ void pass_parent_graph(PGRAPH );
 PGRAPH new_graph_by_index(int);
 PGRAPH *LIST(int i);
 // events and properties
-#define EV_Null 0x01
-#define EV_Wild_Triple 0x02
-#define EV_Incomplete 0x04
-#define EV_Set 0x08
-#define EV_Matchable 0x08
+#define EV_Graph_Layer 0x07
+#define EV_Null 0x08
+#define EV_Wild_Triple 0x10
+#define EV_Incomplete 0x20
+#define EV_Set 0x40
+#define EV_Matchable 0x80
 #define EV_Matched 0x100
-#define EV_Square 0x100
+#define EV_Square 0x200
 #define EV_Sql_Done EV_Null
-#define EV_Overide 0x200
+#define EV_Overide 0x400

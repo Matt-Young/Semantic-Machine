@@ -99,8 +99,7 @@ int parser() {
   TABLE * t = get_table_name("console");
   PGRAPH * pt = (PGRAPH *) (&t->list);
   for(;;) {
-    G_printf("%s","_");
-    new_table_graph(t);
+    G_printf("%c",G_NULL);
     start = process_block(pt);
     G_exit();
   }

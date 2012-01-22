@@ -55,7 +55,7 @@ int ATTRIBUTE(TABLE *table) {
 
 TABLE * TABLE_POINTER(int i) { return triple_tables[i];}
 void set_table_name(char * name,int index) { triple_tables[index]->name =  name;}
-TABLE * get_table_name(char * name) { 
+TABLE * get_table_name(const char * name) { 
 	int i=0;
 	while(triple_tables[i]) {
 			if(!G_strcmp(triple_tables[i]->name,name))
@@ -80,41 +80,38 @@ const struct {
 (BIND_GRAPH << 4) + BIND_GRAPH_ROW, (BIND_GRAPH << 4) + BIND_GRAPH_START,0,0},
 };
 
- sqlite3_stmt * make_stmt(int index,int opid,int format) {
+ sqlite3_stmt * make_stmt(int index,int opid,int format,char * table_name) {
   char buff[200];
   int i,status;
   sqlite3_stmt *stmt;
   // make an sql script
-  G_sprintf(buff,pre_installed[format].sql, triple_tables[index]->name);
+  G_sprintf(buff,pre_installed[format].sql, table_name);
   status= sqlite3_prepare_v2(m.db,buff,G_strlen(buff)+1, &stmt,0);
-  triple_tables[index]->stmt = stmt;
+//  triple_tables[index]->stmt = stmt;
   operands[opid].stmt = 0;  // Look in the table context for stmt
   for(i=0;i < 4;i++) {  // set bindings
-	operands[opid].vp[i] = pre_installed[format].parm[i];
+	operands[opid].vp[i] = pre_installed[index].parm[i];
     }
-  operands[opid].handler = pre_installed[format].handler;
-  operands[opid].properties = EV_Overide;
+  operands[opid].handler = pre_installed[index].handler;
+  operands[opid].properties = index;
   return stmt;
 }
 
 int init_table(int index,char * name) {
   int status = SQLITE_OK;
   TRIPLE t;
+  int i;
   //PGRAPH g = new_graph(LIST(index));
   TABLE * table =  new_table(name);
   CREATE_TABLE(table);
   triple_tables[index] = table;
   //g->table = table;
   // Turn operators into convenient triples
-  t.pointer =0;  t.key = name;
-  table->stmt = make_stmt(index,G_POP,0);
-  t.link = G_POP; table->pop_triple = t; 
-  table->stmt = make_stmt(index,G_INSERT,1);
-  t.link = G_INSERT; table->insert_triple = t; 
-  table->stmt = make_stmt(index,G_UPDATE ,2); 
-  t.link = G_UPDATE; table->update_triple = t;  
-  table->select_triple = table->pop_triple;  //default until posted 
-                        //differenty by an attribute
+  t.pointer =0; 
+  for(i=0; i < NBUILTINS;i++) {
+		t.key = (const char *) make_stmt(i,G_POP+i,0,name);
+  t.link = G_POP+i; table->operators[i] = t; 
+  }
   return status;
 }
 void gfunction(sqlite3_context* context,int n,sqlite3_value** v);

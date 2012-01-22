@@ -4,6 +4,7 @@ typedef struct {
   int link;
   int pointer;
 } TRIPLE;
+
 typedef int (*HANDLER)(TRIPLE);
 extern TRIPLE G_null_graph;
 typedef struct {
@@ -20,15 +21,35 @@ typedef struct {
   int type[8];
   int index;
 } COLINFO;
+#define NBUILTINS 3
+#define pop_triple_operator 0
+#define append_triple_operator 1
+#define update_triple_operator 2
+#define installed_triple_operator 3
 typedef struct  {
   char * name;
   int attribute;
-  TRIPLE pop_triple,update_triple,insert_triple,select_triple,stmt_triple;
+  TRIPLE operators[NBUILTINS + 2];
   int index;
   struct g * list;  //points to the innermost current graph
   COLINFO  info;
-  sqlite3_stmt * stmt;
 } TABLE;
+typedef struct  g {
+  int row;
+  int start;
+  int end;
+  TABLE * table;
+  struct g * parent;
+  int match_state;
+  TRIPLE pending_triple;
+} GRAPH;
+typedef GRAPH * PGRAPH; 
+typedef struct f { 
+	int status;
+  PGRAPH g[2];
+  int properties;
+  struct f *prev,*next;
+} FILTER;
 typedef TABLE *PTABLE;
 char * NAME(TABLE *);
 int ATTRIBUTE(TABLE *);
@@ -121,7 +142,7 @@ int stopped_row();
 int key_op(char * key);
 sqlite3_stmt * bind_sql(TRIPLE top);
 void set_table_name(char * name,int index);
-TABLE * get_table_name(char * name);
+TABLE * get_table_name(const char * name);
 int init_table(int,char *);
 int init_gbase();
 int install_sql_script(char * ch,int opid);
@@ -131,6 +152,7 @@ void * start_select();
 int dispatch();
 int parser();
 int event_handler(TRIPLE t);
+int event_exec(FILTER *f);
 void G_exit();
 void* G_malloc(int size);
 void* G_calloc(int size);

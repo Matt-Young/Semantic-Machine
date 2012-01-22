@@ -30,13 +30,14 @@ int bind_default(sqlite3_stmt *stmt,TRIPLE top,int j,int i) {
 // various binds
 
 int bind_triple(sqlite3_stmt *stmt,TRIPLE top) {
-  int status,index;
-  PGRAPH g;
-  index = G_atoi(top.key);
-  g = *LIST(index);
-  status = sqlite3_bind_text(stmt,1,
-    g->pending_triple.key,
-    G_strlen(g->pending_triple.key),0);
+  int status;
+  PGRAPH g = self_graph();
+  if(g->pending_triple.key) {
+	status = sqlite3_bind_text(stmt,1,
+	g->pending_triple.key,
+	G_strlen(g->pending_triple.key),0);
+  } else // always forcing the default where missing
+	  status = sqlite3_bind_text(stmt,1,"'_'",3,0);
   status = sqlite3_bind_int(stmt,2,g->pending_triple.link);
   status = sqlite3_bind_int(stmt,3,g->pending_triple.pointer);
   return status;
@@ -54,7 +55,7 @@ int bind_schema(sqlite3_stmt *stmt,TRIPLE top) {
   g->row = g->start;
   index = 0;
   G_sprintf(buffer,"select ");
-  triple(table->pop_triple,local_handler);
+  triple(table->operators[pop_triple_operator],local_handler);
   G_sprintf(buffer,"from %s where (gfun(0,rowid) == rowid);",
     NAME(g->table));
   install_sql_script(buffer,G_SCRATCH);
@@ -79,14 +80,15 @@ int bind_graph_var(sqlite3_stmt *stmt,TRIPLE top,int i,int j) {
 }
 
 // Get bound up for a n sql step
-sqlite3_stmt * fetch_stmt(TRIPLE top);
+extern sqlite3_stmt * fetch_stmt(TRIPLE top);
+extern sqlite3_stmt * set_ready_stmt(TRIPLE top);
  sqlite3_stmt * bind_sql(TRIPLE top) {
   int status=SQLITE_OK;
   int i,j;
+  sqlite3_stmt * stmt;
   OP * op = &operands[top.link];
-  // Get the right statement
-  sqlite3_stmt *stmt;
-  stmt = fetch_stmt(top);
+  // Get and set the stmt
+  stmt = set_ready_stmt(top);
 
   for(i=0; op->vp[i]; i++ ) {
     j = op->vp[i];
