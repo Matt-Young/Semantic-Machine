@@ -16,7 +16,6 @@ void reset_graphs(PGRAPH );
 int reset_graph(PGRAPH );
 PGRAPH dup_graph(PGRAPH l1,PGRAPH l2);
 void pass_parent_graph(PGRAPH );
-
 PGRAPH new_graph_by_index(int);
 PGRAPH *LIST(int i);
 #define pop_triple_operator 0

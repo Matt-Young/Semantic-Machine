@@ -8,4 +8,3 @@
 #define BIND_GRAPH_ROW 0
 #define BIND_GRAPH_START 1
 #define BIND_GRAPH_END 2
-PGRAPH *LIST(int i);

@@ -1,6 +1,6 @@
 
 typedef struct {
-  const char * key; 
+  void * key; 
   int link;
   int pointer;
 } TRIPLE;
@@ -8,6 +8,7 @@ typedef struct {
 typedef int (*HANDLER)(TRIPLE);
 extern TRIPLE G_null_graph;
 typedef struct {
+  int maptype;
   int vp[4]; //maps
   int overload_operator;
   sqlite3_stmt *stmt;
@@ -84,16 +85,8 @@ int DELETE_TABLE(TABLE *);
 #define G_UNREADY        103
 #define G_REPEAT        103
 #define G_START        104
-#define G_SCHEMA        105
-#define G_MATCHED        106
-#define G_UNMATCHED         108      
-#define G_SELECTED        109
-#define G_UNSELECTED  108  
-#define G_REJECTED        109
-#define G_UNREJECTED  108 
-#define G_COMPLETE  108 
-#define G_STOPPED        109
-#define G_CONTINUE        109
+#define G_SELECTED        106
+#define G_CONTINUE        107
 #define G_SQUARE        110
 #define G_NESTED        111
 #define G_ERR_INDEX 200
@@ -106,13 +99,7 @@ int DELETE_TABLE(TABLE *);
 #define G_ERR_SCHEMA 207
 #define G_ERR_FILTER 203
 #define G_ERR_UNKNOWN 205
-// IO is fixed by index and name
-#define G_TABLE_SELF 2
-#define G_TABLE_OTHER 3
-#define G_TABLE_RESULT 4
-//const TRIPLE EXIT_TRIPLE = {"Exit",G_EXIT,0};
-//const TRIPLE SQL_TRIPLE = {"Sql",G_SQL,0};
-//const TRIPLE SCRATCH_TRIPLE = {"Scratch",G_SCRATCH,0};
+
 extern const TRIPLE SCRATCH_TRIPLE;
 extern const TRIPLE NULL_TRIPLE;
 typedef struct {

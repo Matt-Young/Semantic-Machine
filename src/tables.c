@@ -63,53 +63,56 @@ TABLE * get_table_name(const char * name) {
 typedef int (*handler)(TRIPLE);
 #define null_handler (handler) 0
 extern int pop_handler(TRIPLE);
+
 const struct {
 	int index;
 	int opid;
   char * sql;
   int (*handler)(TRIPLE);
+  int maptype;
   int parm[4];
 } pre_installed[3] = {
 {pop_triple_operator,G_POP,"select key,link,pointer from %s where (gfun(0,rowid) == rowid);",pop_handler,
-0,0,0,0},
+BIND_DEFAULT,0,0,0,0},
 {append_triple_operator,G_APPEND,"insert into %s values( ?, ?, ?) ;",null_handler,
-(BIND_TRIPLE << 4),0,0,0},
+BIND_TRIPLE,0,0,0,0},
 {update_triple_operator,G_UPDATE,"update %s set pointer = ? where rowid = (? + 1);",null_handler,
-(BIND_GRAPH << 4) + BIND_GRAPH_ROW, (BIND_GRAPH << 4) + BIND_GRAPH_START,0,0},
+BIND_GRAPH,0,0,0,0},
 };
 
- sqlite3_stmt * make_stmt(int index,char * table_name) {
+
+ int make_stmt(TABLE * table,int format,char * table_name) {
   char buff[200];
-  int i,status;
+  int i,status=SQLITE_OK;
   sqlite3_stmt *stmt;
-  int opid = pre_installed[index].opid;
+
+  int opid = pre_installed[format].opid;
+   int index = pre_installed[format].index;
+  TRIPLE *p = &table->operators[index]; 
   // make an sql script
-  G_sprintf(buff,pre_installed[index].sql, table_name);
+  G_sprintf(buff,pre_installed[format].sql, table_name);
   status= sqlite3_prepare_v2(m.db,buff,G_strlen(buff)+1, &stmt,0);
-//  triple_tables[index]->stmt = stmt;
+  p->key = (void *) stmt; 
+  p->link = opid;  p->pointer = 0;
   operands[opid].stmt = 0;  // Look in the table context for stmt
   for(i=0;i < 4;i++) {  // set bindings
-	operands[opid].vp[i] = pre_installed[index].parm[i];
+	operands[opid].vp[i] = pre_installed[format].parm[i];
     }
-  operands[opid].handler = pre_installed[index].handler;
+  operands[opid].handler = pre_installed[format].handler;
   operands[opid].properties = EV_Immediate;
-  return stmt;
+  return status;
 }
 
 int init_table(int index,char * name) {
   int status = SQLITE_OK;
-  TRIPLE t;
   int i;
-  //PGRAPH g = new_graph(LIST(index));
+
   TABLE * table =  new_table_context(name);
   del_create_table(table);
   triple_tables[index] = table;
-  //g->table = table;
-  // Turn operators into convenient triples
-  t.pointer =0; 
   for(i=0; i < NBUILTINS;i++) {
-		t.key = (const char *) make_stmt(i,name);
-  t.link = G_POP+i; table->operators[i] = t; 
+		make_stmt(table,i,name);
+
   }
   return status;
 }

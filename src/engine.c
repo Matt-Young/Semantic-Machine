@@ -13,7 +13,7 @@ const TRIPLE SCRATCH_TRIPLE = {"Scratch",G_SCRATCH,0};
 //triple bind, unbind
 void print_triple(TRIPLE t) { G_printf(" %s %d %d\n",t.key,t.link,t.pointer);}
 void unbind_triple(sqlite3_stmt *stmt,TRIPLE *t) {
-   t->key = (const char *) sqlite3_column_text( stmt, 0);
+   t->key = (void *) sqlite3_column_text( stmt, 0);
   t->link= sqlite3_column_int(stmt, 1);
   t->pointer= sqlite3_column_int(stmt, 2);
 }

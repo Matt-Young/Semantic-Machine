@@ -72,13 +72,10 @@ PGRAPH delete_graph(PGRAPH *list) {
   return parent;
 }
 void close_update_graph(PGRAPH *list) { 
-  int status; char buff[20];
-  PGRAPH child = *list;
-  TABLE *table = child->table;
-  G_sprintf(buff,"%d",table->index);  
-  table->operators[update_triple_operator].key = buff;
+  int status; 
+  TABLE * table = (*list)->table;
   status = triple(&table->operators[update_triple_operator],0);
-  //pass_parent_graph(*list);
+  //pass_parent_graph(*lis
   delete_graph(list);
 }
 int del_table_graph(PGRAPH *inner) {

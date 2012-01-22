@@ -40,7 +40,7 @@ COLINFO *init_col_info(TABLE * t) {
 
 TRIPLE column_decoder(COLINFO *c) {
 	TRIPLE s={0,0,0};
-      s.key = sqlite3_column_text(Statement,c->index);
+      s.key = (void *) sqlite3_column_text(Statement,c->index);
       c->index++;
       s.pointer++;
 	  s.link = 0;
