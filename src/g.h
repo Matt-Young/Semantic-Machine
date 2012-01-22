@@ -26,7 +26,7 @@ typedef struct {
 typedef struct  {
   char * name;
   int attribute;
-  TRIPLE operators[NBUILTINS + 2];
+  TRIPLE operators[NBUILTINS + 5];
   int index;
   struct g * list;  //points to the innermost current graph
   COLINFO  info;
@@ -123,7 +123,8 @@ typedef struct {
 int init_tables();
 int init_gfun();
 
-int triple(TRIPLE top,HANDLER);
+int triple(TRIPLE top[],HANDLER);
+sqlite3_stmt * bind_sql(TRIPLE top[]);
 int gfun_callback(TRIPLE t);
 void G_error(char * c,int i);
 int bind_index(sqlite3_stmt *stmt,int i,int j);
@@ -137,7 +138,7 @@ int set_row(int ivar);
 int _row();
 int stopped_row();
 int key_op(char * key);
-sqlite3_stmt * bind_sql(TRIPLE top);
+
 void set_table_name(char * name,int index);
 TABLE * get_table_name(const char * name);
 int init_table(int,char *);
@@ -145,7 +146,7 @@ int init_gbase();
 int install_sql_script(char * ch,int opid);
 void print_triple(TRIPLE t);
 int init_tables();
-void * start_select();
+
 int dispatch();
 int parser();
 int event_handler(TRIPLE t);

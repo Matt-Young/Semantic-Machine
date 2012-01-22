@@ -5,29 +5,27 @@
 extern OP operands[];
 extern M m;
 // Table stuff, this will change fast and become part of named graphs
-// right now it assumes pre installed triplet tables for test
-// not well linked in
 PTABLE triple_tables[20];
 
 int del_table_count=0,new_table_count=0;
 // direct sql utilities
 #define Sql_create "drop table if exists %s; create table %s (key text,link integer, pointer integer);" 
-int CREATE_TABLE(TABLE *table) {
+int del_create_table(TABLE *table) {
   char buff[400];char  *err;int status;
   TRIPLE t = {buff,G_EXEC,0};
   G_sprintf(buff,Sql_create,table->name,table->name);
     status = sqlite3_exec(m.db,buff,0,0,&err);
   return( status);
 }
-#define Sql_delete "delete from %s;"
-int DELETE_TABLE(TABLE *table) {
+#define Sql_delete_rows "delete from %s;"
+int del_table_rows(TABLE *table) {
   char buff[400], *err; int status;
-  G_sprintf(buff,Sql_delete,table->name,table->name);
+  G_sprintf(buff,Sql_delete_rows,table->name,table->name);
     status = sqlite3_exec(m.db,buff,0,0,&err);
 	return(status);
 }
 
-PTABLE  new_table(char * name) {
+PTABLE  new_table_context(char * name) {
   PTABLE pt;
   pt = (PTABLE) G_calloc(sizeof(GRAPH));
   pt->name = (char *) G_calloc(G_strlen(name));
@@ -36,16 +34,14 @@ PTABLE  new_table(char * name) {
   new_table_count++;
   return pt;
 }
-void free_table(PTABLE pt) {
+void free_table_context(PTABLE pt) {
    if(del_table_count >= new_table_count)
 		G_error("Bad table",G_ERR_GRAPH);
     G_free((void *) pt->name);
 	G_free((void *) pt);
 	del_table_count++;
 }
-PGRAPH *LIST(int i) {
-  return (PGRAPH *) triple_tables[i]->list;
-}
+
 char * NAME(TABLE *table) {
   return table->name;
 }
@@ -105,8 +101,8 @@ int init_table(int index,char * name) {
   TRIPLE t;
   int i;
   //PGRAPH g = new_graph(LIST(index));
-  TABLE * table =  new_table(name);
-  CREATE_TABLE(table);
+  TABLE * table =  new_table_context(name);
+  del_create_table(table);
   triple_tables[index] = table;
   //g->table = table;
   // Turn operators into convenient triples

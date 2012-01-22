@@ -41,12 +41,7 @@ FILTER * new_filter() {
   }
 FILTER *f;
 
-void * start_select() {
-FILTER *f = new_filter();
-f->g[0] = *LIST(0);
-f->status = G_UNREADY;
-return (void *) f;
-};
+
 FILTER *delete_filter(FILTER * f) {
   FILTER * g;
   if(oldfilter >= newfilter) 
@@ -62,11 +57,7 @@ FILTER * close_filter(FILTER * f) {
   return delete_filter(f);
 }
 
-int deliver_output(TRIPLE t) {
-  PGRAPH output = *LIST(m.output);
-  append_graph(&output,t);
-  return SQLITE_OK;
-}
+
 
 sqlite3_stmt *Statement;
 //  **  READY FOR RUNNING ******
@@ -87,6 +78,7 @@ READYSET ready;
 FILTER * ready_filter() { return ready.filter;}
 TABLE * self_table() { return ready.self->table;}
 GRAPH * self_graph(){ return (GRAPH *) ready.self->table->list;}
+GRAPH * other_graph(){ return (GRAPH *) ready.other->table->list;}
 // msthods on graph pointers
 int stopped_row() {
 if(ready.self->row == ready.self->end)
@@ -130,7 +122,7 @@ int dispatch() {
     graph = set_ready_graph(g);
 
   }
-  triple(graph->table->operators[pop_triple_operator],0);
+  triple(&graph->table->operators[pop_triple_operator],0);
   return(SQLITE_OK);
 }
 

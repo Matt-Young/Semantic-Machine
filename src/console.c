@@ -41,9 +41,9 @@ int debug_counter=0;
 char * G_gets(char * line) {
 	if(debug_counter == 0) {
 		debug_counter++;
-		G_strcpy(line,"{abc,def,ghi}");
+		G_strcpy(line,"{abc.def.ghi}");
 	} else
-	G_strcpy(line,"");
+	G_strcpy(line,"\n");
 return(line);
 }
 #else

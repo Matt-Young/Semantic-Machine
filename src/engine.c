@@ -81,7 +81,7 @@ int  config_handler(TRIPLE t) {
 int sql_handler(TRIPLE node) {
   int status=SQLITE_OK;
   install_sql_script((char *) node.key,G_SCRATCH);
-  triple(SCRATCH_TRIPLE,0);
+  triple(&SCRATCH_TRIPLE,0);
   return status;
 }
 int call_handler(TRIPLE node) {
@@ -106,7 +106,7 @@ int pop_handler(TRIPLE node) {
   TRIPLE t;
   //incr_row(1);
   unbind_triple(operands[node.link].stmt,&t);
-  status = triple(t,0);
+  status = triple(&t,0);
   if(stopped_row() )
     status = G_DONE;
   return status;
@@ -153,15 +153,15 @@ int ghandler(TRIPLE top,int status,int (*handler)(TRIPLE)) {
 // We get here when a graph produces a triplet that heads a subsequence
 // The link then holds the specified graph operator, 
 // this sifts through and finds a handler
-int triple(TRIPLE top,int (*handler)(TRIPLE)) {
+int triple(TRIPLE top[],int (*handler)(TRIPLE)) {
   OP *op;
   int status= SQLITE_OK;
   sqlite3_stmt * stmt; 
   void * key;
   key = 0;
-  if(top.link >= OPERMAX) 
+  if(top[0].link >= OPERMAX) 
     return SQLITE_MISUSE;
-  op = &operands[top.link && LINKMASK];
+  op = &operands[top[0].link && LINKMASK];
   if(op->properties & EV_No_bind) 
 	  stmt = op->stmt;
   else 
@@ -176,7 +176,7 @@ int triple(TRIPLE top,int (*handler)(TRIPLE)) {
         sqlite3_reset(stmt);
 	    //sqlite3_reset(stmt);
       }
-    status = ghandler(top,status,handler);
+    status = ghandler(top[0],status,handler);
     }  while( status == SQLITE_ROW );
   if(key)
     delkey((const char *) key);
@@ -221,7 +221,7 @@ int main(int argc, char * argv[])
   int status; 
   //status = init_dll(); 
   status = init_gbase();
-  for(;;) triple(G_null_graph,0);
+  for(;;) triple(&G_null_graph,0);
   //for(;;) status = dispatch();
   G_exit(0);
 }

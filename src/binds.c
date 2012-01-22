@@ -29,20 +29,21 @@ int bind_default(sqlite3_stmt *stmt,TRIPLE top,int j,int i) {
 }
 // various binds
 
-int bind_triple(sqlite3_stmt *stmt,TRIPLE top) {
+int bind_triple(sqlite3_stmt *stmt,TRIPLE top[]) {
   int status; char buff[100];
   PGRAPH g = self_graph();
-  if(g->pending_triple.key) {
+ 
+  if(top[1].key) {
 	status = sqlite3_bind_text(stmt,1,
-	g->pending_triple.key,
-	G_strlen(g->pending_triple.key),0);
+	top[1].key,
+	G_strlen(top[1].key),0);
   } else // always forcing the default where missing 
   {
 	  G_sprintf(buff,"Script: \n%s\n",sqlite3_sql(stmt));
 	  status = sqlite3_bind_text(stmt,1,"abc",3,0);
   }
-  status = sqlite3_bind_int(stmt,2,g->pending_triple.link);
-  status = sqlite3_bind_int(stmt,3,g->pending_triple.pointer);
+  status = sqlite3_bind_int(stmt,2,top[1].link);
+  status = sqlite3_bind_int(stmt,3,top[1].pointer);
   return status;
   }
 char buffer[200];
@@ -58,7 +59,7 @@ int bind_schema(sqlite3_stmt *stmt,TRIPLE top) {
   g->row = g->start;
   index = 0;
   G_sprintf(buffer,"select ");
-  triple(table->operators[pop_triple_operator],local_handler);
+  triple(&table->operators[pop_triple_operator],local_handler);
   G_sprintf(buffer,"from %s where (gfun(0,rowid) == rowid);",
     NAME(g->table));
   install_sql_script(buffer,G_SCRATCH);
@@ -75,26 +76,25 @@ int bind_graph(sqlite3_stmt *stmt,PGRAPH g,int i,int j) {
   return status;
 }
 int bind_graph_var(sqlite3_stmt *stmt,TRIPLE top,int i,int j) {
-  int index;
   PGRAPH g;
-  index = G_atoi(top.key);
-  g = *LIST(index);
+  TABLE * t = get_table_name(top.key);
+  g = t->list;
   return bind_graph(stmt,g,i,j);
 }
 
 // Get bound up for a n sql step
 extern sqlite3_stmt * fetch_stmt(TRIPLE top);
 extern sqlite3_stmt * set_ready_stmt(TRIPLE top);
- sqlite3_stmt * bind_sql(TRIPLE top) {
+ sqlite3_stmt * bind_sql(TRIPLE top[]) {
   int status=SQLITE_OK;
   int i,j;
   sqlite3_stmt * stmt;
-  OP * op = &operands[top.link];
+  OP * op = &operands[top[0].link];
   // Get and set the stmt
   	if(op->properties & EV_Immediate)
-		stmt = (sqlite3_stmt *) top.key;
-	else if( operands[top.link].properties & EV_Operand)
-		stmt = operands[top.link].stmt; // operand table rules
+		stmt = (sqlite3_stmt *) top[0].key;
+	else if( operands[top[0].link].properties & EV_Operand)
+		stmt = operands[top[0].link].stmt; // operand table rules
 	else
 		return (0);
 
@@ -102,19 +102,20 @@ extern sqlite3_stmt * set_ready_stmt(TRIPLE top);
     j = op->vp[i];
     if(j) {
     if((j >> 4) == BIND_DEFAULT)
-      bind_default(stmt,top,j & 0x0f,i);
+      bind_default(stmt,top[0],j & 0x0f,i);
     if((j >> 4) == BIND_GRAPH)
-      bind_graph_var(stmt,top,j & 0x0f,i);
+      bind_graph_var(stmt,top[0],j & 0x0f,i);
     if((j >> 4) == BIND_SELF)
-      bind_graph(stmt,*LIST(2),j & 0x0f,i);
+      bind_graph(stmt,self_graph(),j & 0x0f,i);
     if((j >> 4) == BIND_OTHER)
-      bind_graph(stmt,*LIST(3),j & 0x0f,i);
+      bind_graph(stmt,other_graph(),j & 0x0f,i);
     if((j >> 4) == BIND_TRIPLE)
       bind_triple(stmt,top);
     if((j >> 4) == BIND_SCHEMA)
-      bind_schema(stmt,top);
+      bind_schema(stmt,top[0]);
     }
     }
+  m.status = SQLITE_OK;
   return stmt;
 }
 

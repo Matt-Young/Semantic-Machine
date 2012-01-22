@@ -1,6 +1,7 @@
 
 
 PGRAPH self_graph();
+PGRAPH other_graph();
 PGRAPH new_graph(PGRAPH *);
 PGRAPH delete_graph(PGRAPH *);
 void close_update_graph(PGRAPH *);
@@ -20,8 +21,10 @@ PGRAPH new_graph_by_index(int);
 PGRAPH *LIST(int i);
 #define pop_triple_operator 0
 #define append_triple_operator 1
-#define update_triple_operator 2
-#define installed_triple_operator 3
+#define triple_data 2
+#define update_triple_operator 3
+#define installed_triple_operator 4
+
 // events and properties
 #define EV_Null 0x01  // Do some null operation
 #define EV_No_bind 0x02 // This event requires no binding

@@ -77,13 +77,12 @@ void close_update_graph(PGRAPH *list) {
   TABLE *table = child->table;
   G_sprintf(buff,"%d",table->index);  
   table->operators[update_triple_operator].key = buff;
-  status = triple(table->operators[update_triple_operator],0);
+  status = triple(&table->operators[update_triple_operator],0);
   //pass_parent_graph(*list);
   delete_graph(list);
 }
 int del_table_graph(PGRAPH *inner) {
  if(*inner) {
-	DELETE_TABLE((*inner)->table);
 	while(*inner)
 		*inner = delete_graph(inner);
  }
@@ -100,7 +99,8 @@ PGRAPH p;
 int append_graph(PGRAPH *list,TRIPLE node) {
   int status=0;
   TABLE * t = (*list)->table;
-  status = triple(t->operators[append_triple_operator],0);
+  t->operators[triple_data] = node;
+  status = triple(&t->operators[append_triple_operator],0);
   t->list->row++;
   return(status);
 }
