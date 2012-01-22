@@ -39,7 +39,7 @@ int install_sql_script(char * ch,int opid) {
     sqlite3_prepare_v2(m.db,ch,G_strlen(ch)+1, 
         &operands[opid].stmt,0);
   operands[opid].handler=event_handler;
-        operands[opid].vp[0] = 0;
+        operands[opid].maps[0] = 0;
  operands[opid].properties=0;
         return (SQLITE_OK);
 }
@@ -50,7 +50,6 @@ int install_sql_script(char * ch,int opid) {
   int variable;
 
 int  config_handler(TRIPLE t) {
-    int ivar;
     int status=SQLITE_OK;
     const char * ch = t.key; 
     //printf("Configure: \n");
@@ -70,9 +69,6 @@ int  config_handler(TRIPLE t) {
           G_error("Prepare",G_ERR_PREPARE);
         break;
       default: // parameters
-        ivar = t.pointer - 2;
-        if(0 <= ivar && ivar < NVARS) 
-          operands[variable].vp[ivar] = G_atoi(t.key);
         break;
     }
     return status;
@@ -128,8 +124,8 @@ int dup_handler(TRIPLE node){
   G_strcpy(buff,sqlite3_sql(operands[id].stmt));
   status = install_sql_script(buff,G_SCRATCH);
   if(status != SQLITE_OK) G_error("Dup",G_ERR_DUP);
-  for(i=0;operands[id].vp[i];i++) 
-    operands[G_SCRATCH].vp[i] = operands[id].vp[i];
+  for(i=0;operands[id].maps[i];i++) 
+    operands[G_SCRATCH].maps[i] = operands[id].maps[i];
   return SQLITE_OK;
 }
 

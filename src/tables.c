@@ -91,7 +91,7 @@ const struct new_install{
 	int opindex;
 	int opid;
 	char * sql;
-	char * name[4];
+	char * map_name[4];
 } installs[] = {
 	{pop_triple_operator,G_POP,"select key,link,pointer from %s where (gfun(0,rowid) == rowid);",0},
 	{append_triple_operator,G_APPEND,"insert into %s values( ?, ?, ?) ;",
@@ -114,14 +114,11 @@ Mapper null_map(void * p,int * i);
   status= sqlite3_prepare_v2(m.db,buff,G_strlen(buff)+1, &stmt,0);
   p->key = (char *) stmt; 
   p->link = opid;  p->pointer = 0;
-  operands[opid].stmt = 0;  // Look in the table context for stmt
-  operands[opid].maptype = pre_installed[format].maptype;
-  for(i=0;i < 4;i++) {  // set bindings
-	operands[opid].vp[i] = pre_installed[format].parm[i];
-    }
-  operands[opid].handler = pre_installed[format].handler;
+  operands[opid].stmt = stmt;  // Look in the table context for stmt
+  operands[opid].handler = 0;
   operands[opid].properties = EV_Immediate;
-  operands[opid].maps[0]=(Mapper)null_map;
+  for(i=0; installs[format].map_name[i];i++) 
+	  operands[opid].maps[0]= (Mapper) find_binder(installs[format].map_name[i]);
   return status;
 }
 

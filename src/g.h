@@ -1,8 +1,5 @@
 typedef struct {
-  int maptype;
-  int vp[4]; //maps
   Mapper maps[4]; //map handlers
-  int overload_operator;
   Code stmt;
   HANDLER handler;
   int properties;
