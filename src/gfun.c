@@ -83,22 +83,7 @@ READYSET ready;
 // Selecting an  installed sql statement
 // This is called afer it is determined an installed sql
 // it is always bound to the table context
-sqlite3_stmt * fetch_stmt(TRIPLE top) {
-	sqlite3_stmt *stmt;
-	TABLE * t;
-	// Get the part of this link that conatains the three bits 
-	// of graph layer overides
-	int op_sub_index = operands[top.link].properties & EV_Graph_Layer;
-	if(!(op_sub_index)) 
-		return (operands[top.link].stmt); // operand table rules
-	if(ready.self) t = ready.self->table; else t = ready.other->table;
-	 stmt = (sqlite3_stmt *) t->operators[op_sub_index].key;
-	return stmt;
-}
-sqlite3_stmt * set_ready_stmt(TRIPLE top) {
-	 ready.stmt= fetch_stmt(top);
-	 return(ready.stmt); 
-}
+
 FILTER * ready_filter() { return ready.filter;}
 TABLE * self_table() { return ready.self->table;}
 GRAPH * self_graph(){ return (GRAPH *) ready.self->table->list;}

@@ -30,14 +30,17 @@ int bind_default(sqlite3_stmt *stmt,TRIPLE top,int j,int i) {
 // various binds
 
 int bind_triple(sqlite3_stmt *stmt,TRIPLE top) {
-  int status;
+  int status; char buff[100];
   PGRAPH g = self_graph();
   if(g->pending_triple.key) {
 	status = sqlite3_bind_text(stmt,1,
 	g->pending_triple.key,
 	G_strlen(g->pending_triple.key),0);
-  } else // always forcing the default where missing
-	  status = sqlite3_bind_text(stmt,1,"'_'",3,0);
+  } else // always forcing the default where missing 
+  {
+	  G_sprintf(buff,"Script: \n%s\n",sqlite3_sql(stmt));
+	  status = sqlite3_bind_text(stmt,1,"abc",3,0);
+  }
   status = sqlite3_bind_int(stmt,2,g->pending_triple.link);
   status = sqlite3_bind_int(stmt,3,g->pending_triple.pointer);
   return status;
@@ -88,7 +91,12 @@ extern sqlite3_stmt * set_ready_stmt(TRIPLE top);
   sqlite3_stmt * stmt;
   OP * op = &operands[top.link];
   // Get and set the stmt
-  stmt = set_ready_stmt(top);
+  	if(op->properties & EV_Immediate)
+		stmt = (sqlite3_stmt *) top.key;
+	else if( operands[top.link].properties & EV_Operand)
+		stmt = operands[top.link].stmt; // operand table rules
+	else
+		return (0);
 
   for(i=0; op->vp[i]; i++ ) {
     j = op->vp[i];

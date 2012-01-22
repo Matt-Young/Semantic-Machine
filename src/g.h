@@ -22,10 +22,7 @@ typedef struct {
   int index;
 } COLINFO;
 #define NBUILTINS 3
-#define pop_triple_operator 0
-#define append_triple_operator 1
-#define update_triple_operator 2
-#define installed_triple_operator 3
+
 typedef struct  {
   char * name;
   int attribute;
@@ -66,7 +63,9 @@ int DELETE_TABLE(TABLE *);
 #define G_EXIT 0
 #define G_SWAP 2
 #define G_POP 3
-#define G_POP_MAX 6
+#define G_APPEND 4
+#define G_UPDATE 5
+#define G_GRAPH_MAX 6
 #define GCHAR '_'
 #define G_CALL 8
 #define G_DUP 9
@@ -74,8 +73,6 @@ int DELETE_TABLE(TABLE *);
 #define G_SQL 11
 #define G_SCRIPT 15
 #define G_CONFIG 16
-#define G_INSERT 17
-#define G_UPDATE 20
 #define G_USERMIN 24
 #define G_SCRATCH  25
 #define G_NULL  GCHAR

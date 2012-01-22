@@ -1,6 +1,7 @@
 // G engine
 #include "../include/sqlite3.h"
 #include "g.h"
+#include "graphs.h"
 M m;
 #define NVARS 5
 OP operands[OPERMAX];
@@ -137,7 +138,7 @@ int ghandler(TRIPLE top,int status,int (*handler)(TRIPLE)) {
   m.status = status;
   if( (status != SQLITE_ROW) && (status != SQLITE_DONE) && (status != SQLITE_OK)  )
      G_error("ghandle entry",G_ERR_ENTRY);
-  else if(status == SQLITE_DONE && top.link <= G_POP_MAX ) 
+  else if(status == SQLITE_DONE && top.link <= G_GRAPH_MAX ) 
       m.status =  G_DONE;  
   else if(status != SQLITE_ROW && status != SQLITE_OK) 
     G_error("Ghandle ",G_ERR_HANDLER);
@@ -161,15 +162,12 @@ int triple(TRIPLE top,int (*handler)(TRIPLE)) {
   if(top.link >= OPERMAX) 
     return SQLITE_MISUSE;
   op = &operands[top.link && LINKMASK];
-  if(top.link >= G_INSERT) {
-    key = newkey(top.key);
-    top.key = (char *) key;
-    //status = bind_sql(op,top);
+  if(op->properties & EV_No_bind) 
+	  stmt = op->stmt;
+  else 
 	stmt = bind_sql(top);
-    if(status != SQLITE_OK) 
+  if(m.status != SQLITE_OK) 
       G_error("bind \n",G_ERR_BIND);
-  }  
-  else stmt = op->stmt;
   do {
     if(stmt) {
 	//if(stmt) {
@@ -200,13 +198,16 @@ const MAP map[CALLS] = {
 };
 void init_handlers() {
   int i;
-   for(i=0;i < CALLS;i++)
+   for(i=0;i < CALLS;i++) {
      operands[map[i].index].handler = map[i].handler;
+	 operands[map[i].index].properties = EV_No_bind;
+	 operands[map[i].index].stmt=0; 
+   }
 }
 int init_gbase() {
   int status,i;
    status = sqlite3_open(GBASE,&m.db);
-  for(i=G_USERMIN;i < OPERMAX;i++)
+  for(i=G_USERMIN;i < OPERMAX;i++) 
     operands[i].handler = event_handler;
   init_handlers();
   status = init_tables();
