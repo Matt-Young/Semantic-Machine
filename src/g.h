@@ -1,58 +1,24 @@
-
-typedef struct {
-  void * key; 
-  int link;
-  int pointer;
-} TRIPLE;
-
-typedef int (*HANDLER)(TRIPLE);
-extern TRIPLE G_null_graph;
 typedef struct {
   int maptype;
   int vp[4]; //maps
+  Mapper maps[4]; //map handlers
   int overload_operator;
-  sqlite3_stmt *stmt;
+  Code stmt;
   HANDLER handler;
   int properties;
   } OP;
-typedef struct {
-  int col_count;
-  int rowid;
-  const char * name[8]; 
-  int type[8];
-  int index;
-} COLINFO;
-#define NBUILTINS 3
 
-typedef struct  {
-  char * name;
-  int attribute;
-  TRIPLE operators[NBUILTINS + 5];
-  int index;
-  struct g * list;  //points to the innermost current graph
-  COLINFO  info;
-} TABLE;
-typedef struct  g {
-  int row;
-  int start;
-  int end;
-  TABLE * table;
-  struct g * parent;
-  int match_state;
-  TRIPLE pending_triple;
-} GRAPH;
-typedef GRAPH * PGRAPH; 
+extern OP operands[];
+#define TABLE_SQUARE 1
+#define TABLE_NULL  2
+
 typedef struct f { 
 	int status;
   PGRAPH g[2];
   int properties;
   struct f *prev,*next;
 } FILTER;
-typedef TABLE *PTABLE;
-char * NAME(TABLE *);
-int ATTRIBUTE(TABLE *);
-TABLE * TABLE_POINTER(int i);
-int DELETE_TABLE(TABLE *);
+
 //limits and constants
 #define OPERMAX 128
 
@@ -87,7 +53,7 @@ int DELETE_TABLE(TABLE *);
 #define G_START        104
 #define G_SELECTED        106
 #define G_CONTINUE        107
-#define G_SQUARE        110
+
 #define G_NESTED        111
 #define G_ERR_INDEX 200
 #define G_ERR_PREPARE 201
@@ -102,16 +68,20 @@ int DELETE_TABLE(TABLE *);
 
 extern const TRIPLE SCRATCH_TRIPLE;
 extern const TRIPLE NULL_TRIPLE;
+
+
 typedef struct {
     sqlite3 *db;
   int status;
   int output;
   } M;
+
+extern M m;
 int init_tables();
 int init_gfun();
 
 int triple(TRIPLE top[],HANDLER);
-sqlite3_stmt * bind_sql(TRIPLE top[]);
+int bind_sql(TRIPLE top[],Code *);
 int gfun_callback(TRIPLE t);
 void G_error(char * c,int i);
 int bind_index(sqlite3_stmt *stmt,int i,int j);
@@ -128,6 +98,7 @@ int key_op(char * key);
 
 void set_table_name(char * name,int index);
 TABLE * get_table_name(const char * name);
+PGRAPH get_table_graph(int index);
 int init_table(int,char *);
 int init_gbase();
 int install_sql_script(char * ch,int opid);

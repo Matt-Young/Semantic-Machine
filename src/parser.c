@@ -1,6 +1,6 @@
 #include "../include/sqlite3.h"
-#include "g.h"
-#include "graphs.h"
+#include "all.h"
+
 
 #define DISCARD 256
 
@@ -28,7 +28,8 @@ char * process_block(PGRAPH *inner) {
       i=0;
       nchars = key_op(start);
       op = start[nchars];
-      if((nchars == 0) && (op == 0)) done=1;
+      if((nchars == 0) && (op == 0))
+		  done=1;
       if((nchars > 0) && (op == 0)) op='.'; // default operator
 	  next.key=start;next.link=op;next.pointer=(*inner)->row+1;
       start[nchars]=0;
@@ -98,11 +99,11 @@ int parser() {
   char * start;
   TABLE * t = get_table_name("console");
   PGRAPH * pt = (PGRAPH *) (&t->list);
-  for(;;) {
+ // for(;;) {
     G_printf("%c",G_NULL);
     start = process_block(pt);
-    G_exit();
-  }
-  return(0);
+  //  G_exit();
+  //}
+  return(SQLITE_OK);
 }
 

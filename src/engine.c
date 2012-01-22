@@ -1,7 +1,6 @@
 // G engine
 #include "../include/sqlite3.h"
-#include "g.h"
-#include "graphs.h"
+#include "all.h"
 M m;
 #define NVARS 5
 OP operands[OPERMAX];
@@ -81,7 +80,7 @@ int  config_handler(TRIPLE t) {
 int sql_handler(TRIPLE node) {
   int status=SQLITE_OK;
   install_sql_script((char *) node.key,G_SCRATCH);
-  triple(&SCRATCH_TRIPLE,0);
+  triple((TRIPLE *) &SCRATCH_TRIPLE,0);
   return status;
 }
 int call_handler(TRIPLE node) {
@@ -156,16 +155,15 @@ int ghandler(TRIPLE top,int status,int (*handler)(TRIPLE)) {
 int triple(TRIPLE top[],int (*handler)(TRIPLE)) {
   OP *op;
   int status= SQLITE_OK;
-  sqlite3_stmt * stmt; 
+  Code stmt; 
   void * key;
   key = 0;
   if(top[0].link >= OPERMAX) 
     return SQLITE_MISUSE;
   op = &operands[top[0].link && LINKMASK];
-  if(op->properties & EV_No_bind) 
-	  stmt = op->stmt;
-  else 
-	stmt = bind_sql(top);
+  stmt = op->stmt;
+  if(!(op->properties & EV_No_bind))  
+	status = bind_sql(top,&stmt);
   if(m.status != SQLITE_OK) 
       G_error("bind \n",G_ERR_BIND);
   do {
@@ -206,12 +204,14 @@ void init_handlers() {
 }
 int init_gbase() {
   int status,i;
+  init_binders();
    status = sqlite3_open(GBASE,&m.db);
   for(i=G_USERMIN;i < OPERMAX;i++) 
     operands[i].handler = event_handler;
   init_handlers();
   status = init_tables();
   init_gfun();
+
   return status;
 }
 // do the default _

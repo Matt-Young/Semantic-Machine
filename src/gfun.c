@@ -1,12 +1,10 @@
 
 #include "../include/sqlite3.h"
-#include "g.h"
-#include "graphs.h"
-extern OP operands[];
-extern M m;
-extern TABLE tables[];
+#include "all.h"
+
+
 PGRAPH schema_graph=0;
-extern TABLE tables[];
+
 const TRIPLE NULL_TRIPLE={"_",96,0};
 // 
 PGRAPH other(PGRAPH  g);
@@ -16,13 +14,12 @@ int counter=0;
 // Null is alwys operational
 FILTER null_filter;
 PGRAPH  set_ready_graph(FILTER *f) ;
-int init_gfun() {
-	null_filter.g[0]=0;
-	null_filter.g[1]=0;
-	operands['_'].properties= EV_Null;
-	set_ready_graph(&null_filter);
-	return 0;
+Mapper filter_map(Pointer * pointer,int * type) {
+*pointer = (void *) &null_filter;
+*type = 6;
+return 0;
 }
+
 FILTER *filter_list=&null_filter;
 int newfilter=0;
 int oldfilter=0;
@@ -40,8 +37,6 @@ FILTER * new_filter() {
     return(f);
   }
 FILTER *f;
-
-
 FILTER *delete_filter(FILTER * f) {
   FILTER * g;
   if(oldfilter >= newfilter) 
@@ -70,8 +65,20 @@ typedef struct {
   TRIPLE input_node;
   sqlite3_stmt * stmt;
 }  READYSET;
+
 READYSET ready;
-// Selecting an  installed sql statement
+Mapper map_self_row(Pointer * p,int *type) {
+	*p = (Pointer) ready.self->row;
+	*type = SQLITE_INTEGER;
+	return 0;
+	}
+Mapper map_self_start(Pointer * p,int *type) {
+	*p = (Pointer) ready.self->start;
+	*type = SQLITE_INTEGER;
+	return 0;
+	}
+
+	// Selecting an  installed sql statement
 // This is called afer it is determined an installed sql
 // it is always bound to the table context
 
@@ -180,8 +187,8 @@ int event_handler(TRIPLE t) {
   if(f->properties & EV_Null)
 	  event_exec(f);
   else if(f->properties & EV_Square)  {
-	if(f->g[0]->table->attribute == G_SQUARE)  do_square(0,f);
-	else if(f->g[1]->table->attribute == G_SQUARE) do_square(1,f);
+	if(f->g[0]->table->attribute == TABLE_SQUARE)  do_square(0,f);
+	else if(f->g[1]->table->attribute == TABLE_SQUARE) do_square(1,f);
   } else
     event_exec(f);
  
@@ -237,4 +244,16 @@ void gfunction(sqlite3_context* context,int n,sqlite3_value** v) {
     G_printf("gfun: %d %d\n",x,ready.self->row);
     sqlite3_result_int(context, 0);
   }
+}
+NamedAccessor accessor_list[] = {
+	{ "Filter", (Mapper) filter_map},{"SelfRow",(Mapper) map_self_row},
+	{"SelfStart",(Mapper) map_self_start}, {0,0} };
+int init_gfun() {
+	NamedAccessor a ={"Ready",(Mapper)filter_map};
+	null_filter.g[0]=0;
+	null_filter.g[1]=0;
+	operands['_'].properties= EV_Null;
+	set_ready_graph(&null_filter);
+	new_binders(accessor_list);
+	return 0;
 }

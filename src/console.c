@@ -43,7 +43,7 @@ char * G_gets(char * line) {
 		debug_counter++;
 		G_strcpy(line,"{abc.def.ghi}");
 	} else
-	G_strcpy(line,"\n");
+	G_strcpy(line,"");
 return(line);
 }
 #else

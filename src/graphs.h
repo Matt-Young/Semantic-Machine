@@ -1,5 +1,14 @@
 
-
+typedef struct  g {
+  int row;
+  int start;
+  int end;
+  TABLE * table;
+  struct g * parent;
+  int match_state;
+  TRIPLE pending_triple;
+} GRAPH;
+typedef GRAPH * PGRAPH; 
 PGRAPH self_graph();
 PGRAPH other_graph();
 PGRAPH new_graph(PGRAPH *);
@@ -20,9 +29,10 @@ PGRAPH new_graph_by_index(int);
 PGRAPH *LIST(int i);
 #define pop_triple_operator 0
 #define append_triple_operator 1
-#define triple_data 2
+#define triple_data_0 2
 #define update_triple_operator 3
-#define installed_triple_operator 4
+#define triple_data_1 4
+#define installed_triple_operator 5
 
 // events and properties
 #define EV_Null 0x01  // Do some null operation

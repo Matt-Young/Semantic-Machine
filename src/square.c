@@ -1,6 +1,5 @@
 #include "../include/sqlite3.h"
-#include "g.h"
-#include "graphs.h"
+#include "all.h"
 extern OP operands[];
 extern M m;
 extern TABLE tables[];
@@ -53,7 +52,7 @@ TRIPLE ct,dt;
     c = init_col_info(f->g[0]->table);
     while(c->index < c->col_count) {
 		ct = column_decoder(c); 
-      if(f->g[1]->table->attribute == G_SQUARE) { 
+      if(f->g[1]->table->attribute == TABLE_SQUARE) { 
         d = init_col_info(f->g[1]->table);
         while(d->index < d->col_count) {
 			dt = column_decoder(d); 

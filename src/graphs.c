@@ -1,7 +1,6 @@
 
 #include "../include/sqlite3.h"
-#include "g.h"
-#include "graphs.h"
+#include "all.h"
 
 // every graph is an open subraph of its parent. 
 // the table holds a permanent pointer the the 
@@ -74,6 +73,8 @@ PGRAPH delete_graph(PGRAPH *list) {
 void close_update_graph(PGRAPH *list) { 
   int status; 
   TABLE * table = (*list)->table;
+   TRIPLE * data = &table->operators[triple_data_1];
+  data->key= (char *) table->index;
   status = triple(&table->operators[update_triple_operator],0);
   //pass_parent_graph(*lis
   delete_graph(list);
@@ -96,7 +97,7 @@ PGRAPH p;
 int append_graph(PGRAPH *list,TRIPLE node) {
   int status=0;
   TABLE * t = (*list)->table;
-  t->operators[triple_data] = node;
+  t->operators[triple_data_0] = node;
   status = triple(&t->operators[append_triple_operator],0);
   t->list->row++;
   return(status);

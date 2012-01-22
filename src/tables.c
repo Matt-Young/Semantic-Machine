@@ -1,11 +1,12 @@
 #include "../include/sqlite3.h"
-#include "g.h"
-#include "graphs.h"
-#include "binds.h"
+#include "all.h"
+
+
 extern OP operands[];
 extern M m;
 // Table stuff, this will change fast and become part of named graphs
-PTABLE triple_tables[20];
+#define NUMBER_TABLES 20
+PTABLE triple_tables[NUMBER_TABLES];
 
 int del_table_count=0,new_table_count=0;
 // direct sql utilities
@@ -26,17 +27,22 @@ int del_table_rows(TABLE *table) {
 }
 
 PTABLE  new_table_context(char * name) {
-  PTABLE pt;
+  PTABLE pt;int i;
   pt = (PTABLE) G_calloc(sizeof(GRAPH));
   pt->name = (char *) G_calloc(G_strlen(name));
   pt->list = 0;
+  pt->attribute = TABLE_NULL;
   G_strcpy(pt->name,name);
+  for(i=0;i< NUMBER_TABLES;i++) {if(triple_tables[i]==0) break;}
+  pt->index = i;
+  triple_tables[i] = pt;
   new_table_count++;
   return pt;
 }
 void free_table_context(PTABLE pt) {
    if(del_table_count >= new_table_count)
 		G_error("Bad table",G_ERR_GRAPH);
+   triple_tables[pt->index]=0;
     G_free((void *) pt->name);
 	G_free((void *) pt);
 	del_table_count++;
@@ -51,6 +57,8 @@ int ATTRIBUTE(TABLE *table) {
 
 TABLE * TABLE_POINTER(int i) { return triple_tables[i];}
 void set_table_name(char * name,int index) { triple_tables[index]->name =  name;}
+PGRAPH get_table_graph(int i){return triple_tables[i]->list;}
+
 TABLE * get_table_name(const char * name) { 
 	int i=0;
 	while(triple_tables[i]) {
@@ -77,10 +85,22 @@ BIND_DEFAULT,0,0,0,0},
 {append_triple_operator,G_APPEND,"insert into %s values( ?, ?, ?) ;",null_handler,
 BIND_TRIPLE,0,0,0,0},
 {update_triple_operator,G_UPDATE,"update %s set pointer = ? where rowid = (? + 1);",null_handler,
-BIND_GRAPH,0,0,0,0},
+BIND_UPDATE,0,0,0,0},
 };
-
-
+const struct new_install{
+	int opindex;
+	int opid;
+	char * sql;
+	char * name[4];
+} installs[] = {
+	{pop_triple_operator,G_POP,"select key,link,pointer from %s where (gfun(0,rowid) == rowid);",0},
+	{append_triple_operator,G_APPEND,"insert into %s values( ?, ?, ?) ;",
+	  "bind_triple",0},
+	{update_triple_operator,G_UPDATE,"update %s set pointer = ? where rowid = (? + 1);",
+	"bind_self_row","bind_self_start",0},
+	{0,0,0,0}
+};
+Mapper null_map(void * p,int * i);
  int make_stmt(TABLE * table,int format,char * table_name) {
   char buff[200];
   int i,status=SQLITE_OK;
@@ -92,14 +112,16 @@ BIND_GRAPH,0,0,0,0},
   // make an sql script
   G_sprintf(buff,pre_installed[format].sql, table_name);
   status= sqlite3_prepare_v2(m.db,buff,G_strlen(buff)+1, &stmt,0);
-  p->key = (void *) stmt; 
+  p->key = (char *) stmt; 
   p->link = opid;  p->pointer = 0;
   operands[opid].stmt = 0;  // Look in the table context for stmt
+  operands[opid].maptype = pre_installed[format].maptype;
   for(i=0;i < 4;i++) {  // set bindings
 	operands[opid].vp[i] = pre_installed[format].parm[i];
     }
   operands[opid].handler = pre_installed[format].handler;
   operands[opid].properties = EV_Immediate;
+  operands[opid].maps[0]=(Mapper)null_map;
   return status;
 }
 
@@ -109,7 +131,6 @@ int init_table(int index,char * name) {
 
   TABLE * table =  new_table_context(name);
   del_create_table(table);
-  triple_tables[index] = table;
   for(i=0; i < NBUILTINS;i++) {
 		make_stmt(table,i,name);
 
@@ -119,12 +140,13 @@ int init_table(int index,char * name) {
 void gfunction(sqlite3_context* context,int n,sqlite3_value** v);
 // pre insyalled, but these wiull become embedded in indices later
 #define NTAB 5
- char * n[NTAB] = {"console","config","self","other","result"};
+ char * n[NTAB] = {"console"};
 int init_tables() {
   int status,i;
   char buff[30];
-     status = sqlite3_create_function_v2(m.db,GFUN,2,SQLITE_UTF8 ,0,gfunction,0,0,0);
-	 for(i=0; i < 1;i++) 
+  G_memset(triple_tables,0,sizeof(triple_tables));
+  status = sqlite3_create_function_v2(m.db,GFUN,2,SQLITE_UTF8 ,0,gfunction,0,0,0);
+  for(i=0; i < 1;i++) 
 		 init_table(i,n[i]);
 	 G_sprintf(buff,"select '%c',%d,0;",G_NULL,G_NULL);
   install_sql_script(buff,G_NULL);
