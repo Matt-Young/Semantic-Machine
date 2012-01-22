@@ -11,16 +11,7 @@ const TRIPLE NULL_TRIPLE={"_",96,0};
 // 
 PGRAPH other(PGRAPH  g);
 int counter=0;
-// events and properties
-#define EV_Null 0x01
-#define EV_Wild_Triple 0x02
-#define EV_Incomplete 0x04
-#define EV_Set 0x08
-#define EV_Matchable 0x08
-#define EV_Matched 0x100
-#define EV_Square 0x100
-#define EV_Sql_Done EV_Null
-#define EV_Overide 0x200
+
 typedef struct f { 
 	int status;
   PGRAPH g[2];
@@ -93,16 +84,23 @@ typedef struct {
   TRIPLE input_node;
 }  READYSET;
 READYSET ready;
-sqlite3_stmt * fetch_stmt(OP *op,TRIPLE top) {
-sqlite3_stmt *stmt;
-  if(ready.other->table->attribute & EV_Overide)
-	  stmt = ready.other->table->stmt;
-  else if(ready.self->table->attribute & EV_Overide)
-	  stmt = ready.self->table->stmt;
-  else stmt = operands[top.link].stmt;
-  return stmt;
+// Selecting an  installed sql statement
+// This is called afer it is determined an installed sql
+// it is always bound to the table context
+sqlite3_stmt * fetch_stmt(TRIPLE top) {
+	sqlite3_stmt *stmt;
+	if(operands[top.link].properties & EV_Overide) {
+		if(ready.other)
+			stmt = ready.other->table->stmt;
+		else if(ready.self)
+			stmt = ready.self->table->stmt;
+		else stmt = operands[top.link].stmt;
+	} else stmt = operands[top.link].stmt;
+	return stmt;
 }
 FILTER * ready_filter() { return ready.filter;}
+TABLE * self_table() { return ready.self->table;}
+GRAPH * self_graph(){ return (GRAPH *) ready.self->table->list;}
 // msthods on graph pointers
 int stopped_row() {
 if(ready.self->row == ready.self->end)
@@ -125,9 +123,11 @@ int reset_ready_set() {
 }
 PGRAPH  set_ready_graph(FILTER *f) {
 	G_memset(&ready,0,sizeof(ready));
-		ready.filter = f;
+	ready.filter = f;
   if(f->g[0]) 
 	 ready.self = f->g[0];
+  if(f->g[1]) 
+	 ready.other = f->g[1];
   return ready.self;
 }
 int dispatch() {
@@ -172,12 +172,15 @@ int default_sub_query() {
   f->status = G_UNREADY;
   return 0;
 }
+extern PGRAPH init_parser(char *);
 int event_exec(FILTER * f) {
   int g_event =f->properties;
   switch(g_event) {
   case EV_Null:
-            g_event |= parser();
-			//g_event |= set_ready_graph();
+	  null_filter.g[0] = init_parser("console");
+	  set_ready_graph(&null_filter);
+      g_event |= parser();
+	 //g_event |= set_ready_graph(&null_filter);
             break;
   default:
 	  g_event |=events(f);
@@ -237,10 +240,10 @@ void gfunction(sqlite3_context* context,int n,sqlite3_value** v) {
         ready.self->row++;
     break;
   case OTHER_ROW:
-    sqlite3_result_int(context, other(ready.other)->row+1);
-    if(x == other(ready.other)->row+1) 
-      if(other(ready.other)->row+1 != other(ready.other)->end)
-        other(ready.other)->row++;
+    sqlite3_result_int(context, ready.other->row+1);
+    if(x == ready.other->row+1) 
+      if(ready.other->row+1 != ready.other->end)
+        ready.other->row++;
     break;
   case RESULT_ROW:
     sqlite3_result_int(context, ready.result->row+1);

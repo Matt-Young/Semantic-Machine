@@ -40,6 +40,7 @@ int install_sql_script(char * ch,int opid) {
         &operands[opid].stmt,0);
   operands[opid].handler=event_handler;
         operands[opid].vp[0] = 0;
+ operands[opid].properties=0;
         return (SQLITE_OK);
 }
 
@@ -163,18 +164,18 @@ int triple(TRIPLE top,int (*handler)(TRIPLE)) {
   if(top.link >= G_INSERT) {
     key = newkey(top.key);
     top.key = (char *) key;
-    status = bind_sql(op,top);
-	//stmt = bind_sql(op,top);
+    //status = bind_sql(op,top);
+	stmt = bind_sql(top);
     if(status != SQLITE_OK) 
       G_error("bind \n",G_ERR_BIND);
   }  
   else stmt = op->stmt;
   do {
-    if(op->stmt) {
+    if(stmt) {
 	//if(stmt) {
-      status = sqlite3_step(op->stmt );
+      status = sqlite3_step(stmt );
       if(status == SQLITE_DONE)
-        sqlite3_reset(op->stmt);
+        sqlite3_reset(stmt);
 	    //sqlite3_reset(stmt);
       }
     status = ghandler(top,status,handler);

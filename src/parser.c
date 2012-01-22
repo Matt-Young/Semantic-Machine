@@ -88,14 +88,21 @@ char * process_block(PGRAPH *inner) {
   return(0);
 }
 
-
+PGRAPH init_parser(char * name) {
+	int status;
+  TABLE * t = get_table_name(name);
+  status = new_table_graph(t); 
+  return(t->list);
+}
 int parser() {
   char * start;
+  TABLE * t = get_table_name("console");
+  PGRAPH * pt = (PGRAPH *) (&t->list);
   for(;;) {
     G_printf("%s","_");
-    del_table_graph(LIST(2));
-    start = process_block(LIST(2));
-    //reset_graphs(LIST(2));
+    new_table_graph(t);
+    start = process_block(pt);
+    G_exit();
   }
   return(0);
 }

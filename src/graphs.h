@@ -15,7 +15,7 @@ PGRAPH delete_graph(PGRAPH *);
 void close_update_graph(PGRAPH *);
 int append_graph(PGRAPH *,TRIPLE );
 int del_table_graph(PGRAPH *);
-
+int new_table_graph(TABLE * table);
 //void reset_G_columns();
 
 int empty_graph(PGRAPH );
@@ -27,3 +27,13 @@ void pass_parent_graph(PGRAPH );
 
 PGRAPH new_graph_by_index(int);
 PGRAPH *LIST(int i);
+// events and properties
+#define EV_Null 0x01
+#define EV_Wild_Triple 0x02
+#define EV_Incomplete 0x04
+#define EV_Set 0x08
+#define EV_Matchable 0x08
+#define EV_Matched 0x100
+#define EV_Square 0x100
+#define EV_Sql_Done EV_Null
+#define EV_Overide 0x200

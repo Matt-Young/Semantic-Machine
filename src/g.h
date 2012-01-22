@@ -38,7 +38,7 @@ int DELETE_TABLE(TABLE *);
 #define OPERMAX 128
 
 // Three reserved names for local use b all G machines.
-#define GBASE "gbase"
+#define GBASE "c:/soft/gbase"
 #define GFUN "gfun"
 
 // fundamental links
@@ -119,8 +119,9 @@ int set_row(int ivar);
 int _row();
 int stopped_row();
 int key_op(char * key);
-sqlite3_stmt * bind_sql(OP *op,TRIPLE top);
+sqlite3_stmt * bind_sql(TRIPLE top);
 void set_table_name(char * name,int index);
+TABLE * get_table_name(char * name);
 int init_table(int,char *);
 int init_gbase();
 int install_sql_script(char * ch,int opid);

@@ -89,7 +89,14 @@ int del_table_graph(PGRAPH *inner) {
  }
   return 0;
 }
-
+int new_table_graph(TABLE * table) {
+PGRAPH p;
+ if(table->list) del_table_graph(&table->list);
+	p = new_graph(&table->list);
+	table->list = p; 
+ p->table = table;
+  return 0;
+}
 int append_graph(PGRAPH *list,TRIPLE node) {
   int status=0;
   char buff[20];
