@@ -3,6 +3,8 @@
 
 #define DISCARD 256
 typedef char * CharPointer;
+char * null_key = "_";
+int graph_counter;
 // Collects alphnumerics unti the next punctuation mark
 int key_op(const CharPointer base,CharPointer *current,int * op) {
       int i = 0;
@@ -20,15 +22,13 @@ int key_op(const CharPointer base,CharPointer *current,int * op) {
 char * process_block(PGRAPH *inner) {
   TRIPLE prev,next;
   char line[200],*start;
-  int nchars,done;
+  int nchars,named_count;
   prev.link = DISCARD;
-  done = 0;
   G_memset(line,0,200);
   start = line;
+  named_count=0;
   new_graph(inner); // enclose this work in a subgraph
   for(;;) {
-	done = 0;
-    while(!done ) {
       int i,op;
       i=0;
 	  nchars =key_op(line,&start,&op);
@@ -36,50 +36,41 @@ char * process_block(PGRAPH *inner) {
 		break;
       if(op == 0) op='.'; // default operator
 	  next.key=start;next.link=op;next.pointer=(*inner)->row+1;
+	  if(G_strlen(next.key) == 0) 
+			next.key = null_key;  // valid null key
       start[nchars]=0;
       start+=nchars+1;
-      if(prev.link == ':' )  {  // This one starts a sub graph
+	// Erase the bracket
+	if(next.link == '{') {
+			if(prev.link != ':')
+				new_graph(inner);
+		 next.link = DISCARD;
+	  } else if(next.link != '.') {
+	  // Case:  key.
+		  if(prev.link != '.')
+			  new_graph(inner);
+           append_graph(inner,next);
+	}  else if(next.link == ',' ) {
+// Case: key,X
+		if((prev.link != '.') && (prev.link != DISCARD) )
+			close_update_graph(inner);
+		new_graph(inner);
+		append_graph(inner,prev);
+// Case: key:X
+	} else if(next.link == ':' )  {  
+		named_count++;
         new_graph(inner);  
-        append_graph(inner,prev);
-        if(next.link == '{') // Making this a duplicate
-          next.link = DISCARD;
-        }else if(next.link == '{') {
-          if(prev.link != DISCARD) {
-            if(prev.link == ',') {
-              append_graph(inner,prev);
-              close_update_graph(inner);
-              new_graph(inner);
-            } else if(prev.link == '.') {
-               new_graph(inner);
-               append_graph(inner,prev);
-              }
-           }
-         next.link = DISCARD;
-        }   
-      else if((prev.link == '.') || (prev.link < G_USERMIN) )   { // Append triplet
-        if(G_strlen(prev.key) > 0)
-           append_graph(inner,prev); 
-	  } else if(prev.link == ',' ) {
-           if(G_strlen(prev.key) > 0)
-             append_graph(inner,prev);
-          close_update_graph(inner);
-	  //proces_block
-        new_graph(inner);
-      } else if(prev.link == '}') {
-        if(G_strlen(prev.key) > 0) {
-           next.link = '.';
-          append_graph(inner,prev);
-         }
-       close_update_graph(inner);
-     } else if(prev.link != DISCARD ) { 
+        append_graph(inner,next);
+	  } else if(next.link == '}' ) 
+		close_update_graph(inner);else if(prev.link != DISCARD ) 
+	else { 
+ // Who Knows?
         append_graph(inner,prev);
         close_update_graph(inner);
-	    //process block
         new_graph(inner);
-      }
+	  }
      prev = next;
     }  
-  }
   // finish up
   while((*inner)->parent) {
     if(empty_graph(*inner))
@@ -87,7 +78,6 @@ char * process_block(PGRAPH *inner) {
      else  
       close_update_graph(inner);  
   }
-
   return(0);
 }
 
@@ -98,12 +88,11 @@ PGRAPH init_parser(char * name) {
   return(t->list);
 }
 int parser() {
-  char * start;
   TABLE * t = get_table_name("console");
   PGRAPH * pt = (PGRAPH *) (&t->list);
  // for(;;) {
     G_printf("%c",G_NULL);
-    start = process_block(pt);
+    process_block(pt);
   //  G_exit();
   //}
   return(SQLITE_OK);
