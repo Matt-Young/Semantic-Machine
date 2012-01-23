@@ -39,7 +39,6 @@ typedef struct f {
 #define G_CONFIG 16
 #define G_USERMIN 24
 #define G_SCRATCH  25
-#define G_NULL  GCHAR
 #define SCRATCH_STR "25"
 
 

@@ -1,17 +1,9 @@
 
 #include "../include/sqlite3.h"
 #include "all.h"
-
-
-PGRAPH schema_graph=0;
-
 const TRIPLE NULL_TRIPLE={"_",96,0};
-// 
-PGRAPH other(PGRAPH  g);
-int counter=0;
 
-
-// Null is alwys operational
+// Null is always operational
 FILTER null_filter;
 PGRAPH  set_ready_graph(FILTER *f) ;
 Mapper filter_map(Pointer * pointer,int * type) {
@@ -53,8 +45,6 @@ FILTER * close_filter(FILTER * f) {
 }
 
 
-
-sqlite3_stmt *Statement;
 //  **  READY FOR RUNNING ******
 typedef struct {
   int count;
@@ -68,12 +58,26 @@ typedef struct {
 
 READYSET ready;
 Mapper map_self_row(Pointer * p,int *type) {
-	*p = (Pointer) ready.self->row;
+	if(ready.self)
+		*p = (Pointer) ready.self->row;
 	*type = SQLITE_INTEGER;
 	return 0;
 	}
 Mapper map_self_start(Pointer * p,int *type) {
-	*p = (Pointer) ready.self->start;
+	if(ready.self)
+		*p = (Pointer) ready.self->start;
+	*type = SQLITE_INTEGER;
+	return 0;
+	}
+Mapper map_other_row(Pointer * p,int *type) {
+	if(ready.other)
+		*p = (Pointer) ready.other->row;
+	*type = SQLITE_INTEGER;
+	return 0;
+	}
+Mapper map_other_start(Pointer * p,int *type) {
+	if(ready.other)
+		*p = (Pointer) ready.other->start;
 	*type = SQLITE_INTEGER;
 	return 0;
 	}
@@ -246,8 +250,10 @@ void gfunction(sqlite3_context* context,int n,sqlite3_value** v) {
   }
 }
 NamedAccessor accessor_list[] = {
-	{ "Filter", (Mapper) filter_map},{"SelfRow",(Mapper) map_self_row},
-	{"SelfStart",(Mapper) map_self_start}, {0,0} };
+	{ "Filter", (Mapper) filter_map},
+	{"BindSelfRow",(Mapper) map_self_row},{"BindSelfStart",(Mapper) map_self_start}, 
+	{"BindOtherRow",(Mapper) map_self_row},{"BindOtherStart",(Mapper) map_self_start}, 	
+	{0,0} };
 int init_gfun() {
 	NamedAccessor a ={"Ready",(Mapper)filter_map};
 	null_filter.g[0]=0;

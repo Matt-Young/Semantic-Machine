@@ -210,7 +210,7 @@ int init_machine() {
   init_tables();
   init_gfun();
   init_console();
-
+  print_binders();
   return status;
 }
 // do the default _

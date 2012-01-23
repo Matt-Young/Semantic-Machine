@@ -36,12 +36,13 @@ Mapper  find_binder(char * name) {
 			return((Mapper) binders[i].mapper);
 	return 0;}
 // various binds
-Mapper null_map(Pointer  p,int * i) { 
+Mapper null_map(Pointer  pointer,int  *type) { 
+	*type = G_NULL;
 	return 0;}
-Mapper map_triple(Pointer *j,int *type) {
+Mapper map_triple(Pointer *pointer,int *type) {
 	*type = G_TRIPLE;
 	return 0;}
-NamedAccessor a[] ={ {"null",(Mapper) null_map},{"BindTriple",(Mapper) map_triple},{0,0}};
+NamedAccessor a[] ={ {"BindNull",(Mapper) null_map},{"BindTriple",(Mapper) map_triple},{0,0}};
 int init_binders() {
 	bind_count=0;
 	new_binders(a);
@@ -95,3 +96,16 @@ int local_handler(TRIPLE t) {
 	  G_sprintf(buff,"Script: \n%s\n",sqlite3_sql(stmt));
 	  status = sqlite3_bind_text(stmt,1,"abc",3,0);
   }*/
+
+ 
+ void print_binders() { 
+	int i;
+	Pointer p; int type;
+	for(i=0; binders[i].name;i++) {
+		if(binders[i].mapper)
+			binders[i].mapper( (Pointer *) &p,&type);
+		else
+			type = G_NULL;
+		G_printf("%s %d %d \n",binders[i].name,type,i);
+	}
+	}

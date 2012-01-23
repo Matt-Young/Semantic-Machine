@@ -5,6 +5,7 @@ extern NamedAccessor binders[];
 extern TRIPLE G_null_graph;
 int init_binders();
 int new_binders(NamedAccessor[]);
+void print_binders();
 Mapper  find_binder(char * name);
 
 #define BIND_DEFAULT 1
