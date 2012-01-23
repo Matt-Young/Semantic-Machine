@@ -221,7 +221,7 @@ Mapper map_debugger(Pointer * p,int *type) {
 	*type = G_TYPE_CODE;
 	return 0;
 	}
-NamedAccessor engine_accessor_list[] = { { "debug", (Mapper) map_debugger},{0,0}};
+NameValue engine_accessor_list[] = { { "debug", (Mapper) map_debugger},{0,0}};
 const struct {char * name;int value;} internals[] =
 {{"script",G_SCRIPT},{"exec",G_EXEC},
 {"config",G_CONFIG},
@@ -235,11 +235,11 @@ int main(int argc, char * argv[])
 {
   int status; 
   //status = init_dll(); 
-    init_binders();
-	new_binders(engine_accessor_list);
+    init_name_value();
+	add_name_value(engine_accessor_list);
   status = init_machine();
 
-  print_binders();
+  print_name_value();
   for(;;) triple(&G_null_graph,0);
   //for(;;) status = dispatch();
   G_exit(0);

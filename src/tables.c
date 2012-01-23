@@ -96,7 +96,7 @@ Mapper null_map(void * p,int * i);
   operands[opid].handler = 0;
   operands[opid].properties = EV_Immediate;
   for(i=0; installs[format].map_name[i];i++) 
-	  operands[opid].maps[0]= (Mapper) find_binder(installs[format].map_name[i]);
+	  operands[opid].maps[0]= (Mapper) find_name_value(installs[format].map_name[i]);
   return status;
 }
 
@@ -117,17 +117,17 @@ void gfunction(sqlite3_context* context,int n,sqlite3_value** v);
  
 
 int init_tables() {
-	NamedAccessor a[] = {{"TablesInit",0},{0,0}};
+	NameValue a[] = {{"TablesInit",0},{0,0}};
   int status,i;
   char buff[30];
-  new_binders(a);
+  add_name_value(a);
   G_memset(triple_tables,0,sizeof(triple_tables));
   status = sqlite3_create_function_v2(g_db,GFUN,2,SQLITE_UTF8 ,0,gfunction,0,0,0);
   for(i=0; i < 1;i++) 
 		 init_table(i,n[i]);
 	 G_sprintf(buff,"select '%c',%d,0;",G_TYPE_NULL,G_TYPE_NULL);
   install_sql_script(buff,G_TYPE_NULL);
-  operands[G_DEBUG].maps[0]= (Mapper) find_binder("Debug");
+  operands[G_DEBUG].maps[0]= (Mapper) find_name_value("Debug");
   //operands[G_TYPE_NULL].maps[0]=
   return status;
 }

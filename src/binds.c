@@ -12,29 +12,9 @@ an index system built on the sqlite_master
 
 #define NUMBINDS 10
 int bind_count=0;
-NamedAccessor binders[NUMBINDS];
+NameValue binders[NUMBINDS];
 
-int new_binders(NamedAccessor pairs[]) {
-	int i=0;
-	char *  p;
-	NamedAccessor a;
-	while(pairs[i].name != 0) {
-		a = pairs[i];
-		p =  (char * )G_malloc(G_strlen(a.name));
-		G_strcpy((char *) p,a.name);
-		binders[bind_count].name = p;
-		binders[bind_count].mapper = a.mapper;
-		bind_count++;
-		i++;
-	}
-	return 0;
-}
-Mapper  find_binder(char * name) { 
-	int i;
-	for(i=0; binders[i].name;i++) 
-		if(!G_strcmp(binders[i].name,name))
-			return((Mapper) binders[i].mapper);
-	return 0;}
+
 // various binds
 Mapper null_map(Pointer  pointer,int  *type) { 
 	*type = G_TYPE_NULL;
@@ -42,12 +22,7 @@ Mapper null_map(Pointer  pointer,int  *type) {
 Mapper map_triple(Pointer *pointer,int *type) {
 	*type = G_TYPE_Triple;
 	return 0;}
-NamedAccessor a[] ={ {"BindNull",(Mapper) null_map},{"BindTriple",(Mapper) map_triple},{0,0}};
-int init_binders() {
-	bind_count=0;
-	new_binders(a);
-	return 0;
-}
+NameValue a[] ={ {"BindNull",(Mapper) null_map},{"BindTriple",(Mapper) map_triple},{0,0}};
 
 int local_handler(Triple t) {
 	char buffer[200];
@@ -105,15 +80,3 @@ int local_handler(Triple t) {
 	 char buff[200];
 	  G_sprintf(buff,"Script: \n%s\n",sqlite3_sql(stmt));
   }
-
- void print_binders() { 
-	int i;
-	Pointer p; int type;
-	for(i=0; binders[i].name;i++) {
-		if(binders[i].mapper)
-			binders[i].mapper( (Pointer *) &p,&type);
-		else
-			type = G_TYPE_NULL;
-		G_printf("%s %d %d \n",binders[i].name,type,i);
-	}
-	}

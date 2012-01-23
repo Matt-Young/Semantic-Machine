@@ -147,6 +147,7 @@ int event_exec(FILTER * f) {
   int g_event =f->properties;
   switch(g_event) {
   case EV_Null:
+	  
 	  null_filter.g[0] = init_parser("console");
 	  null_filter.event_table = null_filter.g[0]->table;
 	  null_filter.event_triple = 
@@ -238,13 +239,13 @@ void gfunction(sqlite3_context* context,int n,sqlite3_value** v) {
     sqlite3_result_int(context, 0);
   }
 }
-NamedAccessor gfun_accessor_list[] = {
+NameValue gfun_accessor_list[] = {
 	{ "Filter", (Mapper) filter_map},
 	{"BindSelfRow",(Mapper) map_self_row},{"BindSelfStart",(Mapper) map_self_start}, 
 	{"BindOtherRow",(Mapper) map_self_row},{"BindOtherStart",(Mapper) map_self_start}, 	
 	{0,0} };
 int init_gfun() {
-	new_binders(gfun_accessor_list);
+	add_name_value(gfun_accessor_list);
 	null_filter.g[0]=0;
 	null_filter.g[1]=0;
 	null_filter.properties= EV_Null;
