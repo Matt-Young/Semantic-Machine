@@ -8,8 +8,8 @@ an index system built on the sqlite_master
 #include "../include/sqlite3.h"
 #include "all.h"
 
-extern OP operands[];
-extern M m;
+
+
 #define NUMBINDS 10
 int bind_count=0;
 NamedAccessor binders[NUMBINDS];

@@ -81,12 +81,12 @@ int process_block(PGRAPH *inner) {
     }  
   // finish up
   while((*inner)->parent) {
-    if(empty_graph(*inner))
+    if(count_graph(*inner))
       delete_graph(inner);
      else  
       close_update_graph(inner);  
   }
-  return(0);
+  return(count_graph(*inner));
 }
 
 PGRAPH init_parser(char * name) {

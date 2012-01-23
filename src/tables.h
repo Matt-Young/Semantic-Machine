@@ -1,4 +1,4 @@
-#define NBUILTINS 5
+#define NBUILTINS 3
 typedef struct {
   int col_count;
   int rowid;

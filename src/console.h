@@ -14,3 +14,4 @@ int G_ispunct(int c);
 char *  G_gets(char * line);
 char * G_line(char * line);
 void G_debug(void * format);
+#define DEBUG

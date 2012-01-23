@@ -1,6 +1,7 @@
 
 #include "../include/sqlite3.h"
 #include "all.h"
+#include "filter.h"
 const Triple NULL_Triple={"_",96,0};
 
 // Null is always operational
@@ -52,8 +53,8 @@ typedef struct {
   PGRAPH other;
   PGRAPH result;
   FILTER *filter;
-  Triple input_node;
-  sqlite3_stmt * stmt;
+  //Triple input_node;
+  Code stmt;
 }  READYSET;
 
 READYSET ready;
@@ -110,14 +111,14 @@ int reset_ready_set() {
   G_memset((void *) &ready,0,sizeof(ready));
   return 0;
 }
-PGRAPH  set_ready_graph(FILTER *f) {
+int  run_ready_graph(FILTER *f) {
 	G_memset(&ready,0,sizeof(ready));
 	ready.filter = f;
   if(f->g[0]) 
 	 ready.self = f->g[0];
   else if(f->g[1]) 
 	 ready.other = f->g[1];
-  return ready.self;
+  return  triple(f->event_triple,0);
 }
 
 int key_match(const char * k,const char * g) {
@@ -144,12 +145,12 @@ int event_exec(FILTER * f) {
   switch(g_event) {
   case EV_Null:
 	  null_filter.g[0] = init_parser("console");
-	  parser();
+	  null_filter.event_table = null_filter.g[0]->table;
 	  null_filter.event_triple = 
-		  null_filter.g[0]->table->operands[pop_triple_operator];
-	 set_ready_graph(&null_filter);
-	 g_event = triple(null_filter.event_triple,0);
-            break;
+		  &null_filter.event_table->operators[pop_triple_operator];
+	  if(parser())
+		g_event = run_ready_graph(&null_filter);
+     break;
   default:
 	  g_event |=events(f);
 	  break;
@@ -243,8 +244,8 @@ int init_gfun() {
 	new_binders(gfun_accessor_list);
 	null_filter.g[0]=0;
 	null_filter.g[1]=0;
+	null_filter.properties= EV_Null;
+	ready.filter= &null_filter;
 	operands['_'].properties= EV_Null;
-	set_ready_graph(&null_filter);
-
 	return 0;
 }

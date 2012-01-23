@@ -20,7 +20,7 @@ int new_table_graph(TABLE * table);
 PGRAPH get_table_graph(int index);
 //void reset_G_columns();
 
-int empty_graph(PGRAPH );
+int count_graph(PGRAPH );
 void graph_counts() ;
 void reset_graphs(PGRAPH );
 int reset_graph(PGRAPH );

@@ -1,9 +1,6 @@
 #include "../include/sqlite3.h"
 #include "all.h"
 
-
-extern OP operands[];
-extern M m;
 // Table stuff, this will change fast and become part of named graphs
 #define NUMBER_TABLES 20
 PTABLE triple_tables[NUMBER_TABLES];
@@ -15,14 +12,14 @@ int del_create_table(TABLE *table) {
   char buff[400];char  *err;int status;
   Triple t = {buff,G_EXEC,0};
   G_sprintf(buff,Sql_create,table->name,table->name);
-    status = sqlite3_exec(m.db,buff,0,0,&err);
+    status = sqlite3_exec(g_db,buff,0,0,&err);
   return( status);
 }
 #define Sql_delete_rows "delete from %s;"
 int del_table_rows(TABLE *table) {
   char buff[400], *err; int status;
   G_sprintf(buff,Sql_delete_rows,table->name,table->name);
-    status = sqlite3_exec(m.db,buff,0,0,&err);
+    status = sqlite3_exec(g_db,buff,0,0,&err);
 	return(status);
 }
 
@@ -92,7 +89,7 @@ Mapper null_map(void * p,int * i);
   Triple *p = &table->operators[index]; 
   // make an sql script
   G_sprintf(buff,installs[format].sql, table_name);
-  status= sqlite3_prepare_v2(m.db,buff,G_strlen(buff)+1, &stmt,0);
+  status= sqlite3_prepare_v2(g_db,buff,G_strlen(buff)+1, &stmt,0);
   p->key = (char *) stmt; 
   p->link = opid;  p->pointer = 0;
   operands[opid].stmt = stmt;  // Look in the table context for stmt
@@ -125,7 +122,7 @@ int init_tables() {
   char buff[30];
   new_binders(a);
   G_memset(triple_tables,0,sizeof(triple_tables));
-  status = sqlite3_create_function_v2(m.db,GFUN,2,SQLITE_UTF8 ,0,gfunction,0,0,0);
+  status = sqlite3_create_function_v2(g_db,GFUN,2,SQLITE_UTF8 ,0,gfunction,0,0,0);
   for(i=0; i < 1;i++) 
 		 init_table(i,n[i]);
 	 G_sprintf(buff,"select '%c',%d,0;",G_TYPE_NULL,G_TYPE_NULL);

@@ -25,9 +25,7 @@
 extern const Triple SCRATCH_Triple;
 extern const Triple NULL_Triple;
 
-typedef struct {
-    sqlite3 *db;
-  } M;
+
 
 int bind_sql(Triple top[],Code *);
 int gfun_callback(Triple t);

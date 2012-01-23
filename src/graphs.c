@@ -17,10 +17,8 @@ if(!parent)
 parent->start = graph->end;
 parent->row = graph->end;
 }
-int empty_graph(PGRAPH graph) {
-  if(graph->row == graph->start)
-    return(1);
-  return(0);
+int count_graph(PGRAPH graph) {
+  return(graph->row - graph->start);
 }
 int reset_graph(PGRAPH graph) {
   graph->row=0;

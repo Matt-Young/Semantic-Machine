@@ -1,7 +1,7 @@
 #include "../include/sqlite3.h"
 #include "all.h"
-extern OP operands[];
-extern M m;
+#include "filter.h"
+
 extern TABLE tables[];
 Code  Statement;
 // square table adapter

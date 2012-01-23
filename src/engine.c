@@ -1,7 +1,7 @@
 // G engine
 #include "../include/sqlite3.h"
 #include "all.h"
-M m;
+Pointer g_db;
 #define NVARS 5
 OP operands[OPERMAX];
 
@@ -36,7 +36,7 @@ int output_filter(Triple t);
 int install_sql_script(char * ch,int opid) {
   int status;
   status =
-    sqlite3_prepare_v2(m.db,ch,G_strlen(ch)+1, 
+    sqlite3_prepare_v2(g_db,ch,G_strlen(ch)+1, 
         &operands[opid].stmt,0);
   operands[opid].handler=event_handler;
         operands[opid].maps[0] = 0;
@@ -89,7 +89,7 @@ int call_handler(Triple node) {
 int exec_handler(Triple t) {
   int status;
   char *err;
-  status = sqlite3_exec(m.db,t.key,0,0,&err);
+  status = sqlite3_exec(g_db,t.key,0,0,&err);
   return status;
 }
 
@@ -203,7 +203,7 @@ int init_machine() {
   int status,i;
   for(i=G_USERMIN;i < OPERMAX;i++) 
     operands[i].handler = event_handler;
-   status = sqlite3_open(GBASE,&m.db);
+   status = sqlite3_open(GBASE,g_db);
   init_handlers();
   init_gfun();
   init_tables();

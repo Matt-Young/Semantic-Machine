@@ -8,18 +8,18 @@ int init_console() { return(0);}
 #include <stdlib.h> 
 #include <string.h> 
 #include <stdarg.h>
-#define DEBUG
 int debug_counter = 0;
 #define test_0 "{abc.def.ghi}"
 #define test_1 "{abc,def,ghi}"
 #define test_2 "{Test2$debug}"
+#define test_3 ""
 char * G_line(char * line) {
 	char * prompt="Hello\n";
 	memset(line,0,200);
 	fgets(line, 100, stdin);
 #ifdef DEBUG
-	G_strcpy(line,test_2);
-	printf("%s\n",test_2);
+	G_strcpy(line,test_3);
+	printf("%s\n",test_3);
 #endif
 	return line;
   }
