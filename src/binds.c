@@ -49,18 +49,21 @@ int init_binders() {
 	return 0;
 }
 
-char buffer[200];
-int index = 0;
+
 int local_handler(TRIPLE t) {
+	char buffer[200];
   G_sprintf(buffer + G_strlen(buffer)," %s ,",t.key);
   return SQLITE_OK;
 }
 
 
 // Get bound up for a n sql step
+ void look_stmt(Code stmt) ;
   int bind_sql(TRIPLE top[],Code *stmt) {
   int status=SQLITE_OK;
-  int i=0,j;
+  Pointer pointer;
+  int type;
+  int index;
   Mapper * a;
   // Get and set the stmt
   	if(operands[top[0].link].properties & EV_Immediate)
@@ -69,22 +72,26 @@ int local_handler(TRIPLE t) {
 		*stmt = operands[top[0].link].stmt; // operand table rules
 	else
 		return (0);
+	look_stmt(*stmt);
 	a = operands[top[0].link].maps;
+	index =1;
 	while(*a) {
-		(*a) ( (Pointer *) &i,&j);
-		switch(j) {
+		(*a) ( (Pointer *) &pointer,&type);
+		switch(type) {
 			case SQLITE_TEXT:
 				status = sqlite3_bind_text(*stmt,index++,
-				(char * ) i, G_strlen((char * ) i),0);
+				(char * ) pointer, G_strlen((char * ) pointer),0);
+					
 			break;
 			case SQLITE_INTEGER:
-				status = sqlite3_bind_int(*stmt,index++,i);
+				status = sqlite3_bind_int(*stmt,index++,(int) pointer);
 			break;
 			case G_TRIPLE:
 				status = sqlite3_bind_text(*stmt,index++, 
 					(char * ) top[1].key, G_strlen(top[1].key),0);
 				status = sqlite3_bind_int(*stmt,index++,top[1].link);
 				status = sqlite3_bind_int(*stmt,index++,top[1].pointer);
+				look_stmt(*stmt);
 			break;
 			}
 		a++;
@@ -92,10 +99,10 @@ int local_handler(TRIPLE t) {
   return SQLITE_OK;
 }
 
-   /* {
+ void look_stmt(Code stmt) {
+	 char buff[200];
 	  G_sprintf(buff,"Script: \n%s\n",sqlite3_sql(stmt));
-	  status = sqlite3_bind_text(stmt,1,"abc",3,0);
-  }*/
+  }
 
  
  void print_binders() { 

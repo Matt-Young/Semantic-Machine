@@ -1,82 +1,84 @@
 #include "../include/sqlite3.h"
 #include "all.h"
 
-
 #define DISCARD 256
-
-int key_op(char * key) {
+typedef char * CharPointer;
+// Collects alphnumerics unti the next punctuation mark
+int key_op(const CharPointer base,CharPointer *current,int * op) {
       int i = 0;
-      while(!G_ispunct(key[i]) && (key[i] != 0) ) i++; 
+	  if(**current == 0) {
+		  	*current = base;
+			G_line(base);
+			if(base[0] == 0)
+				return -1;
+	  }
+	  while(!G_ispunct(*(*current)) && (*(*current) != 0) ) {i++; (*current)++;}
+	  *op = (int) *(*current);
       return i;
     }
+// buils a subgraph on inner from user text
 char * process_block(PGRAPH *inner) {
-  TRIPLE ts,next;
+  TRIPLE prev,next;
   char line[200],*start;
   int nchars,done;
-  ts.link = DISCARD;
+  prev.link = DISCARD;
   done = 0;
-  new_graph(inner); // starting SET
+  G_memset(line,0,200);
+  start = line;
+  new_graph(inner); // enclose this work in a subgraph
   for(;;) {
-    G_memset(line,0,200);
-    start =  line;
-    G_gets(line);
-    if(line[0] == 0)
-      break;
 	done = 0;
     while(!done ) {
       int i,op;
       i=0;
-      nchars = key_op(start);
-      op = start[nchars];
-      if((nchars == 0) && (op == 0))
-		  done=1;
-      if((nchars > 0) && (op == 0)) op='.'; // default operator
+	  nchars =key_op(line,&start,&op);
+      if(nchars < 0)
+		break;
+      if(op == 0) op='.'; // default operator
 	  next.key=start;next.link=op;next.pointer=(*inner)->row+1;
       start[nchars]=0;
       start+=nchars+1;
-      if(ts.link == ':' )  {  
+      if(prev.link == ':' )  {  // This one starts a sub graph
         new_graph(inner);  
-        append_graph(inner,ts);
-        if(next.link == '{')
+        append_graph(inner,prev);
+        if(next.link == '{') // Making this a duplicate
           next.link = DISCARD;
-       } else if(next.link == '{') {
-         if(ts.link != DISCARD) {
-           if(ts.link == ',') {
-            append_graph(inner,ts);
-            close_update_graph(inner);
-            new_graph(inner);
-            } else if(ts.link == '.') {
-            new_graph(inner);
-            append_graph(inner,ts);
-          }
-        }
-      next.link = DISCARD;
-    } 
-    else if((ts.link == '.') || (ts.link < G_USERMIN) )   {
-      if(G_strlen(ts.key) > 0)
-        append_graph(inner,ts); }
-    else if(ts.link == ',' ) {
-      if(G_strlen(ts.key) > 0)
-        append_graph(inner,ts);
-      close_update_graph(inner);
+        }else if(next.link == '{') {
+          if(prev.link != DISCARD) {
+            if(prev.link == ',') {
+              append_graph(inner,prev);
+              close_update_graph(inner);
+              new_graph(inner);
+            } else if(prev.link == '.') {
+               new_graph(inner);
+               append_graph(inner,prev);
+              }
+           }
+         next.link = DISCARD;
+        }   
+      else if((prev.link == '.') || (prev.link < G_USERMIN) )   { // Append triplet
+        if(G_strlen(prev.key) > 0)
+           append_graph(inner,prev); 
+	  } else if(prev.link == ',' ) {
+           if(G_strlen(prev.key) > 0)
+             append_graph(inner,prev);
+          close_update_graph(inner);
 	  //proces_block
-      new_graph(inner);
-      } 
-	else if(ts.link == '}') {
-      if(G_strlen(ts.key) > 0) {
-        next.link = '.';
-        append_graph(inner,ts);
+        new_graph(inner);
+      } else if(prev.link == '}') {
+        if(G_strlen(prev.key) > 0) {
+           next.link = '.';
+          append_graph(inner,prev);
+         }
+       close_update_graph(inner);
+     } else if(prev.link != DISCARD ) { 
+        append_graph(inner,prev);
+        close_update_graph(inner);
+	    //process block
+        new_graph(inner);
       }
-    close_update_graph(inner);
-  }
-    else if(ts.link != DISCARD ) { 
-      append_graph(inner,ts);
-      close_update_graph(inner);
-	  //process block
-      new_graph(inner);
-    }
-     ts = next;
-  }  
+     prev = next;
+    }  
   }
   // finish up
   while((*inner)->parent) {

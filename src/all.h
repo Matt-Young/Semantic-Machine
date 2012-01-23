@@ -1,3 +1,4 @@
+#include "console.h"
 #include "types.h"
 #include "binds.h"
 #include "tables.h"

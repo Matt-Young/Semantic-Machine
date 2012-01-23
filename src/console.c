@@ -1,4 +1,5 @@
 // Console, set up
+#include "console.h"
 int init_console() { 
 }
 // These are here just to keep the std lib includes in one spot
@@ -8,6 +9,22 @@ int init_console() {
 #include <stdlib.h> 
 #include <string.h> 
 #include <stdarg.h>
+#define DEBUG
+int debug_counter = 0;
+char * G_line(char * line) {
+#ifdef DEBUG
+	if(debug_counter == 0) {
+		debug_counter++;
+		G_strcpy(line,"{abc.def.ghi}");
+	} else
+		G_strcpy(line,"");
+#else
+	memset(line,0,200);
+	return gets(line);
+#endif
+	return line;
+  }
+
 void G_printf( const char *fmt, ...) 
 {    
  va_list argptr;
@@ -35,19 +52,7 @@ void G_memset(void* s, int c, int n) {memset(s,c,n);}
 void G_exit() { exit(0);}
 int G_ispunct(int c){return ispunct(c);}
 
-void G_error(char * c,int i) {G_printf("error %d\n",c); G_exit();}
-#define DEBUG
-#ifdef DEBUG
-int debug_counter=0;
-char * G_gets(char * line) {
-	if(debug_counter == 0) {
-		debug_counter++;
-		G_strcpy(line,"{abc.def.ghi}");
-	} else
-	G_strcpy(line,"");
-return(line);
-}
-#else
+void G_error(char * c,int i) {G_printf("error %d\n",c); G_exit(i);}
+
 char * G_gets(char * line) { return gets(line);};
-#endif
 #undef DEBUG
