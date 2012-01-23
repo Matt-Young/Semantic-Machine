@@ -45,11 +45,10 @@ void reset_graphs(PGRAPH inner) {
 
 PGRAPH new_graph(PGRAPH *outer) {
   PGRAPH inner;
+  if(!(*outer)) return(0);  // call new_table_graph first
   inner = (PGRAPH) G_calloc(sizeof(GRAPH));
-
-  if(*outer) dup_graph(inner,(*outer));
-  else inner->table = TABLE_POINTER(2);
-    inner->match_state = G_START;
+  dup_graph(inner,(*outer));
+  inner->match_state = G_START;
   *outer = inner;
   new_count++;
   return inner;
@@ -87,11 +86,12 @@ int del_table_graph(PGRAPH *inner) {
   return 0;
 }
 int new_table_graph(TABLE * table) {
-PGRAPH p;
+  PGRAPH inner;
  if(table->list) del_table_graph(&table->list);
-	p = new_graph(&table->list);
-	table->list = p; 
- p->table = table;
+  inner = (PGRAPH) G_calloc(sizeof(GRAPH));
+  new_count++;
+	table->list = inner; 
+	inner->table = table;
   return 0;
 }
 int append_graph(PGRAPH *list,TRIPLE node) {

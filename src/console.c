@@ -1,7 +1,6 @@
 // Console, set up
 #include "console.h"
-int init_console() { 
-}
+int init_console() { return(0);}
 // These are here just to keep the std lib includes in one spot
 // and run test sequences
 #include <ctype.h>
@@ -11,16 +10,16 @@ int init_console() {
 #include <stdarg.h>
 #define DEBUG
 int debug_counter = 0;
+#define test_0 "{abc.def.ghi}"
+#define test_1 "{abc.def.ghi}"
 char * G_line(char * line) {
-#ifdef DEBUG
-	if(debug_counter == 0) {
-		debug_counter++;
-		G_strcpy(line,"{abc.def.ghi}");
-	} else
-		G_strcpy(line,"");
-#else
+	int i; 
+	char * prompt="Hello\n";
 	memset(line,0,200);
-	return gets(line);
+	fgets(line, 100, stdin);
+#ifdef DEBUG
+	G_strcpy(line,test_0);
+	printf("%s\n",test_0);
 #endif
 	return line;
   }

@@ -61,18 +61,12 @@ typedef struct f {
 #define G_ERR_SCHEMA 207
 #define G_ERR_FILTER 203
 #define G_ERR_UNKNOWN 205
-
 extern const TRIPLE SCRATCH_TRIPLE;
 extern const TRIPLE NULL_TRIPLE;
 
-
 typedef struct {
     sqlite3 *db;
-  int status;
-  int output;
   } M;
-
-
 int triple(TRIPLE top[],HANDLER);
 int bind_sql(TRIPLE top[],Code *);
 int gfun_callback(TRIPLE t);

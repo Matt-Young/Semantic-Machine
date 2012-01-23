@@ -7,15 +7,20 @@ char * null_key = "_";
 int graph_counter;
 // Collects alphnumerics unti the next punctuation mark
 int key_op(const CharPointer base,CharPointer *current,int * op) {
-      int i = 0;
-	  if(**current == 0) {
+      int i;
+	  CharPointer ptr=*current;
+	  if(*ptr == 0) {
 		  	*current = base;
+			ptr = *current;
+			G_printf("%c",G_NULL);
 			G_line(base);
 			if(base[0] == 0)
 				return -1;
 	  }
-	  while(!G_ispunct(*(*current)) && (*(*current) != 0) ) {i++; (*current)++;}
-	  *op = (int) *(*current);
+	  i = 0;
+	  while(!G_ispunct(*ptr) && (*ptr != 0) ) {i++; ptr++;}
+	  *op = (int) *ptr;
+	  *current = ptr;
       return i;
     }
 // buils a subgraph on inner from user text
@@ -29,17 +34,17 @@ char * process_block(PGRAPH *inner) {
   named_count=0;
   new_graph(inner); // enclose this work in a subgraph
   for(;;) {
-      int i,op;
-      i=0;
+      int op;
+	  next.key=start;
 	  nchars =key_op(line,&start,&op);
       if(nchars < 0)
 		break;
       if(op == 0) op='.'; // default operator
-	  next.key=start;next.link=op;next.pointer=(*inner)->row+1;
-	  if(G_strlen(next.key) == 0) 
+	  next.link=op;next.pointer=(*inner)->row+1;
+	  if((nchars == 0) || !G_strlen(next.key) || G_strlen(next.key) == 0) 
 			next.key = null_key;  // valid null key
-      start[nchars]=0;
-      start+=nchars+1;
+      start[0]=0;
+      start++;
 	// Erase the bracket
 	if(next.link == '{') {
 			if(prev.link != ':')
@@ -91,7 +96,7 @@ int parser() {
   TABLE * t = get_table_name("console");
   PGRAPH * pt = (PGRAPH *) (&t->list);
  // for(;;) {
-    G_printf("%c",G_NULL);
+
     process_block(pt);
   //  G_exit();
   //}

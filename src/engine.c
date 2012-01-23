@@ -130,18 +130,18 @@ int dup_handler(TRIPLE node){
 }
 
 int ghandler(TRIPLE top,int status,int (*handler)(TRIPLE)) { 
-  m.status = status;
+
   if( (status != SQLITE_ROW) && (status != SQLITE_DONE) && (status != SQLITE_OK)  )
      G_error("ghandle entry",G_ERR_ENTRY);
   else if(status == SQLITE_DONE && top.link <= G_GRAPH_MAX ) 
-      m.status =  G_DONE;  
+      status =  G_DONE;  
   else if(status != SQLITE_ROW && status != SQLITE_OK) 
     G_error("Ghandle ",G_ERR_HANDLER);
   else if(handler)
     handler(top);
   else if(operands[top.link].handler)
-      m.status |= operands[top.link].handler(top);
-  return m.status;
+      status |= operands[top.link].handler(top);
+  return status;
 }
 
 #define LINKMASK 0xff
@@ -160,7 +160,7 @@ int triple(TRIPLE top[],int (*handler)(TRIPLE)) {
   stmt = op->stmt;
   if(!(op->properties & EV_No_bind))  
 	status = bind_sql(top,&stmt);
-  if(m.status != SQLITE_OK) 
+  if(status != SQLITE_OK) 
       G_error("bind \n",G_ERR_BIND);
   do {
     if(stmt) {
