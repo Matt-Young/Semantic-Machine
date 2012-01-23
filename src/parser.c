@@ -45,7 +45,7 @@ char * process_block(PGRAPH *inner) {
 			if(prev.link != ':')
 				new_graph(inner);
 		 next.link = DISCARD;
-	  } else if(next.link != '.') {
+	  } else if(next.link == '.') {
 	  // Case:  key.
 		  if(prev.link != '.')
 			  new_graph(inner);
@@ -62,8 +62,8 @@ char * process_block(PGRAPH *inner) {
         new_graph(inner);  
         append_graph(inner,next);
 	  } else if(next.link == '}' ) 
-		close_update_graph(inner);else if(prev.link != DISCARD ) 
-	else { 
+		close_update_graph(inner);
+	  else if(prev.link != DISCARD )  { 
  // Who Knows?
         append_graph(inner,prev);
         close_update_graph(inner);
