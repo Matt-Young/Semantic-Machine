@@ -6,7 +6,7 @@ typedef struct  g {
   TABLE * table;
   struct g * parent;
   int match_state;
-  TRIPLE pending_triple;
+  Triple pending_triple;
 } GRAPH;
 typedef GRAPH * PGRAPH; 
 PGRAPH self_graph();
@@ -14,9 +14,10 @@ PGRAPH other_graph();
 PGRAPH new_graph(PGRAPH *);
 PGRAPH delete_graph(PGRAPH *);
 void close_update_graph(PGRAPH *);
-int append_graph(PGRAPH *,TRIPLE );
+int append_graph(PGRAPH *,Triple );
 int del_table_graph(PGRAPH *);
 int new_table_graph(TABLE * table);
+PGRAPH get_table_graph(int index);
 //void reset_G_columns();
 
 int empty_graph(PGRAPH );
@@ -31,7 +32,8 @@ PGRAPH new_graph_by_index(int);
 #define triple_data_0 2
 #define update_triple_operator 3
 #define triple_data_1 4
-#define installed_triple_operator 5
+#define select_triple_operator 5
+#define installed_triple_operator 6
 
 // events and properties
 #define EV_Null 0x01  // Do some null operation

@@ -1,46 +1,7 @@
-typedef struct {
-  Mapper maps[4]; //map handlers
-  Code stmt;
-  HANDLER handler;
-  int properties;
-  } OP;
-
-extern OP operands[];
-#define TABLE_SQUARE 1
-#define TABLE_NULL  2
-
-typedef struct f { 
-	int status;
-  PGRAPH g[2];
-  int properties;
-  struct f *prev,*next;
-} FILTER;
-
-//limits and constants
-#define OPERMAX 128
 
 // Three reserved names for local use b all G machines.
 #define GBASE "c:/soft/gbase"
 #define GFUN "gfun"
-
-// fundamental links
-#define G_EXIT 0
-#define G_SWAP 2
-#define G_POP 3
-#define G_APPEND 4
-#define G_UPDATE 5
-#define G_GRAPH_MAX 6
-#define GCHAR '_'
-#define G_CALL 8
-#define G_DUP 9
-#define G_EXEC 10
-#define G_SQL 11
-#define G_SCRIPT 15
-#define G_CONFIG 16
-#define G_USERMIN 24
-#define G_SCRATCH  25
-#define SCRATCH_STR "25"
-
 
 #define G_DONE        102
 #define G_READY        103
@@ -61,18 +22,18 @@ typedef struct f {
 #define G_ERR_SCHEMA 207
 #define G_ERR_FILTER 203
 #define G_ERR_UNKNOWN 205
-extern const TRIPLE SCRATCH_TRIPLE;
-extern const TRIPLE NULL_TRIPLE;
+extern const Triple SCRATCH_Triple;
+extern const Triple NULL_Triple;
 
 typedef struct {
     sqlite3 *db;
   } M;
-int triple(TRIPLE top[],HANDLER);
-int bind_sql(TRIPLE top[],Code *);
-int gfun_callback(TRIPLE t);
+
+int bind_sql(Triple top[],Code *);
+int gfun_callback(Triple t);
 void G_error(char * c,int i);
 int bind_index(sqlite3_stmt *stmt,int i,int j);
-void print_triple(TRIPLE t);
+void print_triple(Triple t);
 //int swap();
 int loop();
 //int jump(void *);
@@ -83,14 +44,8 @@ int _row();
 int stopped_row();
 
 
-void set_table_name(char * name,int index);
-TABLE * get_table_name(const char * name);
-PGRAPH get_table_graph(int index);
-int install_sql_script(char * ch,int opid);
-void print_triple(TRIPLE t);
 
-int parser();
-int event_handler(TRIPLE t);
-int event_exec(FILTER *f);
+void print_triple(Triple t);
 
 
+int event_handler(Triple t);

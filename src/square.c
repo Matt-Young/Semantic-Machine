@@ -3,12 +3,12 @@
 extern OP operands[];
 extern M m;
 extern TABLE tables[];
-sqlite3_stmt * Statement;
+Code  Statement;
 // square table adapter
 
-int bind_schema(sqlite3_stmt *stmt,TRIPLE top);
+int bind_schema(Code stmt,Triple top);
 /*
-int new_filter_graph(TRIPLE t) {
+int new_filter_graph(Triple t) {
 	PGRAPH schema;
   schema_graph->match_state = G_SCHEMA;
   schema_graph = dup_graph(schema_graph,ready.self);
@@ -37,8 +37,8 @@ COLINFO *init_col_info(TABLE * t) {
   return(&t->info);
 }
 
-TRIPLE column_decoder(COLINFO *c) {
-	TRIPLE s={0,0,0};
+Triple column_decoder(COLINFO *c) {
+	Triple s={0,0,0};
       s.key = (void *) sqlite3_column_text(Statement,c->index);
       c->index++;
       s.pointer++;
@@ -48,7 +48,7 @@ TRIPLE column_decoder(COLINFO *c) {
 // defaut grammar is to descend a row with the default Dot
 int do_square(int mode,FILTER *f) {
 COLINFO *c,*d;
-TRIPLE ct,dt;
+Triple ct,dt;
     c = init_col_info(f->g[0]->table);
     while(c->index < c->col_count) {
 		ct = column_decoder(c); 

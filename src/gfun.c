@@ -1,7 +1,7 @@
 
 #include "../include/sqlite3.h"
 #include "all.h"
-const TRIPLE NULL_TRIPLE={"_",96,0};
+const Triple NULL_Triple={"_",96,0};
 
 // Null is always operational
 FILTER null_filter;
@@ -52,7 +52,7 @@ typedef struct {
   PGRAPH other;
   PGRAPH result;
   FILTER *filter;
-  TRIPLE input_node;
+  Triple input_node;
   sqlite3_stmt * stmt;
 }  READYSET;
 
@@ -115,26 +115,9 @@ PGRAPH  set_ready_graph(FILTER *f) {
 	ready.filter = f;
   if(f->g[0]) 
 	 ready.self = f->g[0];
-  if(f->g[1]) 
+  else if(f->g[1]) 
 	 ready.other = f->g[1];
   return ready.self;
-}
-int dispatch() {
-  FILTER * g;
-  PGRAPH graph;
-//next ready filter
-  g = f;
-  do {
-    if(g->status == G_UNREADY) 
-      break;
-    g = g->prev;
-  }while(g);
-  if(g) {
-    graph = set_ready_graph(g);
-
-  }
-  triple(&graph->table->operators[pop_triple_operator],0);
-  return(SQLITE_OK);
 }
 
 int key_match(const char * k,const char * g) {
@@ -161,9 +144,11 @@ int event_exec(FILTER * f) {
   switch(g_event) {
   case EV_Null:
 	  null_filter.g[0] = init_parser("console");
-	  set_ready_graph(&null_filter);
-      g_event |= parser();
-	 //g_event |= set_ready_graph(&null_filter);
+	  parser();
+	  null_filter.event_triple = 
+		  null_filter.g[0]->table->operands[pop_triple_operator];
+	 set_ready_graph(&null_filter);
+	 g_event = triple(null_filter.event_triple,0);
             break;
   default:
 	  g_event |=events(f);
@@ -184,7 +169,7 @@ int event_exec(FILTER * f) {
 // top is the initiationg query, in most cases, the originating triplet.
 // Normal action, find an event to call this, then go up the filter chain, 
 // srtarting with the calling triplet
-int event_handler(TRIPLE t) {
+int event_handler(Triple t) {
 	FILTER *f;
   f = ready_filter();
   f->properties = operands[t.link].properties;
@@ -198,7 +183,7 @@ int event_handler(TRIPLE t) {
  
   return 0;
     }
- //int output_filter(TRIPLE t) {
+ //int output_filter(Triple t) {
  //return handler(ready.filter);
 //}
 //G function call backs from inside sql
@@ -249,17 +234,17 @@ void gfunction(sqlite3_context* context,int n,sqlite3_value** v) {
     sqlite3_result_int(context, 0);
   }
 }
-NamedAccessor accessor_list[] = {
+NamedAccessor gfun_accessor_list[] = {
 	{ "Filter", (Mapper) filter_map},
 	{"BindSelfRow",(Mapper) map_self_row},{"BindSelfStart",(Mapper) map_self_start}, 
 	{"BindOtherRow",(Mapper) map_self_row},{"BindOtherStart",(Mapper) map_self_start}, 	
 	{0,0} };
 int init_gfun() {
-	NamedAccessor a ={"Ready",(Mapper)filter_map};
+	new_binders(gfun_accessor_list);
 	null_filter.g[0]=0;
 	null_filter.g[1]=0;
 	operands['_'].properties= EV_Null;
 	set_ready_graph(&null_filter);
-	new_binders(accessor_list);
+
 	return 0;
 }

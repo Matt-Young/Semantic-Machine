@@ -12,7 +12,6 @@ int key_op(const CharPointer base,CharPointer *current,int * op) {
 	  if(*ptr == 0) {
 		  	*current = base;
 			ptr = *current;
-			G_printf("%c",G_NULL);
 			G_line(base);
 			if(base[0] == 0)
 				return -1;
@@ -23,12 +22,18 @@ int key_op(const CharPointer base,CharPointer *current,int * op) {
 	  *current = ptr;
       return i;
     }
+// apply known attributes
+void SetAttribute(Triple * destination,char * attribute) {
+if(!G_strcmp(attribute,"debug"))
+	destination->link = G_DEBUG;  
+}
 // buils a subgraph on inner from user text
-char * process_block(PGRAPH *inner) {
-  TRIPLE prev,next;
+int process_block(PGRAPH *inner) {
+  Triple prev,current,next;
   char line[200],*start;
   int nchars,named_count;
   prev.link = DISCARD;
+  current.link = DISCARD;
   G_memset(line,0,200);
   start = line;
   named_count=0;
@@ -45,36 +50,34 @@ char * process_block(PGRAPH *inner) {
 			next.key = null_key;  // valid null key
       start[0]=0;
       start++;
+	  // Handle attributes immediately
+	if(current.link == '$') 
+		SetAttribute(&current,next.key);
 	// Erase the bracket
-	if(next.link == '{') {
+	else if(current.link == '{') {
 			if(prev.link != ':')
 				new_graph(inner);
-		 next.link = DISCARD;
-	  } else if(next.link == '.') {
+		 current.link = DISCARD;
+	  } else if(current.link == '.') {
 	  // Case:  key.
 		  if(prev.link != '.')
 			  new_graph(inner);
-           append_graph(inner,next);
-	}  else if(next.link == ',' ) {
+           append_graph(inner,current);
+	}  else if(current.link == ',' ) {
 // Case: key,X
 		if((prev.link != '.') && (prev.link != DISCARD) )
 			close_update_graph(inner);
 		new_graph(inner);
-		append_graph(inner,prev);
+		append_graph(inner,current);
 // Case: key:X
-	} else if(next.link == ':' )  {  
+	} else if(current.link == ':' )  {  
 		named_count++;
         new_graph(inner);  
-        append_graph(inner,next);
-	  } else if(next.link == '}' ) 
+        append_graph(inner,current);
+	  } else if(current.link == '}' ) 
 		close_update_graph(inner);
-	  else if(prev.link != DISCARD )  { 
- // Who Knows?
-        append_graph(inner,prev);
-        close_update_graph(inner);
-        new_graph(inner);
-	  }
-     prev = next;
+     prev = current;
+	 current = next; 
     }  
   // finish up
   while((*inner)->parent) {
@@ -96,8 +99,7 @@ int parser() {
   TABLE * t = get_table_name("console");
   PGRAPH * pt = (PGRAPH *) (&t->list);
  // for(;;) {
-
-    process_block(pt);
+    return process_block(pt);
   //  G_exit();
   //}
   return(SQLITE_OK);

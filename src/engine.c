@@ -6,12 +6,12 @@ M m;
 OP operands[OPERMAX];
 
 // Another cheat to trip up re-entry
-TRIPLE triple_var;
+Triple triple_var;
 
-const TRIPLE SCRATCH_TRIPLE = {"Scratch",G_SCRATCH,0};
+const Triple SCRATCH_Triple = {"Scratch",G_SCRATCH,0};
 //triple bind, unbind
-void print_triple(TRIPLE t) { G_printf(" %s %d %d\n",t.key,t.link,t.pointer);}
-void unbind_triple(sqlite3_stmt *stmt,TRIPLE *t) {
+void print_triple(Triple t) { G_printf(" %s %d %d\n",t.key,t.link,t.pointer);}
+void unbind_triple(sqlite3_stmt *stmt,Triple *t) {
    t->key = (void *) sqlite3_column_text( stmt, 0);
   t->link= sqlite3_column_int(stmt, 1);
   t->pointer= sqlite3_column_int(stmt, 2);
@@ -32,7 +32,7 @@ void delkey(const char * key) {
   {oldcount++; G_free( (void *) key);}
 }
 
-int output_filter(TRIPLE t);
+int output_filter(Triple t);
 int install_sql_script(char * ch,int opid) {
   int status;
   status =
@@ -49,7 +49,7 @@ int install_sql_script(char * ch,int opid) {
 // these are varable cheats for config state
   int variable;
 
-int  config_handler(TRIPLE t) {
+int  config_handler(Triple t) {
     int status=SQLITE_OK;
     const char * ch = t.key; 
     //printf("Configure: \n");
@@ -73,32 +73,32 @@ int  config_handler(TRIPLE t) {
     }
     return status;
     }
-int sql_handler(TRIPLE node) {
+int sql_handler(Triple node) {
   int status=SQLITE_OK;
   install_sql_script((char *) node.key,G_SCRATCH);
-  triple((TRIPLE *) &SCRATCH_TRIPLE,0);
+  triple((Triple *) &SCRATCH_Triple,0);
   return status;
 }
-int call_handler(TRIPLE node) {
+int call_handler(Triple node) {
   int pointer;
   pointer  =  incr_row(0);
   set_row(G_atoi(node.key));
   set_row(pointer);
   return SQLITE_OK;
 }
-int exec_handler(TRIPLE t) {
+int exec_handler(Triple t) {
   int status;
   char *err;
   status = sqlite3_exec(m.db,t.key,0,0,&err);
   return status;
 }
 
-int swap_handler(TRIPLE t) {return SQLITE_OK;}
-int exit_handler(TRIPLE node) {  
+int swap_handler(Triple t) {return SQLITE_OK;}
+int exit_handler(Triple node) {  
 return G_DONE;}
-int pop_handler(TRIPLE node) {
+int pop_handler(Triple node) {
   int status;
-  TRIPLE t;
+  Triple t;
   //incr_row(1);
   unbind_triple(operands[node.link].stmt,&t);
   status = triple(&t,0);
@@ -106,17 +106,17 @@ int pop_handler(TRIPLE node) {
     status = G_DONE;
   return status;
 }
-int script_handler(TRIPLE node) {  
+int script_handler(Triple node) {  
   int id;
   id = G_atoi(node.key);
   G_printf("Script: \n%s\n",sqlite3_sql(operands[id].stmt));
   return SQLITE_OK;
 }
-int echo_handler(TRIPLE node) {  
+int echo_handler(Triple node) {  
   G_printf("Echo: \n%s %d \n",node.key,node.link);
   return SQLITE_OK;
 }
-int dup_handler(TRIPLE node){
+int dup_handler(Triple node){
   int id,i;
   char buff[400];
   int status;
@@ -129,7 +129,7 @@ int dup_handler(TRIPLE node){
   return SQLITE_OK;
 }
 
-int ghandler(TRIPLE top,int status,int (*handler)(TRIPLE)) { 
+int ghandler(Triple top,int status,int (*handler)(Triple)) { 
 
   if( (status != SQLITE_ROW) && (status != SQLITE_DONE) && (status != SQLITE_OK)  )
      G_error("ghandle entry",G_ERR_ENTRY);
@@ -148,7 +148,7 @@ int ghandler(TRIPLE top,int status,int (*handler)(TRIPLE)) {
 // We get here when a graph produces a triplet that heads a subsequence
 // The link then holds the specified graph operator, 
 // this sifts through and finds a handler
-int triple(TRIPLE top[],int (*handler)(TRIPLE)) {
+int triple(Triple top[],int (*handler)(Triple)) {
   OP *op;
   int status= SQLITE_OK;
   Code stmt; 
@@ -180,13 +180,13 @@ int triple(TRIPLE top[],int (*handler)(TRIPLE)) {
 
 typedef struct {
   int index;
-  int (*handler)(TRIPLE);
+  int (*handler)(Triple);
   } MAP;
 #define CALLS 8
 
 const MAP map[CALLS] = {
   {G_EXIT,exit_handler},{G_CALL,call_handler},
-  {G_DUP,dup_handler},{G_SWAP,swap_handler},
+  {G_DUP,dup_handler},{G_POP,swap_handler},
   {G_EXEC,exec_handler},{G_SQL,sql_handler},
   {G_SCRIPT,script_handler},{G_CONFIG,config_handler}
 };
@@ -203,24 +203,31 @@ int init_machine() {
   int status,i;
   for(i=G_USERMIN;i < OPERMAX;i++) 
     operands[i].handler = event_handler;
-
    status = sqlite3_open(GBASE,&m.db);
-  init_binders();
   init_handlers();
-  init_tables();
   init_gfun();
+  init_tables();
+
   init_console();
-  print_binders();
   return status;
 }
 // do the default _
-TRIPLE G_null_graph = {"_",'_',0};
+Triple G_null_graph = {"_",'_',0};
 
+Mapper map_debugger(Pointer * p,int *type) {
+	*type = G_TYPE_CODE;
+	return 0;
+	}
+NamedAccessor engine_accessor_list[] = { { "Debug", (Mapper) map_debugger},{0,0}};
 int main(int argc, char * argv[])
 {
   int status; 
   //status = init_dll(); 
+    init_binders();
+	new_binders(engine_accessor_list);
   status = init_machine();
+
+  print_binders();
   for(;;) triple(&G_null_graph,0);
   //for(;;) status = dispatch();
   G_exit(0);

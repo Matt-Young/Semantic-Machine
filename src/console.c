@@ -11,15 +11,15 @@ int init_console() { return(0);}
 #define DEBUG
 int debug_counter = 0;
 #define test_0 "{abc.def.ghi}"
-#define test_1 "{abc.def.ghi}"
+#define test_1 "{abc,def,ghi}"
+#define test_2 "{Test2$debug}"
 char * G_line(char * line) {
-	int i; 
 	char * prompt="Hello\n";
 	memset(line,0,200);
 	fgets(line, 100, stdin);
 #ifdef DEBUG
-	G_strcpy(line,test_0);
-	printf("%s\n",test_0);
+	G_strcpy(line,test_2);
+	printf("%s\n",test_2);
 #endif
 	return line;
   }
@@ -53,5 +53,6 @@ int G_ispunct(int c){return ispunct(c);}
 
 void G_error(char * c,int i) {G_printf("error %d\n",c); G_exit(i);}
 
-char * G_gets(char * line) { return gets(line);};
+char * G_gets(char * line) { return gets(line);}
+void G_debug(void * format) {}
 #undef DEBUG

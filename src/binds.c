@@ -37,10 +37,10 @@ Mapper  find_binder(char * name) {
 	return 0;}
 // various binds
 Mapper null_map(Pointer  pointer,int  *type) { 
-	*type = G_NULL;
+	*type = G_TYPE_NULL;
 	return 0;}
 Mapper map_triple(Pointer *pointer,int *type) {
-	*type = G_TRIPLE;
+	*type = G_TYPE_Triple;
 	return 0;}
 NamedAccessor a[] ={ {"BindNull",(Mapper) null_map},{"BindTriple",(Mapper) map_triple},{0,0}};
 int init_binders() {
@@ -49,17 +49,15 @@ int init_binders() {
 	return 0;
 }
 
-
-int local_handler(TRIPLE t) {
+int local_handler(Triple t) {
 	char buffer[200];
   G_sprintf(buffer + G_strlen(buffer)," %s ,",t.key);
   return SQLITE_OK;
 }
 
-
 // Get bound up for a n sql step
  void look_stmt(Code stmt) ;
-  int bind_sql(TRIPLE top[],Code *stmt) {
+  int bind_sql(Triple top[],Code *stmt) {
   int status=SQLITE_OK;
   Pointer pointer;
   int type;
@@ -86,13 +84,17 @@ int local_handler(TRIPLE t) {
 			case SQLITE_INTEGER:
 				status = sqlite3_bind_int(*stmt,index++,(int) pointer);
 			break;
-			case G_TRIPLE:
+			case G_TYPE_Triple:
 				status = sqlite3_bind_text(*stmt,index++, 
 					(char * ) top[1].key, G_strlen(top[1].key),0);
 				status = sqlite3_bind_int(*stmt,index++,top[1].link);
 				status = sqlite3_bind_int(*stmt,index++,top[1].pointer);
 				look_stmt(*stmt);
 			break;
+			case G_TYPE_CODE:
+				G_debug(*stmt);
+				*stmt = 0; // cancel this event
+				break;
 			}
 		a++;
 		} 
@@ -104,7 +106,6 @@ int local_handler(TRIPLE t) {
 	  G_sprintf(buff,"Script: \n%s\n",sqlite3_sql(stmt));
   }
 
- 
  void print_binders() { 
 	int i;
 	Pointer p; int type;
@@ -112,7 +113,7 @@ int local_handler(TRIPLE t) {
 		if(binders[i].mapper)
 			binders[i].mapper( (Pointer *) &p,&type);
 		else
-			type = G_NULL;
+			type = G_TYPE_NULL;
 		G_printf("%s %d %d \n",binders[i].name,type,i);
 	}
 	}

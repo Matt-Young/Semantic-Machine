@@ -72,7 +72,7 @@ PGRAPH delete_graph(PGRAPH *list) {
 void close_update_graph(PGRAPH *list) { 
   int status; 
   TABLE * table = (*list)->table;
-   TRIPLE * data = &table->operators[triple_data_1];
+   Triple * data = &table->operators[triple_data_1];
   data->key= (char *) table->index;
   status = triple(&table->operators[update_triple_operator],0);
   //pass_parent_graph(*lis
@@ -94,7 +94,7 @@ int new_table_graph(TABLE * table) {
 	inner->table = table;
   return 0;
 }
-int append_graph(PGRAPH *list,TRIPLE node) {
+int append_graph(PGRAPH *list,Triple node) {
   int status=0;
   TABLE * t = (*list)->table;
   t->operators[triple_data_0] = node;

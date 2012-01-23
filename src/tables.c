@@ -13,7 +13,7 @@ int del_table_count=0,new_table_count=0;
 #define Sql_create "drop table if exists %s; create table %s (key text,link integer, pointer integer);" 
 int del_create_table(TABLE *table) {
   char buff[400];char  *err;int status;
-  TRIPLE t = {buff,G_EXEC,0};
+  Triple t = {buff,G_EXEC,0};
   G_sprintf(buff,Sql_create,table->name,table->name);
     status = sqlite3_exec(m.db,buff,0,0,&err);
   return( status);
@@ -89,7 +89,7 @@ Mapper null_map(void * p,int * i);
   sqlite3_stmt *stmt;
   int opid = installs[format].opid;
   int index = installs[format].opindex;
-  TRIPLE *p = &table->operators[index]; 
+  Triple *p = &table->operators[index]; 
   // make an sql script
   G_sprintf(buff,installs[format].sql, table_name);
   status= sqlite3_prepare_v2(m.db,buff,G_strlen(buff)+1, &stmt,0);
@@ -128,7 +128,9 @@ int init_tables() {
   status = sqlite3_create_function_v2(m.db,GFUN,2,SQLITE_UTF8 ,0,gfunction,0,0,0);
   for(i=0; i < 1;i++) 
 		 init_table(i,n[i]);
-	 G_sprintf(buff,"select '%c',%d,0;",G_NULL,G_NULL);
-  install_sql_script(buff,G_NULL);
+	 G_sprintf(buff,"select '%c',%d,0;",G_TYPE_NULL,G_TYPE_NULL);
+  install_sql_script(buff,G_TYPE_NULL);
+  operands[G_DEBUG].maps[0]= (Mapper) find_binder("Debug");
+  //operands[G_TYPE_NULL].maps[0]=
   return status;
 }

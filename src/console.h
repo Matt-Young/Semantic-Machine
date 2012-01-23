@@ -13,3 +13,4 @@ void G_memset(void* s, int c, int n);
 int G_ispunct(int c);
 char *  G_gets(char * line);
 char * G_line(char * line);
+void G_debug(void * format);
