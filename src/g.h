@@ -1,6 +1,6 @@
 
 // Three reserved names for local use b all G machines.
-#define GBASE "c:/soft/gbase"
+
 #define GFUN "gfun"
 
 #define G_DONE        102
@@ -32,10 +32,6 @@ int gfun_callback(Triple t);
 void G_error(char * c,int i);
 int bind_index(sqlite3_stmt *stmt,int i,int j);
 void print_triple(Triple t);
-//int swap();
-int loop();
-//int jump(void *);
-// mrethods to manage pointers for triple frames
 int incr_row(int);
 int set_row(int ivar);
 int _row();

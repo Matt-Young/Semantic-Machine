@@ -13,13 +13,14 @@ int debug_counter = 0;
 #define test_1 "{abc,def,ghi}"
 #define test_2 "{Test2$debug}"
 #define test_3 ""
+#define test_4 "{TestAttribute$debug}"
 char * G_line(char * line) {
 	char * prompt="Hello\n";
 	memset(line,0,200);
 	fgets(line, 100, stdin);
 #ifdef DEBUG
-	G_strcpy(line,test_3);
-	printf("%s\n",test_3);
+	G_strcpy(line,test_4);
+	printf("%s\n",test_4);
 #endif
 	return line;
   }

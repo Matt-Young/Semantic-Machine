@@ -148,6 +148,7 @@ int ghandler(Triple top,int status,int (*handler)(Triple)) {
 // We get here when a graph produces a triplet that heads a subsequence
 // The link then holds the specified graph operator, 
 // this sifts through and finds a handler
+
 int triple(Triple top[],int (*handler)(Triple)) {
   OP *op;
   int status= SQLITE_OK;
@@ -156,6 +157,7 @@ int triple(Triple top[],int (*handler)(Triple)) {
   key = 0;
   if(top[0].link >= OPERMAX) 
     return SQLITE_MISUSE;
+
   op = &operands[top[0].link && LINKMASK];
   stmt = op->stmt;
   if(!(op->properties & EV_No_bind))  
@@ -203,7 +205,8 @@ int init_machine() {
   int status,i;
   for(i=G_USERMIN;i < OPERMAX;i++) 
     operands[i].handler = event_handler;
-   status = sqlite3_open(GBASE,g_db);
+  G_printf("%s\n",GBASE);
+   status = sqlite3_open(GBASE,&g_db);
   init_handlers();
   init_gfun();
   init_tables();
@@ -218,7 +221,16 @@ Mapper map_debugger(Pointer * p,int *type) {
 	*type = G_TYPE_CODE;
 	return 0;
 	}
-NamedAccessor engine_accessor_list[] = { { "Debug", (Mapper) map_debugger},{0,0}};
+NamedAccessor engine_accessor_list[] = { { "debug", (Mapper) map_debugger},{0,0}};
+const struct {char * name;int value;} internals[] =
+{{"script",G_SCRIPT},{"exec",G_EXEC},
+{"config",G_CONFIG},
+{"debug", G_DEBUG},{0,0}};
+int get_system_call(char * name) {
+	int i=0;
+	while(G_strcmp(internals[i].name,name)) i++;
+	return(internals[i].value);
+}
 int main(int argc, char * argv[])
 {
   int status; 
@@ -232,6 +244,7 @@ int main(int argc, char * argv[])
   //for(;;) status = dispatch();
   G_exit(0);
 }
+
 
 
 

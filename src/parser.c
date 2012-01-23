@@ -24,8 +24,9 @@ int key_op(const CharPointer base,CharPointer *current,int * op) {
     }
 // apply known attributes
 void SetAttribute(Triple * destination,char * attribute) {
-if(!G_strcmp(attribute,"debug"))
-	destination->link = G_DEBUG;  
+	int id = get_system_call(attribute);
+	if(id > 0)
+		destination->link = id;  
 }
 // buils a subgraph on inner from user text
 int process_block(PGRAPH *inner) {
