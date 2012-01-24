@@ -7,10 +7,15 @@ typedef char * CharPointer;
 char * null_key = "_";
 int graph_counter;
 // Collects alphnumerics unti the next punctuation mark, does quote '
+const char  *uglies = "_',.{}!$";
+char  isugly(char ch) { 
+	const char * ptr = uglies;
+	while((*ptr) && ((*ptr) != ch)) ptr++;
+		return *ptr;}
 int key_op(const CharPointer base,CharPointer *current,CharPointer *key,int * op) {
       int i;
 	  CharPointer ptr= *current;
-	  CharPointer end;
+	  int quoting;
 	  if(*ptr == 0) {
 		  	*current = base;
 			ptr = *current;
@@ -18,25 +23,24 @@ int key_op(const CharPointer base,CharPointer *current,CharPointer *key,int * op
 			if(base[0] == 0)
 				return -1;
 	  }
-	  i = 0; end=0;
+	  i = 0; quoting=0;
 	  while(isspace(*ptr)) ptr++;
 	  if(*ptr == 39) {
 		  ptr++;
 		  *key=ptr;
 		  while(*ptr != 39) ptr++;
-		  end = ptr;ptr++;
+		  quoting = 1;ptr++;
 	  }
 	  else 
 		  *key=ptr;
-      while(!G_ispunct(*ptr) && (*ptr != 0) ) {i++; ptr++;}
-	  if(end==0) {
-		 end = ptr;
-		if ((*end) != 0)  while(isspace(*(end-1) )) end--;
-		}
+      while(!isugly(*ptr) && (*ptr != 0) ) {i++; ptr++;}
 	  *op = (int) *ptr;
-	  i = (int) ptr - (int) *current;
+	  i = (int) ptr - (int) (*current); // char count
+	  if(!quoting) 
+		  if(ptr != base) 
+			while( ((*ptr) != 0) && isspace(*(ptr-1))) ptr--;
+	  *ptr = 0;
 	  *current = ptr+1;
-	  *end=0;
       return i;
     }
 // apply known attributes
@@ -61,18 +65,16 @@ int process_block(PGRAPH *inner) {
   named_count=0;
   new_graph(inner); // enclose this work in a subgraph
   for(;;) {
-      int op;
-	
 	  nchars =key_op(line,&start,&next.key,&next.link);
       if(nchars < 0)
 		break;
-      if(next.link == 0) op='.'; // default operator
+      if(next.link == 0) next.link='_'; // default operator
 	  if(!G_strlen(next.key) ) 
 			next.key = null_key;  // valid null key
 	  next.pointer=(*inner)->row+1;
 #ifdef Debug_parser
 	  if(1) {
-	  G_printf("%s %d  ", next.key,next.link);
+	  G_printf("%s %c  ", next.key,next.link);
 	  next.link = DISCARD;
 	  } else
 #endif

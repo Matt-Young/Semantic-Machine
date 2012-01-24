@@ -10,11 +10,6 @@ Mapper filter_map(Pointer * pointer,int * type) {
 return 0;
 }
 
-FILTER * close_filter(FILTER * f) {
-  delete_graph((PGRAPH *) f->g[0]->table->list);
-  delete_graph((PGRAPH *) f->g[1]->table->list);
-  return delete_filter(f);
-}
 
 //  **  READY FOR RUNNING ******
 typedef struct {
@@ -118,14 +113,16 @@ int events(FILTER * f) {
 
 // sql table name will cuse events overned by filter paerent->child
  int init_run_table(FILTER * parent,char * name) {
-	  TABLE * table;
+	  TABLE * table; int status;
 	  FILTER * child = new_filter(parent);
 	  init_table(name,0,&table);
 	  child->event_table=table;
 	  child->event_triple  = &table->operators[pop_triple_operator];
 	  new_table_graph(table);
 	  child->g[0] = (PGRAPH) table->list;
-	  return run_ready_graph(child);
+	  status = run_ready_graph(child);
+	  delete_filter(child);
+	  return status;
   }
  extern PGRAPH init_parser(char *);
 int init_run_console(FILTER *f) {
@@ -142,7 +139,7 @@ int event_exec(FILTER * f) {
 	  g_event = init_run_console(f);
      break;
   case EV_Debug:
-	  init_run_table(f,"config");
+	  g_event = init_run_table(f,"config");
 	break;
   default:
 	  g_event |=events(f);
@@ -155,31 +152,22 @@ int event_exec(FILTER * f) {
  }
  int do_square(int mode,FILTER *f);
  
-// If the result lands here, the query is done
-// go search the filter list for something to do
-// otr else
-// we are getting a row from some square table.
-// then we take the row and run the machine triplet/column mode
-// top is the initiationg query, in most cases, the originating triplet.
-// Normal action, find an event to call this, then go up the filter chain, 
-// srtarting with the calling triplet
+// Arrive here when some operaors has produced events
 int event_handler(Triple t) {
 	FILTER *f;
-  f = ready.filter;
-  f->properties |= operands[t.link].properties;
-  if(f->properties & EV_Null)
+	f = ready.filter;
+	f->properties |= operands[t.link].properties;
+	if(f->properties & EV_Null)
 	  event_exec(f);
-  else if(f->properties & EV_Square)  {
-	if(f->g[0]->table->attribute == TABLE_SQUARE)  do_square(0,f);
-	else if(f->g[1]->table->attribute == TABLE_SQUARE) do_square(1,f);
-  } else
+	else if(f->properties & EV_Square)  {
+		if(f->g[0]->table->attribute == TABLE_SQUARE)  do_square(0,f);
+		else if(f->g[1]->table->attribute == TABLE_SQUARE) do_square(1,f);
+		} else
     event_exec(f);
  
   return 0;
     }
- //int output_filter(Triple t) {
- //return handler(ready.filter);
-//}
+ 
 //G function call backs from inside sql
 #define SELF_ROW 0
 #define OTHER_ROW 1
@@ -237,8 +225,6 @@ Trio gfun_accessor_list[] = {
 	{0,00,} };
 int init_gfun() {
 	add_trios(gfun_accessor_list);
-
 	ready.filter= &null_filter;
-	operands['_'].properties= EV_Null;
 	return 0;
 }

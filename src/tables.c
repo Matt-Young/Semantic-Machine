@@ -6,6 +6,10 @@
 PTABLE triple_tables[NUMBER_TABLES];
 
 int del_table_count=0,new_table_count=0;
+int init_table_context() {
+ G_memset(triple_tables,0,sizeof(triple_tables));
+ del_table_count=0,new_table_count=0;
+  return 0;}
 // direct sql utilities
 #define Sql_create "drop table if exists %s; create table %s (key text,link integer, pointer integer);" 
 int del_create_table(TABLE *table) {
@@ -112,19 +116,12 @@ int init_table(char * name,int options,TABLE **table) {
   return status;
 }
 void gfunction(Pointer context,int n,Pointer * v);
-// pre insyalled, but these wiull become embedded in indices later
-#define NTAB 5
- char * n[NTAB] = {"console"};
- 
+
  Trio table_trios[] = {{"TablesInit",0,0},{0,0,0}};
 int init_tables() {
-  int status;
-  char buff[30];
-  add_trios(table_trios);
-  G_memset(triple_tables,0,sizeof(triple_tables));
-  status = machine_install_callback(g_db,GFUN,2,gfunction);
-  G_sprintf(buff,"select '%c',%d,0;",G_TYPE_NULL,G_TYPE_NULL);
-  status = install_sql_script(buff,G_TYPE_NULL);
-  operands[G_DEBUG].maps[0]= (Mapper) find_trio_value("Debug");
-  return status;
+	int status;
+	add_trios(table_trios);
+	init_table_context();
+	status = machine_install_callback(g_db,GFUN,2,gfunction);
+	return status;
 }

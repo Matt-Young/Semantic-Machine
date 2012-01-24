@@ -42,5 +42,6 @@ Pointer  find_trio_value(char * name) {
  void print_trios() { 
 	int i;
 	for(i=0; g_names[i].name;i++) 
-		G_printf("%s %d %d \n",g_names[i].name,g_names[i].value,i);
+		G_printf("%3d: |%16s|%4d|%10d| \n",
+		i,g_names[i].name,g_names[i].type,g_names[i].value,i);
 	}

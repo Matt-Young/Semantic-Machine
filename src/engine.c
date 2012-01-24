@@ -2,6 +2,7 @@
 #include "sqlite_msgs.h"
 #include "all.h"
 #include "filter.h"
+#define Debug_engine
 Pointer g_db;
 #define NVARS 5
 OP operands[OPERMAX];
@@ -203,18 +204,15 @@ int init_handlers() {
    return 0;
 }
 int init_machine() {
-  int status,i;
-  for(i=G_USERMIN;i < OPERMAX;i++) 
-    operands[i].handler = event_handler;
-  G_printf("%s\n",GBASE);
-status =   open_machine_layer(GBASE,&g_db);
-
-  status = init_handlers();
-  status = init_binder();
-  status = init_gfun();
-  status = init_tables();
-  status = init_filters();
-  init_console();
+	int status;
+	G_printf("%s\n",GBASE);
+	status = open_machine_layer(GBASE,&g_db);
+	status = init_handlers();
+	status = init_binder();
+	status = init_gfun();
+	status = init_tables();
+	status = init_filters();
+	init_console();
   return status;
 }
 
@@ -228,23 +226,34 @@ Trio engine_trios[] = {
 	{ "Debug", G_TYPE_HANDLER, g_debugger},
 	{ "Testing", G_TYPE_BIT, (Pointer) EV_Overload},
 	{0,0,0}};
-// do the default _
-Triple G_null_graph = {"_",'_',0};
+
+// defult operands
+const Triple G_null_graph = {"_",'_',0};
+int init_operands() {
+	int i; 
+	G_memset(operands,0,sizeof(operands));
+	for(i=G_USERMIN;i < OPERMAX;i++) {
+		operands[i].handler = event_handler;
+		operands[i].properties= EV_Null; }
+	install_sql_script("select '_',95,0;",G_TYPE_NULL);
+	G_printf("%s %d\n",GBASE,i);
+	return(i);
+	}
 int main(int argc, char * argv[])
 {
-  int status; 
-  Triple test;
- 
-  g_debugger_state=0;
-    init_trios();
+	int status; 
+	Triple test;
+	g_debugger_state=0;
+	init_operands();
+	init_trios();
 	add_trios(engine_trios);
-  status = init_machine();
-
-  print_trios();
-   G_memcpy(&test,&G_null_graph,sizeof(Triple));
+	status = init_machine();
+	print_trios();
+	G_memcpy(&test,&G_null_graph,sizeof(Triple));
+#ifdef Debug_engine
    test.link |= EV_Overload;
+#endif
   for(;;) triple(&test,0);
-  //for(;;) status = dispatch();
   G_exit(0);
 }
 void print_triple(Triple t) { G_printf(" %s %d %d\n",t.key,t.link,t.pointer);}

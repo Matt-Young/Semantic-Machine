@@ -15,7 +15,11 @@ FILTER * new_filter(FILTER * parent) {
     f->status =  parent->status;
     return(f);
   }
-FILTER *f;
+FILTER * close_filter(FILTER * f) {
+  delete_graph((PGRAPH *) f->g[0]->table->list);
+  delete_graph((PGRAPH *) f->g[1]->table->list);
+  return delete_filter(f);
+}
 FILTER *delete_filter(FILTER * f) {
   FILTER * g;
   if(oldfilter >= newfilter) 
