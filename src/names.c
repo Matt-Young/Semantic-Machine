@@ -3,7 +3,7 @@
 // Just a quick utility to store name value pairs
 // All names here should be constant
 #define MAXNAMES 100
-NameTypeValue g_names[MAXNAMES];
+Trio g_names[MAXNAMES];
 int  g_name_count;
 
 int add_trio(char * name,int type,Pointer value) {
@@ -15,7 +15,7 @@ g_names[g_name_count].value = value;
 g_name_count++;
 return g_name_count;
 }
-int add_trios(NameTypeValue trios[]) {
+int add_trios(Trio trios[]) {
 	int i=0;
 	while(trios[i].name != 0) {
 		add_trio(trios[i].name,trios[i].type,trios[i].value);

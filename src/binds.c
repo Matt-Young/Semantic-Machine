@@ -73,7 +73,7 @@ int local_handler(Triple t) {
   return SQLITE_OK;
 }
   // tios local to binds
-  NameTypeValue bind_trios[] ={ {"BindNull",G_TYPE_MAPPER,(Mapper) null_map},
+  Trio bind_trios[] ={ {"BindNull",G_TYPE_MAPPER,(Mapper) null_map},
 {"BindTriple",G_TYPE_MAPPER,(Mapper) map_triple},
 {0,0,0}};
   int init_binder() {add_trios(bind_trios);return(0);}

@@ -18,10 +18,10 @@ typedef void * Code;
 #define G_TYPE_NULL 95
 #define GBASE "c:/soft/gbase"
 
-typedef struct { char * name; int type; Pointer value;} NameTypeValue;
+typedef struct { char * name; int type; Pointer value;} Trio;
 int init_trios();
 void print_trios();
-int add_trios(NameTypeValue[]); 
+int add_trios(Trio[]); 
 int add_trio(char *,int,Pointer); 
 Pointer  find_trio(char * name);
 #endif

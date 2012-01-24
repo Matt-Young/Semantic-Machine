@@ -188,10 +188,10 @@ typedef struct {
 #define CALLS 8
 
 const MAP map[CALLS] = {
-  {"g_exit_call",G_EXIT,exit_handler},{"g_exit_call",G_CALL,call_handler},
-  {"g_exit_call",G_DUP,dup_handler},{"g_exit_call",G_POP,swap_handler},
-  {"g_exit_call",G_EXEC,exec_handler},{"g_exit_call",G_SQL,sql_handler},
-  {"g_exit_call",G_SCRIPT,script_handler},{"g_exit_call",G_CONFIG,config_handler}
+  {"SystemExit",G_EXIT,exit_handler},{"SystemCall",G_CALL,call_handler},
+  {"SystemDup",G_DUP,dup_handler},{"SystemExit",G_POP,swap_handler},
+  {"SystemExec",G_EXEC,exec_handler},{"SystemScript",G_SQL,sql_handler},
+  {"SystemDecode",G_SCRIPT,script_handler},{"SystemConfig",G_CONFIG,config_handler}
 };
 int init_handlers() {
   int i;
@@ -223,22 +223,14 @@ Mapper map_debugger(Pointer * p,int *type) {
 	*type = G_TYPE_CODE;
 	return 0;
 	}
-NameTypeValue engine_accessor_list[] = { { "debug", (Mapper) map_debugger},{0,0}};
-const struct {char * name;int value;} internals[] =
-{{"script",G_SCRIPT},{"exec",G_EXEC},
-{"config",G_CONFIG},
-{"debug", G_DEBUG},{0,0}};
-int get_system_call(char * name) {
-	int i=0;
-	while(G_strcmp(internals[i].name,name)) i++;
-	return(internals[i].value);
-}
+Trio engine_trios[] = { { "debug", G_TYPE_MAPPER,(Mapper) map_debugger},{0,0,0}};
+
 int main(int argc, char * argv[])
 {
   int status; 
   //status = init_dll(); 
     init_trios();
-	add_trios(engine_accessor_list);
+	add_trios(engine_trios);
   status = init_machine();
 
   print_trios();

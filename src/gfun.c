@@ -239,7 +239,7 @@ void gfunction(sqlite3_context* context,int n,sqlite3_value** v) {
     sqlite3_result_int(context, 0);
   }
 }
-NameTypeValue gfun_accessor_list[] = {
+Trio gfun_accessor_list[] = {
 	{ "Filter",G_TYPE_MAPPER, (Mapper) filter_map},
 	{"BindSelfRow",G_TYPE_MAPPER,(Mapper) map_self_row},
 	{"BindSelfStart",G_TYPE_MAPPER,(Mapper) map_self_start}, 

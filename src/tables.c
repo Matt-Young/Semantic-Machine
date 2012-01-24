@@ -115,7 +115,7 @@ void gfunction(sqlite3_context* context,int n,sqlite3_value** v);
 #define NTAB 5
  char * n[NTAB] = {"console"};
  
- NameTypeValue table_trios[] = {{"TablesInit",0,0},{0,0,0}};
+ Trio table_trios[] = {{"TablesInit",0,0},{0,0,0}};
 int init_tables() {
 	
   int status,i;
