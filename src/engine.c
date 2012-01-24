@@ -181,23 +181,25 @@ int triple(Triple top[],int (*handler)(Triple)) {
 
 
 typedef struct {
-  int index;
+  char * name;
+  int opid;
   int (*handler)(Triple);
   } MAP;
 #define CALLS 8
 
 const MAP map[CALLS] = {
-  {G_EXIT,exit_handler},{G_CALL,call_handler},
-  {G_DUP,dup_handler},{G_POP,swap_handler},
-  {G_EXEC,exec_handler},{G_SQL,sql_handler},
-  {G_SCRIPT,script_handler},{G_CONFIG,config_handler}
+  {"g_exit_call",G_EXIT,exit_handler},{"g_exit_call",G_CALL,call_handler},
+  {"g_exit_call",G_DUP,dup_handler},{"g_exit_call",G_POP,swap_handler},
+  {"g_exit_call",G_EXEC,exec_handler},{"g_exit_call",G_SQL,sql_handler},
+  {"g_exit_call",G_SCRIPT,script_handler},{"g_exit_call",G_CONFIG,config_handler}
 };
 int init_handlers() {
   int i;
    for(i=0;i < CALLS;i++) {
-     operands[map[i].index].handler = map[i].handler;
-	 operands[map[i].index].properties = EV_No_bind;
-	 operands[map[i].index].stmt=0; 
+     operands[map[i].opid].handler = map[i].handler;
+	 operands[map[i].opid].properties = EV_No_bind;
+	 operands[map[i].opid].stmt=0; 
+	 add_trio(map[i].name,G_TYPE_SYSTEM,(Pointer) map[i].opid);
    }
    return 0;
 }
@@ -208,6 +210,7 @@ int init_machine() {
   G_printf("%s\n",GBASE);
    status = sqlite3_open(GBASE,&g_db);
   init_handlers();
+  init_binder();
   init_gfun();
   init_tables();
 
@@ -216,12 +219,11 @@ int init_machine() {
 }
 // do the default _
 Triple G_null_graph = {"_",'_',0};
-
 Mapper map_debugger(Pointer * p,int *type) {
 	*type = G_TYPE_CODE;
 	return 0;
 	}
-NameValue engine_accessor_list[] = { { "debug", (Mapper) map_debugger},{0,0}};
+NameTypeValue engine_accessor_list[] = { { "debug", (Mapper) map_debugger},{0,0}};
 const struct {char * name;int value;} internals[] =
 {{"script",G_SCRIPT},{"exec",G_EXEC},
 {"config",G_CONFIG},
@@ -235,11 +237,11 @@ int main(int argc, char * argv[])
 {
   int status; 
   //status = init_dll(); 
-    init_name_value();
-	add_name_value(engine_accessor_list);
+    init_trios();
+	add_trios(engine_accessor_list);
   status = init_machine();
 
-  print_name_value();
+  print_trios();
   for(;;) triple(&G_null_graph,0);
   //for(;;) status = dispatch();
   G_exit(0);

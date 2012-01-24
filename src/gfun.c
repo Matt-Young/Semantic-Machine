@@ -239,13 +239,15 @@ void gfunction(sqlite3_context* context,int n,sqlite3_value** v) {
     sqlite3_result_int(context, 0);
   }
 }
-NameValue gfun_accessor_list[] = {
-	{ "Filter", (Mapper) filter_map},
-	{"BindSelfRow",(Mapper) map_self_row},{"BindSelfStart",(Mapper) map_self_start}, 
-	{"BindOtherRow",(Mapper) map_self_row},{"BindOtherStart",(Mapper) map_self_start}, 	
-	{0,0} };
+NameTypeValue gfun_accessor_list[] = {
+	{ "Filter",G_TYPE_MAPPER, (Mapper) filter_map},
+	{"BindSelfRow",G_TYPE_MAPPER,(Mapper) map_self_row},
+	{"BindSelfStart",G_TYPE_MAPPER,(Mapper) map_self_start}, 
+	{"BindOtherRow",G_TYPE_MAPPER,(Mapper) map_self_row},
+	{"BindOtherStart",G_TYPE_MAPPER,(Mapper) map_self_start}, 	
+	{0,00,} };
 int init_gfun() {
-	add_name_value(gfun_accessor_list);
+	add_trios(gfun_accessor_list);
 	null_filter.g[0]=0;
 	null_filter.g[1]=0;
 	null_filter.properties= EV_Null;

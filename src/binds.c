@@ -12,17 +12,14 @@ an index system built on the sqlite_master
 
 #define NUMBINDS 10
 int bind_count=0;
-NameValue binders[NUMBINDS];
-
-
 // various binds
 Mapper null_map(Pointer  pointer,int  *type) { 
 	*type = G_TYPE_NULL;
 	return 0;}
 Mapper map_triple(Pointer *pointer,int *type) {
-	*type = G_TYPE_Triple;
+	*type = G_TYPE_TRIPLE;
 	return 0;}
-NameValue a[] ={ {"BindNull",(Mapper) null_map},{"BindTriple",(Mapper) map_triple},{0,0}};
+
 
 int local_handler(Triple t) {
 	char buffer[200];
@@ -59,7 +56,7 @@ int local_handler(Triple t) {
 			case SQLITE_INTEGER:
 				status = sqlite3_bind_int(*stmt,index++,(int) pointer);
 			break;
-			case G_TYPE_Triple:
+			case G_TYPE_TRIPLE:
 				status = sqlite3_bind_text(*stmt,index++, 
 					(char * ) top[1].key, G_strlen(top[1].key),0);
 				status = sqlite3_bind_int(*stmt,index++,top[1].link);
@@ -75,7 +72,11 @@ int local_handler(Triple t) {
 		} 
   return SQLITE_OK;
 }
-
+  // tios local to binds
+  NameTypeValue bind_trios[] ={ {"BindNull",G_TYPE_MAPPER,(Mapper) null_map},
+{"BindTriple",G_TYPE_MAPPER,(Mapper) map_triple},
+{0,0,0}};
+  int init_binder() {add_trios(bind_trios);return(0);}
  void look_stmt(Code stmt) {
 	 char buff[200];
 	  G_sprintf(buff,"Script: \n%s\n",sqlite3_sql(stmt));

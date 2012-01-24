@@ -24,7 +24,7 @@ int key_op(const CharPointer base,CharPointer *current,int * op) {
     }
 // apply known attributes
 void SetAttribute(Triple * destination,char * attribute) {
-	int id = (int) find_name_value(attribute);
+	int id = (int) find_trio(attribute);
 	if(id > 0)
 		destination->link = id;  
 }
