@@ -16,7 +16,7 @@
 #define G_ERR_PREPARE 201
 #define  G_ERR_DUP 202
 #define  G_ERR_ENTRY 203
-#define  G_ERR_HANDLER 204
+#define  G_ERR_Handler 204
 #define  G_ERR_BIND 205
 #define G_ERR_GRAPH 206
 #define G_ERR_SCHEMA 207
@@ -30,16 +30,10 @@ extern const Triple NULL_Triple;
 int bind_sql(Triple top[],Code *);
 int gfun_callback(Triple t);
 void G_error(char * c,int i);
-int bind_index(sqlite3_stmt *stmt,int i,int j);
+//int bind_index(sqlite3_stmt *stmt,int i,int j);
 void print_triple(Triple t);
 int incr_row(int);
 int set_row(int ivar);
 int _row();
 int stopped_row();
-
-
-
-void print_triple(Triple t);
-
-
 int event_handler(Triple t);

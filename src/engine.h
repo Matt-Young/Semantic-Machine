@@ -1,7 +1,7 @@
 typedef struct {
   Mapper maps[4]; //map handlers
   Code stmt;
-  HANDLER handler;
+  Handler handler;
   int properties;
   } OP;
 //limits and constants

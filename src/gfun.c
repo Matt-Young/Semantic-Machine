@@ -1,5 +1,4 @@
 
-#include "../include/sqlite3.h"
 #include "all.h"
 #include "filter.h"
 const Triple NULL_Triple={"_",96,0};
@@ -61,25 +60,25 @@ READYSET ready;
 Mapper map_self_row(Pointer * p,int *type) {
 	if(ready.self)
 		*p = (Pointer) ready.self->row;
-	*type = SQLITE_INTEGER;
+	*type = G_TYPE_INTEGER;
 	return 0;
 	}
 Mapper map_self_start(Pointer * p,int *type) {
 	if(ready.self)
 		*p = (Pointer) ready.self->start;
-	*type = SQLITE_INTEGER;
+	*type = G_TYPE_INTEGER;
 	return 0;
 	}
 Mapper map_other_row(Pointer * p,int *type) {
 	if(ready.other)
 		*p = (Pointer) ready.other->row;
-	*type = SQLITE_INTEGER;
+	*type = G_TYPE_INTEGER;
 	return 0;
 	}
 Mapper map_other_start(Pointer * p,int *type) {
 	if(ready.other)
 		*p = (Pointer) ready.other->start;
-	*type = SQLITE_INTEGER;
+	*type = G_TYPE_INTEGER;
 	return 0;
 	}
 
@@ -200,43 +199,43 @@ int event_handler(Triple t) {
 #define GET_ROW 5
 #define SET_ROW 6
 #define SET_LINK 7
-void gfunction(sqlite3_context* context,int n,sqlite3_value** v) {
+void gfunction(Pointer context,int n, Pointer* v) {
 
-  int op = sqlite3_value_int(v[0]);
-  int x = sqlite3_value_int(v[1]);
+  int op = machine_value_int(v[0]);
+  int x = machine_value_int(v[1]);
   //printf("gfun: %d %d\n",x,m.self_row);
   switch(op) {
   case SELF_ROW:
-    sqlite3_result_int(context, ready.self->row+1);
+	 machine_result_int(context, ready.self->row+1);
     if(x == ready.self->row+1) 
       if(ready.self->row+1 != ready.self->end)
         ready.self->row++;
     break;
   case OTHER_ROW:
-    sqlite3_result_int(context, ready.other->row+1);
+    machine_result_int(context, ready.other->row+1);
     if(x == ready.other->row+1) 
       if(ready.other->row+1 != ready.other->end)
         ready.other->row++;
     break;
   case RESULT_ROW:
-    sqlite3_result_int(context, ready.result->row+1);
+    machine_result_int(context, ready.result->row+1);
     break;
   case GET_NEXT_ROW:
-    sqlite3_result_int(context, ready.result->row);
+    machine_result_int(context, ready.result->row);
     break;
   case SET_NEXT_ROW:
-    sqlite3_result_int(context, ready.result->row);
+    machine_result_int(context, ready.result->row);
     ready.self->end = x;
     break;
   case SET_LINK:
     //current_graph->link = x;
     ready.self->row++;
     //current_graph->opclass = operands[x].properties;
-    sqlite3_result_int(context, 1);
+    machine_result_int(context, 1);
     break;
   default:
     G_printf("gfun: %d %d\n",x,ready.self->row);
-    sqlite3_result_int(context, 0);
+    machine_result_int(context, 0);
   }
 }
 Trio gfun_accessor_list[] = {

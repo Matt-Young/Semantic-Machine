@@ -1,4 +1,4 @@
-#include "../include/sqlite3.h"
+
 #include "all.h"
 
 // Table stuff, this will change fast and become part of named graphs
@@ -12,14 +12,15 @@ int del_create_table(TABLE *table) {
   char buff[400];char  *err;int status;
   Triple t = {buff,G_EXEC,0};
   G_sprintf(buff,Sql_create,table->name,table->name);
-    status = sqlite3_exec(g_db,buff,0,0,&err);
+ 
+    status = machine_exec(g_db,buff,&err);
   return( status);
 }
 #define Sql_delete_rows "delete from %s;"
 int del_table_rows(TABLE *table) {
   char buff[400], *err; int status;
   G_sprintf(buff,Sql_delete_rows,table->name,table->name);
-    status = sqlite3_exec(g_db,buff,0,0,&err);
+    status = machine_exec(g_db,buff,&err);
 	return(status);
 }
 
@@ -83,20 +84,20 @@ Mapper null_map(void * p,int * i);
  int make_stmt(TABLE * table,int format,char * table_name) {
   char buff[200];
   int i,status=SQLITE_OK;
-  sqlite3_stmt *stmt;
+  Code stmt;
   int opid = installs[format].opid;
   int index = installs[format].opindex;
   Triple *p = &table->operators[index]; 
   // make an sql script
   G_sprintf(buff,installs[format].sql, table_name);
-  status= sqlite3_prepare_v2(g_db,buff,G_strlen(buff)+1, &stmt,0);
+  status= machine_prepare(g_db,buff, &stmt);
   p->key = (char *) stmt; 
   p->link = opid;  p->pointer = 0;
   operands[opid].stmt = stmt;  // Look in the table context for stmt
   operands[opid].handler = 0;
   operands[opid].properties = EV_Immediate;
   for(i=0; installs[format].map_name[i];i++) 
-	  operands[opid].maps[0]= (Mapper) find_trio(installs[format].map_name[i]);
+	  operands[opid].maps[0]= (Mapper) find_trio_value(installs[format].map_name[i]);
   return status;
 }
 
@@ -110,7 +111,7 @@ int init_table(int index,char * name) {
   }
   return status;
 }
-void gfunction(sqlite3_context* context,int n,sqlite3_value** v);
+void gfunction(Pointer context,int n,Pointer * v);
 // pre insyalled, but these wiull become embedded in indices later
 #define NTAB 5
  char * n[NTAB] = {"console"};
@@ -122,12 +123,12 @@ int init_tables() {
   char buff[30];
   add_trios(table_trios);
   G_memset(triple_tables,0,sizeof(triple_tables));
-  status = sqlite3_create_function_v2(g_db,GFUN,2,SQLITE_UTF8 ,0,gfunction,0,0,0);
+  status = machine_install_callback(g_db,GFUN,2,gfunction);
   for(i=0; i < 1;i++) 
 		 init_table(i,n[i]);
 	 G_sprintf(buff,"select '%c',%d,0;",G_TYPE_NULL,G_TYPE_NULL);
   install_sql_script(buff,G_TYPE_NULL);
-  operands[G_DEBUG].maps[0]= (Mapper) find_trio("Debug");
+  operands[G_DEBUG].maps[0]= (Mapper) find_trio_value("Debug");
   //operands[G_TYPE_NULL].maps[0]=
   return status;
 }

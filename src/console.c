@@ -11,9 +11,9 @@ int init_console() { return(0);}
 int debug_counter = 0;
 #define test_0 "{abc.def.ghi}"
 #define test_1 "{abc,def,ghi}"
-#define test_2 "{Test2$debug}"
+#define test_2 "{Test2$SystemDecode}"
 #define test_3 ""
-#define test_4 "{TestAttribute$debug}"
+#define test_4 "{TestAttribute$SystemDecode}"
 char * G_line(char * line) {
 	char * prompt="Hello\n";
 	memset(line,0,200);

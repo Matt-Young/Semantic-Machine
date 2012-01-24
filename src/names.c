@@ -1,4 +1,5 @@
 #include "g_types.h"
+#include "names.h"
 #include "console.h"
 // Just a quick utility to store name value pairs
 // All names here should be constant
@@ -29,14 +30,17 @@ int init_trios() {
 	G_printf("Init names %d\n",sizeof(g_names));
 	return 0;
 }
-Pointer  find_trio(char * name) { 
+Trio  * find_trio(char * name) { 
 	int i;
 	for(i=0; g_names[i].name;i++) 
 		if(!G_strcmp(g_names[i].name,name))
-			return(g_names[i].value);
+			return(&g_names[i]);
 	return 0;
 }
-
+Pointer  find_trio_value(char * name) {
+	Trio * trio = find_trio(name);
+	if(trio) return trio->value; else return 0;
+}
  void print_trios() { 
 	int i;
 	for(i=0; g_names[i].name;i++) 

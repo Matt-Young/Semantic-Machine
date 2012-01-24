@@ -1,5 +1,7 @@
-#include "console.h"
+// All includes
 #include "g_types.h"
+#include "names.h"
+#include "console.h"
 #include "binds.h"
 #include "tables.h"
 #include "graphs.h"

@@ -1,4 +1,4 @@
-#include "../include/sqlite3.h"
+
 #include "all.h"
 
 #define DISCARD 256
@@ -24,9 +24,9 @@ int key_op(const CharPointer base,CharPointer *current,int * op) {
     }
 // apply known attributes
 void SetAttribute(Triple * destination,char * attribute) {
-	int id = (int) find_trio(attribute);
-	if(id > 0)
-		destination->link = id;  
+	Trio * trio= find_trio(attribute);
+	if(trio)
+		destination->link = (int) trio->value;  
 }
 // buils a subgraph on inner from user text
 int process_block(PGRAPH *inner) {
@@ -52,8 +52,10 @@ int process_block(PGRAPH *inner) {
       start[0]=0;
       start++;
 	  // Handle attributes immediately
-	if(current.link == '$') 
+	if(current.link == '$') {
 		SetAttribute(&current,next.key);
+			 current.link = DISCARD;
+	}
 	// Erase the bracket
 	else if(current.link == '{') {
 			if(prev.link != ':')

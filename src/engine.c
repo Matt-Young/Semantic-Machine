@@ -1,5 +1,5 @@
 // G engine
-#include "../include/sqlite3.h"
+#define SQLITE_OK 0
 #include "all.h"
 Pointer g_db;
 #define NVARS 5
@@ -10,11 +10,11 @@ Triple triple_var;
 
 const Triple SCRATCH_Triple = {"Scratch",G_SCRATCH,0};
 //triple bind, unbind
-void print_triple(Triple t) { G_printf(" %s %d %d\n",t.key,t.link,t.pointer);}
-void unbind_triple(sqlite3_stmt *stmt,Triple *t) {
-   t->key = (void *) sqlite3_column_text( stmt, 0);
-  t->link= sqlite3_column_int(stmt, 1);
-  t->pointer= sqlite3_column_int(stmt, 2);
+
+void unbind_triple(Code stmt,Triple *t) {
+   t->key = (char  *) machine_column_text(stmt,0); 
+  t->link= machine_column_int(stmt, 1);
+  t->pointer= machine_column_int(stmt, 2);
 }
 
 
@@ -36,8 +36,7 @@ int output_filter(Triple t);
 int install_sql_script(char * ch,int opid) {
   int status;
   status =
-    sqlite3_prepare_v2(g_db,ch,G_strlen(ch)+1, 
-        &operands[opid].stmt,0);
+	  machine_prepare(g_db,ch,&operands[opid].stmt);
   operands[opid].handler=event_handler;
         operands[opid].maps[0] = 0;
  operands[opid].properties=0;
@@ -89,7 +88,7 @@ int call_handler(Triple node) {
 int exec_handler(Triple t) {
   int status;
   char *err;
-  status = sqlite3_exec(g_db,t.key,0,0,&err);
+  status = machine_exec(g_db,t.key,&err);
   return status;
 }
 
@@ -109,7 +108,7 @@ int pop_handler(Triple node) {
 int script_handler(Triple node) {  
   int id;
   id = G_atoi(node.key);
-  G_printf("Script: \n%s\n",sqlite3_sql(operands[id].stmt));
+  G_printf("Script: \n%s\n",machine_script(operands[id].stmt));
   return SQLITE_OK;
 }
 int echo_handler(Triple node) {  
@@ -121,7 +120,7 @@ int dup_handler(Triple node){
   char buff[400];
   int status;
   id = G_atoi(node.key);
-  G_strcpy(buff,sqlite3_sql(operands[id].stmt));
+  G_strcpy(buff,(const char *) machine_script(operands[id].stmt));
   status = install_sql_script(buff,G_SCRATCH);
   if(status != SQLITE_OK) G_error("Dup",G_ERR_DUP);
   for(i=0;operands[id].maps[i];i++) 
@@ -136,7 +135,7 @@ int ghandler(Triple top,int status,int (*handler)(Triple)) {
   else if(status == SQLITE_DONE && top.link <= G_GRAPH_MAX ) 
       status =  G_DONE;  
   else if(status != SQLITE_ROW && status != SQLITE_OK) 
-    G_error("Ghandle ",G_ERR_HANDLER);
+    G_error("Ghandle ",G_ERR_Handler);
   else if(handler)
     handler(top);
   else if(operands[top.link].handler)
@@ -167,10 +166,9 @@ int triple(Triple top[],int (*handler)(Triple)) {
   do {
     if(stmt) {
 	//if(stmt) {
-      status = sqlite3_step(stmt );
+status = machine_step(stmt );
       if(status == SQLITE_DONE)
-        sqlite3_reset(stmt);
-	    //sqlite3_reset(stmt);
+        machine_reset(stmt);
       }
     status = ghandler(top[0],status,handler);
     }  while( status == SQLITE_ROW );
@@ -208,7 +206,8 @@ int init_machine() {
   for(i=G_USERMIN;i < OPERMAX;i++) 
     operands[i].handler = event_handler;
   G_printf("%s\n",GBASE);
-   status = sqlite3_open(GBASE,&g_db);
+  open_machine_layer(GBASE,&g_db);
+
   init_handlers();
   init_binder();
   init_gfun();
@@ -223,12 +222,14 @@ Mapper map_debugger(Pointer * p,int *type) {
 	*type = G_TYPE_CODE;
 	return 0;
 	}
-Trio engine_trios[] = { { "debug", G_TYPE_MAPPER,(Mapper) map_debugger},{0,0,0}};
+Handler g_debugger(Triple );
+int g_debugger_state;
+Trio engine_trios[] = { { "Debug", G_TYPE_HANDLER, g_debugger},{0,0,0}};
 
 int main(int argc, char * argv[])
 {
   int status; 
-  //status = init_dll(); 
+  g_debugger_state=0;
     init_trios();
 	add_trios(engine_trios);
   status = init_machine();
@@ -238,7 +239,6 @@ int main(int argc, char * argv[])
   //for(;;) status = dispatch();
   G_exit(0);
 }
-
-
-
-
+void print_triple(Triple t) { G_printf(" %s %d %d\n",t.key,t.link,t.pointer);}
+// his is a little debgger, and stays ith this file
+Handler g_debugger(Triple t) {print_triple(t);return 0;}
