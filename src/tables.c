@@ -1,6 +1,6 @@
-
+#include "sqlite_msgs.h"
 #include "all.h"
-
+#include "filter.h"
 // Table stuff, this will change fast and become part of named graphs
 #define NUMBER_TABLES 20
 PTABLE triple_tables[NUMBER_TABLES];
@@ -12,7 +12,6 @@ int del_create_table(TABLE *table) {
   char buff[400];char  *err;int status;
   Triple t = {buff,G_EXEC,0};
   G_sprintf(buff,Sql_create,table->name,table->name);
- 
     status = machine_exec(g_db,buff,&err);
   return( status);
 }
@@ -101,13 +100,14 @@ Mapper null_map(void * p,int * i);
   return status;
 }
 
-int init_table(int index,char * name) {
+int init_table(char * name,int options,TABLE **table) {
   int status = SQLITE_OK;
   int i;
-  TABLE * table =  new_table_context(name);
-  del_create_table(table);
+  *table =  new_table_context(name);
+  if(options)
+	del_create_table(*table);
   for(i=0; i < NBUILTINS;i++) {
-		make_stmt(table,i,name);
+		make_stmt(*table,i,name);
   }
   return status;
 }
@@ -118,17 +118,13 @@ void gfunction(Pointer context,int n,Pointer * v);
  
  Trio table_trios[] = {{"TablesInit",0,0},{0,0,0}};
 int init_tables() {
-	
-  int status,i;
+  int status;
   char buff[30];
   add_trios(table_trios);
   G_memset(triple_tables,0,sizeof(triple_tables));
   status = machine_install_callback(g_db,GFUN,2,gfunction);
-  for(i=0; i < 1;i++) 
-		 init_table(i,n[i]);
-	 G_sprintf(buff,"select '%c',%d,0;",G_TYPE_NULL,G_TYPE_NULL);
-  install_sql_script(buff,G_TYPE_NULL);
+  G_sprintf(buff,"select '%c',%d,0;",G_TYPE_NULL,G_TYPE_NULL);
+  status = install_sql_script(buff,G_TYPE_NULL);
   operands[G_DEBUG].maps[0]= (Mapper) find_trio_value("Debug");
-  //operands[G_TYPE_NULL].maps[0]=
   return status;
 }

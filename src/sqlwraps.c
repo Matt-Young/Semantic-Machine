@@ -3,14 +3,14 @@
  #include "g_types.h"
  typedef void (*xFunc)(sqlite3_context*,int,sqlite3_value**);
 //void gfunction(sqlite3_context* context,int n,sqlite3_value** v);
-int open_machine_layer(const char * name,Pointer * g_db) {
-	return sqlite3_open(name,(sqlite3 **)&g_db);}
+int open_machine_layer(const char * name,Pointer  g_db) {
+	return sqlite3_open(name,(sqlite3 **)g_db);}
 Pointer machine_column_text(Code stmt,int colid) {
 	return (unsigned char *) sqlite3_column_text( (sqlite3_stmt*) stmt, colid);}
 int machine_column_int(Code stmt,int colid) {
 	return sqlite3_column_int((sqlite3_stmt*) stmt, colid);}
 int machine_prepare(Pointer g_db,char * ch,Code * stmt) {
-	return sqlite3_prepare_v2((sqlite3 *)g_db,ch,G_strlen(ch)+1,*stmt,0);}
+	return sqlite3_prepare_v2((sqlite3 *)g_db,ch,G_strlen(ch)+1,(sqlite3_stmt **)stmt,0);}
 int machine_step(Code stmt ) { return sqlite3_step((sqlite3_stmt*) stmt );}
   int machine_exec(Pointer g_db,char * buff,char ** err) {
 	  return sqlite3_exec((sqlite3 *)g_db,buff,0,0,err);}

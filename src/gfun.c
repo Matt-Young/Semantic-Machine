@@ -3,8 +3,7 @@
 #include "filter.h"
 const Triple NULL_Triple={"_",96,0};
 
-// Null is always operational
-FILTER null_filter;
+
 PGRAPH  set_ready_graph(FILTER *f) ;
 Mapper filter_map(Pointer * pointer,int * type) {
 *pointer = (void *) &null_filter;
@@ -12,32 +11,8 @@ Mapper filter_map(Pointer * pointer,int * type) {
 return 0;
 }
 
-FILTER *filter_list=&null_filter;
-int newfilter=0;
-int oldfilter=0;
-FILTER * new_filter() {
-    FILTER * f = (FILTER *) G_calloc(sizeof(FILTER));
-    newfilter++;
-    if(filter_list)
-        f->prev = filter_list;
-      else
-        filter_list = f;
-    if(f->prev) {
-      f->status =  f->prev->status;
-      }
-    f->status |= G_SELECTED + G_CONTINUE;
-    return(f);
-  }
-FILTER *f;
-FILTER *delete_filter(FILTER * f) {
-  FILTER * g;
-  if(oldfilter >= newfilter) 
-    G_error("Filter",G_ERR_FILTER);
-  g = (FILTER *) f->prev; 
-  oldfilter++; 
-  G_free( (void *) f);
-  return g;
-  }
+
+
 FILTER * close_filter(FILTER * f) {
   delete_graph((PGRAPH *) f->g[0]->table->list);
   delete_graph((PGRAPH *) f->g[1]->table->list);
@@ -141,18 +116,31 @@ int events(FILTER * f) {
   return (g_event);
 }
 
+// sql table name will cuse events overned by filter paerent->child
+ int init_run_table(FILTER * parent,char * name) {
+	  TABLE * table;
+	  FILTER * child = new_filter(parent);
+	  init_table(name,0,&table);
+	  child->event_table=table;
+	  child->event_triple  = &table->operators[pop_triple_operator];
+	  new_table_graph(table);
+	  child->g[0] = (PGRAPH) table->list;
+	  return run_ready_graph(child);
+
+  }
 extern PGRAPH init_parser(char *);
 int event_exec(FILTER * f) {
   int g_event =f->properties;
+	 init_run_table(f,"config");	  
   switch(g_event) {
   case EV_Null:
-	  
-	  null_filter.g[0] = init_parser("console");
-	  null_filter.event_table = null_filter.g[0]->table;
-	  null_filter.event_triple = 
-		  &null_filter.event_table->operators[pop_triple_operator];
+	  f->g[0] = init_parser("console");
+	  f->event_table = f->g[0]->table;
+	  f->event_triple = 
+		  &f->event_table->operators[pop_triple_operator];
 	  if(parser())
-		g_event = run_ready_graph(&null_filter);
+		g_event = run_ready_graph(f);
+
      break;
   default:
 	  g_event |=events(f);
@@ -247,9 +235,7 @@ Trio gfun_accessor_list[] = {
 	{0,00,} };
 int init_gfun() {
 	add_trios(gfun_accessor_list);
-	null_filter.g[0]=0;
-	null_filter.g[1]=0;
-	null_filter.properties= EV_Null;
+
 	ready.filter= &null_filter;
 	operands['_'].properties= EV_Null;
 	return 0;

@@ -7,7 +7,7 @@ an index system built on the sqlite_master
 */
 #include "../include/sqlite3.h"
 #include "all.h"
-
+#include "filter.h"
 
 
 #define NUMBINDS 10

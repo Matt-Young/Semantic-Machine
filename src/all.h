@@ -14,3 +14,4 @@
   int init_gfun();
   int init_console();
   int parser();
+  int init_filters();

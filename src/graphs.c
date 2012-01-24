@@ -1,5 +1,4 @@
 
-#include "../include/sqlite3.h"
 #include "all.h"
 
 // every graph is an open subraph of its parent. 

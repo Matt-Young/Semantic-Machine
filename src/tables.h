@@ -23,7 +23,8 @@ char * NAME(TABLE *);
 int ATTRIBUTE(TABLE *);
 TABLE * TABLE_POINTER(int i);
 int DELETE_TABLE(TABLE *);
-int init_table(int index,char * name);
+int init_table(char * name,int options,TABLE **table);
 
 void set_table_name(char * name,int index);
 TABLE * get_table_name(const char * name);
+void free_table_context(PTABLE pt);

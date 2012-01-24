@@ -1,4 +1,4 @@
-
+#include "sqlite_msgs.h"
 #include "all.h"
 
 #define DISCARD 256

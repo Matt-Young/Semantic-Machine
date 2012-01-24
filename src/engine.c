@@ -1,6 +1,7 @@
 // G engine
-#define SQLITE_OK 0
+#include "sqlite_msgs.h"
 #include "all.h"
+#include "filter.h"
 Pointer g_db;
 #define NVARS 5
 OP operands[OPERMAX];
@@ -206,13 +207,13 @@ int init_machine() {
   for(i=G_USERMIN;i < OPERMAX;i++) 
     operands[i].handler = event_handler;
   G_printf("%s\n",GBASE);
-  open_machine_layer(GBASE,&g_db);
+status =   open_machine_layer(GBASE,&g_db);
 
-  init_handlers();
-  init_binder();
-  init_gfun();
-  init_tables();
-
+  status = init_handlers();
+  status = init_binder();
+  status = init_gfun();
+  status = init_tables();
+  status = init_filters();
   init_console();
   return status;
 }

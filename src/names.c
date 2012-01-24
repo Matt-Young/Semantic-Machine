@@ -8,10 +8,7 @@ Trio g_names[MAXNAMES];
 int  g_name_count;
 
 int add_trio(char * name,int type,Pointer value) {
-char * ch;
-ch =  (char * )G_malloc(G_strlen(name));
-G_strcpy((char *) ch,name);
-g_names[g_name_count].name = ch;
+g_names[g_name_count].name = name;
 g_names[g_name_count].value = value;
 g_name_count++;
 return g_name_count;
