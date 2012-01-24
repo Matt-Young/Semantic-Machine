@@ -3,7 +3,6 @@
 #include "filter.h"
 const Triple NULL_Triple={"_",96,0};
 
-
 PGRAPH  set_ready_graph(FILTER *f) ;
 Mapper filter_map(Pointer * pointer,int * type) {
 *pointer = (void *) &null_filter;
@@ -11,14 +10,11 @@ Mapper filter_map(Pointer * pointer,int * type) {
 return 0;
 }
 
-
-
 FILTER * close_filter(FILTER * f) {
   delete_graph((PGRAPH *) f->g[0]->table->list);
   delete_graph((PGRAPH *) f->g[1]->table->list);
   return delete_filter(f);
 }
-
 
 //  **  READY FOR RUNNING ******
 typedef struct {
@@ -27,7 +23,7 @@ typedef struct {
   PGRAPH other;
   PGRAPH result;
   FILTER *filter;
-  //Triple input_node;
+  int  events;
   Code stmt;
 }  READYSET;
 
@@ -80,11 +76,14 @@ int set_row(int ivar) {
   return(ready.self->row);
 }
 
-
 int reset_ready_set() {
   G_memset((void *) &ready,0,sizeof(ready));
   return 0;
 }
+int set_ready_event(int EV_event) {
+	ready.events |= EV_event;
+	return ready.events; }
+
 int  run_ready_graph(FILTER *f) {
 	G_memset(&ready,0,sizeof(ready));
 	ready.filter = f;
@@ -112,6 +111,7 @@ int events(FILTER * f) {
   else if(f->g[1])
 	 if(f->g[1]->end  > f->g[1]->row) 
 		g_event |= EV_Incomplete;
+  g_event |= set_ready_event(0);
  //if((f->properties & EV_Matchable) && key_match(f->
   return (g_event);
 }
@@ -126,22 +126,24 @@ int events(FILTER * f) {
 	  new_table_graph(table);
 	  child->g[0] = (PGRAPH) table->list;
 	  return run_ready_graph(child);
-
   }
-extern PGRAPH init_parser(char *);
+ extern PGRAPH init_parser(char *);
+int init_run_console(FILTER *f) {
+	f->g[0] = init_parser("console");
+	f->event_table = f->g[0]->table;
+	f->event_triple = 
+		&f->event_table->operators[pop_triple_operator];
+	return(parser());}
+
 int event_exec(FILTER * f) {
-  int g_event =f->properties;
-	 init_run_table(f,"config");	  
+  int g_event = f->properties;
   switch(g_event) {
   case EV_Null:
-	  f->g[0] = init_parser("console");
-	  f->event_table = f->g[0]->table;
-	  f->event_triple = 
-		  &f->event_table->operators[pop_triple_operator];
-	  if(parser())
-		g_event = run_ready_graph(f);
-
+	  g_event = init_run_console(f);
      break;
+  case EV_Debug:
+	  init_run_table(f,"config");
+	break;
   default:
 	  g_event |=events(f);
 	  break;

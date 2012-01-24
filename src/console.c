@@ -1,5 +1,6 @@
 // Console, set up
 #include "console.h"
+#define Debug_console
 int init_console() { return(0);}
 // These are here just to keep the std lib includes in one spot
 // and run test sequences
@@ -12,15 +13,17 @@ int debug_counter = 0;
 #define test_0 "{abc.def.ghi}"
 #define test_1 "{abc,def,ghi}"
 #define test_2 "{Test2$SystemDecode}"
-#define test_3 ""
-#define test_4 "{TestAttribute$SystemDecode}"
+#define test_3 "'12345678'$12345678"
+#define test_4 "{TestAttribute$Testing}"
 char * G_line(char * line) {
 	char * prompt="Hello\n";
 	memset(line,0,200);
+
+#ifdef Debug_console
+	G_strcpy(line,test_3);
+	//printf("%s\n",test_3);
+#else
 	fgets(line, 100, stdin);
-#ifdef DEBUG
-	G_strcpy(line,test_4);
-	printf("%s\n",test_4);
 #endif
 	return line;
   }
@@ -51,7 +54,7 @@ int G_atoi(const char* s){ return atoi(s);}
 void G_memset(void* s, int c, int n) {memset(s,c,n);}
 void G_exit() { exit(0);}
 int G_ispunct(int c){return ispunct(c);}
-
+void* G_memcpy(void* s, const void* ct, size_t n) {return memcpy(s, ct, (size_t) n);}
 void G_error(char * c,int i) {G_printf("error %d\n",c); G_exit(i);}
 
 char * G_gets(char * line) { return gets(line);}

@@ -28,3 +28,4 @@ extern OP operands[];
 int get_system_call(char * name);
 int install_sql_script(char * ch,int opid);
 int triple(Triple top[],int (*handler)(Triple));
+int set_ready_event(int EV_event);

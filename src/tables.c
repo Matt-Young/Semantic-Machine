@@ -28,7 +28,7 @@ PTABLE  new_table_context(char * name) {
   pt = (PTABLE) G_calloc(sizeof(GRAPH));
   pt->name = (char *) G_calloc(G_strlen(name));
   pt->list = 0;
-  pt->attribute = TABLE_NULL;
+  pt->attribute = G_TYPE_TABLE;
   G_strcpy(pt->name,name);
   for(i=0;i< NUMBER_TABLES;i++) {if(triple_tables[i]==0) break;}
   pt->index = i;

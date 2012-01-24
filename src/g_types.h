@@ -11,15 +11,17 @@ extern Pointer g_db;
 typedef int (*Handler)(Triple);
 typedef int (*Mapper)(Pointer *pointer,int *type);
 typedef void * Code;
+
 #define G_TYPE_INTEGER  1
 #define G_TYPE_FLOAT    2
 #define G_TYPE_BLOB     4
-
+#define G_TYPE_BIT     5
 #define G_TYPE_TRIPLE 6
 #define G_TYPE_CODE 7
 #define G_TYPE_MAPPER 8
 #define G_TYPE_HANDLER 9
-#define G_TYPE_SYSTEM 9
+#define G_TYPE_TABLE 10
+#define G_TYPE_SYSTEM 12
 #define G_TYPE_NULL 95
 
 

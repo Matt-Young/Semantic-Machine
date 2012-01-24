@@ -1,14 +1,16 @@
 #include "sqlite_msgs.h"
 #include "all.h"
-
+#include <ctype.h>
+#define Debug_parser
 #define DISCARD 256
 typedef char * CharPointer;
 char * null_key = "_";
 int graph_counter;
-// Collects alphnumerics unti the next punctuation mark
-int key_op(const CharPointer base,CharPointer *current,int * op) {
+// Collects alphnumerics unti the next punctuation mark, does quote '
+int key_op(const CharPointer base,CharPointer *current,CharPointer *key,int * op) {
       int i;
-	  CharPointer ptr=*current;
+	  CharPointer ptr= *current;
+	  CharPointer end;
 	  if(*ptr == 0) {
 		  	*current = base;
 			ptr = *current;
@@ -16,17 +18,36 @@ int key_op(const CharPointer base,CharPointer *current,int * op) {
 			if(base[0] == 0)
 				return -1;
 	  }
-	  i = 0;
-	  while(!G_ispunct(*ptr) && (*ptr != 0) ) {i++; ptr++;}
+	  i = 0; end=0;
+	  while(isspace(*ptr)) ptr++;
+	  if(*ptr == 39) {
+		  ptr++;
+		  *key=ptr;
+		  while(*ptr != 39) ptr++;
+		  end = ptr;ptr++;
+	  }
+	  else 
+		  *key=ptr;
+      while(!G_ispunct(*ptr) && (*ptr != 0) ) {i++; ptr++;}
+	  if(end==0) {
+		 end = ptr;
+		if ((*end) != 0)  while(isspace(*(end-1) )) end--;
+		}
 	  *op = (int) *ptr;
-	  *current = ptr;
+	  i = (int) ptr - (int) *current;
+	  *current = ptr+1;
+	  *end=0;
       return i;
     }
 // apply known attributes
 void SetAttribute(Triple * destination,char * attribute) {
 	Trio * trio= find_trio(attribute);
-	if(trio)
-		destination->link = (int) trio->value;  
+	if(trio) {
+		if(trio->type == G_TYPE_BIT) 
+			destination->link += (int) trio->value;  
+		else if(trio->type == G_TYPE_SYSTEM)
+			destination->link = (int) trio->value;
+	}
 }
 // buils a subgraph on inner from user text
 int process_block(PGRAPH *inner) {
@@ -41,16 +62,20 @@ int process_block(PGRAPH *inner) {
   new_graph(inner); // enclose this work in a subgraph
   for(;;) {
       int op;
-	  next.key=start;
-	  nchars =key_op(line,&start,&op);
+	
+	  nchars =key_op(line,&start,&next.key,&next.link);
       if(nchars < 0)
 		break;
-      if(op == 0) op='.'; // default operator
-	  next.link=op;next.pointer=(*inner)->row+1;
-	  if((nchars == 0) || !G_strlen(next.key) || G_strlen(next.key) == 0) 
+      if(next.link == 0) op='.'; // default operator
+	  if(!G_strlen(next.key) ) 
 			next.key = null_key;  // valid null key
-      start[0]=0;
-      start++;
+	  next.pointer=(*inner)->row+1;
+#ifdef Debug_parser
+	  if(1) {
+	  G_printf("%s %d  ", next.key,next.link);
+	  next.link = DISCARD;
+	  } else
+#endif
 	  // Handle attributes immediately
 	if(current.link == '$') {
 		SetAttribute(&current,next.key);
@@ -101,10 +126,11 @@ PGRAPH init_parser(char * name) {
 int parser() {
   TABLE * t = get_table_name("console");
   PGRAPH * pt = (PGRAPH *) (&t->list);
- // for(;;) {
+#ifdef Debug_parser
+  for(;;)process_block(pt);
+#else
     return process_block(pt);
-  //  G_exit();
-  //}
+#endif
   return(SQLITE_OK);
 }
 

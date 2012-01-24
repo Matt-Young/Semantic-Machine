@@ -5,7 +5,7 @@
 Pointer g_db;
 #define NVARS 5
 OP operands[OPERMAX];
-
+#define LINKMASK 0x7f
 // Another cheat to trip up re-entry
 Triple triple_var;
 
@@ -128,51 +128,51 @@ int dup_handler(Triple node){
     operands[G_SCRATCH].maps[i] = operands[id].maps[i];
   return SQLITE_OK;
 }
-
+  
 int ghandler(Triple top,int status,int (*handler)(Triple)) { 
-
   if( (status != SQLITE_ROW) && (status != SQLITE_DONE) && (status != SQLITE_OK)  )
-     G_error("ghandle entry",G_ERR_ENTRY);
-  else if(status == SQLITE_DONE && top.link <= G_GRAPH_MAX ) 
-      status =  G_DONE;  
-  else if(status != SQLITE_ROW && status != SQLITE_OK) 
-    G_error("Ghandle ",G_ERR_Handler);
-  else if(handler)
-    handler(top);
-  else if(operands[top.link].handler)
-      status |= operands[top.link].handler(top);
+     G_error("ghandle entry",G_ERR_ENTRY);  
+  else if(status == SQLITE_DONE && (top.link & LINKMASK) <= G_GRAPH_MAX ) 
+      return(status);
+  if(status == SQLITE_DONE)
+	  set_ready_event(EV_No_data);
+  if(handler)
+    status = handler(top);
+  else if(operands[top.link & LINKMASK].handler)
+    status = operands[top.link & LINKMASK].handler(top);
+
   return status;
 }
 
-#define LINKMASK 0xff
+
 // We get here when a graph produces a triplet that heads a subsequence
 // The link then holds the specified graph operator, 
 // this sifts through and finds a handler
 
 int triple(Triple top[],int (*handler)(Triple)) {
   OP *op;
-  int status= SQLITE_OK;
+  int status;
+  int events;
   Code stmt; 
   void * key;
   key = 0;
-  if(top[0].link >= OPERMAX) 
-    return SQLITE_MISUSE;
-
+  events = set_ready_event(top[0].link & EV_Overload);
   op = &operands[top[0].link && LINKMASK];
   stmt = op->stmt;
   if(!(op->properties & EV_No_bind))  
 	status = bind_sql(top,&stmt);
   if(status != SQLITE_OK) 
       G_error("bind \n",G_ERR_BIND);
-  do {
-    if(stmt) {
-	//if(stmt) {
-status = machine_step(stmt );
-      if(status == SQLITE_DONE)
-        machine_reset(stmt);
-      }
-    status = ghandler(top[0],status,handler);
-    }  while( status == SQLITE_ROW );
+ if((!stmt) || (events & EV_Overload))
+	 status = ghandler(top[0],status,handler);
+ else {
+	 do {
+		status = machine_step(stmt );
+		status = ghandler(top[0],status,handler);
+		}  while( status == SQLITE_ROW );
+	machine_reset(stmt);
+	}
+	
   if(key)
     delkey((const char *) key);
   return status;
@@ -217,26 +217,33 @@ status =   open_machine_layer(GBASE,&g_db);
   init_console();
   return status;
 }
-// do the default _
-Triple G_null_graph = {"_",'_',0};
+
 Mapper map_debugger(Pointer * p,int *type) {
 	*type = G_TYPE_CODE;
 	return 0;
 	}
 Handler g_debugger(Triple );
 int g_debugger_state;
-Trio engine_trios[] = { { "Debug", G_TYPE_HANDLER, g_debugger},{0,0,0}};
-
+Trio engine_trios[] = { 
+	{ "Debug", G_TYPE_HANDLER, g_debugger},
+	{ "Testing", G_TYPE_BIT, (Pointer) EV_Overload},
+	{0,0,0}};
+// do the default _
+Triple G_null_graph = {"_",'_',0};
 int main(int argc, char * argv[])
 {
   int status; 
+  Triple test;
+ 
   g_debugger_state=0;
     init_trios();
 	add_trios(engine_trios);
   status = init_machine();
 
   print_trios();
-  for(;;) triple(&G_null_graph,0);
+   G_memcpy(&test,&G_null_graph,sizeof(Triple));
+   test.link |= EV_Overload;
+  for(;;) triple(&test,0);
   //for(;;) status = dispatch();
   G_exit(0);
 }

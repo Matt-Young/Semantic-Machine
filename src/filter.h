@@ -11,6 +11,7 @@ FILTER *delete_filter(FILTER * f);
 FILTER * new_filter(FILTER * parent);
 extern FILTER null_filter;
 // events and properties
+#define EV_Overload 0x80
 #define EV_Null 0x01  // Do some null operation
 #define EV_No_bind 0x02 // This event requires no binding
 #define EV_Immediate 0x04  //The statement in the key value
@@ -20,4 +21,5 @@ extern FILTER null_filter;
 #define EV_Square 0x40 // Square table looms ahead
 #define EV_Operand 0x80 // Operand containd the statement
 #define EV_Incomplete 0x100  // DUnno
-#define EV_Sql_Done EV_Null
+#define EV_Debug EV_Overload
+#define EV_No_data 0x200

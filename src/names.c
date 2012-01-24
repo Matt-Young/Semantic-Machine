@@ -9,6 +9,7 @@ int  g_name_count;
 
 int add_trio(char * name,int type,Pointer value) {
 g_names[g_name_count].name = name;
+g_names[g_name_count].type = type;
 g_names[g_name_count].value = value;
 g_name_count++;
 return g_name_count;
@@ -29,7 +30,7 @@ int init_trios() {
 }
 Trio  * find_trio(char * name) { 
 	int i;
-	for(i=0; g_names[i].name;i++) 
+	for(i=0;i < g_name_count;i++) 
 		if(!G_strcmp(g_names[i].name,name))
 			return(&g_names[i]);
 	return 0;
