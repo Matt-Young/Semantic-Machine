@@ -35,11 +35,11 @@ int local_handler(Triple t) {
   int index;
   Mapper * a;
   // Get and set the stmt
-  	if(operands[top[0].link].properties & EV_Immediate)
+  	if(operands[top[0].link].properties & EV_Overload)
 		*stmt = (Code) top[0].key;
-	else if( operands[top[0].link].properties & EV_Operand)
+	else 
 		*stmt = operands[top[0].link].stmt; // operand table rules
-	else
+	if(!stmt)
 		return (0);
 	look_stmt(*stmt);
 	a = operands[top[0].link].maps;

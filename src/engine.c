@@ -142,7 +142,7 @@ int ghandler(Triple top[],int status,Handler handler) {
   else if(status == EV_Done && (top->link & LINKMASK) < SystemMax ) 
       return(status);
   if(status == EV_Done)
-	  set_ready_event(EV_No_data);
+	  set_ready_event(EV_Done);
   if(handler)
     status = handler(top);
   else if(operands[top->link & LINKMASK].handler)
@@ -164,9 +164,9 @@ int triple(Triple top[],Handler handler) {
 	void * key;
 	key = 0;events=0;
 	status = EV_Ok;
-	events = set_ready_event(top[0].link & EV_Overload);
 	op = &operands[top[0].link && LINKMASK];
-	if(EV_Immediate & op->properties)
+	set_ready_event(op->properties);
+	if(EV_Overload & op->properties)
 		stmt = top[0].key;
 	else
 		stmt = op->stmt;
@@ -174,7 +174,7 @@ int triple(Triple top[],Handler handler) {
 		status = bind_sql(top,&stmt);
   if(status != EV_Ok) 
       G_error("bind \n",G_ERR_BIND);
- if((!stmt) || (events & EV_Overload))
+ if(!stmt)
 	 status = ghandler(top,status,handler);
  else {
 	 do {

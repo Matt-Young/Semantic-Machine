@@ -9,7 +9,7 @@ typedef void * Pointer;
 typedef int (*Handler)(Triple *);
 typedef int (*Mapper)(Pointer *pointer,int *type);
 typedef void * Code;
-#define EV_Overload 0x80
+
 
 /*
 #define SQLITE_INTEGER  1
@@ -45,16 +45,15 @@ int machine_bind_int(Code stmt,int index,int value);
 int machine_bind_text(Code stmt,int index,char * ch);
 #define EV_Ok 0x00
 #define EV_Null 0x01  // Do some null operation
-#define EV_No_bind 0x02 // This event requires no binding
-#define EV_Immediate 0x04  //The statement in the key value
-#define EV_Matchable 0x10  // Key value is matchable
-#define EV_Matched 0x20  // And matched
-#define EV_Square 0x40 // Square table looms ahead
+#define EV_Data 0x02
+#define EV_Done	0x04 
 #define EV_Error 0x80 // Operand containd the statement
 #define EV_Incomplete 0x100  // Dunno
-#define EV_Debug EV_Overload
-#define EV_Data 0x200
-#define EV_Done	0x400 
-#define EV_Operand 0x800
-#define EV_No_data 0x1000
+#define EV_Overload 0x200
+#define EV_No_bind 0x400 // This event requires no binding
+#define EV_Immediate 0x800  //The statement in the key value
+#define EV_Matchable 0x1000  // Key value is matchable
+#define EV_Matched 0x2000  // And matched
+#define EV_Square 0x4000 // Square table looms ahead
+#define EV_Debug 0x4000
 #endif

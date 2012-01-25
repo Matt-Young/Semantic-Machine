@@ -105,7 +105,7 @@ Mapper null_map(void * p,int * i);
   p->link = opid;  p->pointer = 0;
   operands[opid].stmt = stmt;  // Look in the table context for stmt
   operands[opid].handler = pop_handler;
-  operands[opid].properties = EV_Immediate;
+  operands[opid].properties = EV_Overload;
   for(i=0; installs[format].map_name[i];i++) 
 	  operands[opid].maps[0]= (Mapper) find_trio_value(installs[format].map_name[i]);
   return status;
