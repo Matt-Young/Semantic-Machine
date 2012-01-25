@@ -17,6 +17,7 @@ typedef void * Code;
 #define SQLITE_NULL     5
 # define SQLITE_TEXT     3
 */
+// git push git@github.com:Matt-Young/Embedded-SQL.git
 enum {G_TYPE_NONE,G_TYPE_INTEGER,G_TYPE_FLOAT,
 	G_TYPE_TEXT,G_TYPE_BIT,G_TYPE_TRIPLE,G_TYPE_CODE,
 	G_TYPE_MAPPER,G_TYPE_HANDLER,G_TYPE_TABLE,

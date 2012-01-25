@@ -1,7 +1,7 @@
 #include "sqlite_msgs.h"
 #include "all.h"
 #include <ctype.h>
-#define Debug_parser
+
 #define DISCARD 256
 #define Line_size 256
 typedef char * CharPointer;
@@ -118,7 +118,7 @@ int process_block(PGRAPH *inner) {
 		 current.link = DISCARD;
 	  } else if((current.link == '.') || (current.link == '_')){
 	  // Case:  key.
-		  if(prev.link != '.')
+		  if((prev.link != '.') && (prev.link != '.'))
 			  new_child_graph(inner);
            append_graph(inner,current);
 	}  else if(current.link == ',' ) {

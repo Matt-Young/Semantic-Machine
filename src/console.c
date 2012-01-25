@@ -9,21 +9,26 @@ int init_console() { return(0);}
 #include <stdlib.h> 
 #include <string.h> 
 #include <stdarg.h>
+#ifdef Debug_console
 int debug_counter = 0;
 #define test_0 "{abc.def.ghi}"
 #define test_1 "{abc,def,ghi}"
 #define test_2 "{abc}"
 #define test_3 ".'12'$12345678.0 $34 , 'a d'{ and}"
 #define test_4 "{TestAttribute$Testing}"
+#endif
 char * G_line(char * line,int n) {
 	memset(line,0,n);
 
 #ifdef Debug_console
-	G_strncpy(line,test_2,n);
-	//printf("%s\n",test_3);
-#else
-	fgets(line, n, stdin);
+	debug_counter++; debug_counter &= 0x03;
+	if(debug_counter != 0) {
+		G_strncpy(line,test_2,n);
+		G_printf("%s",line);
+		return line;
+	} else
 #endif
+	fgets(line, n, stdin);
 	return line;
   }
 char * G_console(Console * console) { return G_line(console->base,console->size);}
