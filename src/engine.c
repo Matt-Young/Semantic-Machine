@@ -94,7 +94,7 @@ int exec_handler(Triple *t) {
 }
 
 int swap_handler(Triple *t) {return SQLITE_OK;}
-int exit_handler(Triple node) {  
+int exit_handler(Triple *node) {  
 return EV_Done;}
 int pop_handler(Triple *node) {
   int status;
