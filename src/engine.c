@@ -2,7 +2,7 @@
 #include "sqlite_msgs.h"
 #include "all.h"
 #include "filter.h"
-#define Debug_engine
+
 Pointer g_db;
 #define NVARS 5
 OP operands[OPERMAX];
@@ -132,7 +132,7 @@ int dup_handler(Triple *node){
 int ghandler(Triple top[],int status,Handler handler) { 
   if( (status != SQLITE_ROW) && (status != SQLITE_DONE) && (status != SQLITE_OK)  )
      G_error("ghandle entry",G_ERR_ENTRY);  
-  else if(status == SQLITE_DONE && (top->link & LINKMASK) <= G_GRAPH_MAX ) 
+  else if(status == SQLITE_DONE && (top->link & LINKMASK) < G_SYS_MAX ) 
       return(status);
   if(status == SQLITE_DONE)
 	  set_ready_event(EV_No_data);
@@ -155,7 +155,9 @@ int triple(Triple top[],Handler handler) {
   int events;
   Code stmt; 
   void * key;
-  key = 0;
+  key = 0;events=0;
+  status = top[0].link;
+  status &= EV_Overload;
   events = set_ready_event(top[0].link & EV_Overload);
   op = &operands[top[0].link && LINKMASK];
   stmt = op->stmt;

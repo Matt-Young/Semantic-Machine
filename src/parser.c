@@ -67,7 +67,7 @@ int key_op(Console * console,CharPointer *key,int * op) {
 			*op = *ptr;
 		i =  start - (int) *console->current; // char count
 		*ptr = 0;
-		if(!key[0]) 
+		if(!(*key[0])) 
 			*key = null_key;  // valid null key
 		return i;
 	}
@@ -101,10 +101,10 @@ int process_block(PGRAPH *inner) {
 
 	  next.pointer=(*inner)->row+1;
 #ifdef Debug_parser
-	  if(1) {
+	 // if(1) {
 		  G_printf("{%10s %c  %4d}\n", next.key,next.link,next.pointer);
-	  next.link = DISCARD;
-	  } else
+	  //next.link = DISCARD;
+	  //} //else
 #endif
 	  // Handle attributes immediately
 	if(current.link == '$') {
@@ -116,7 +116,7 @@ int process_block(PGRAPH *inner) {
 			if(prev.link != ':')
 				new_child_graph(inner);
 		 current.link = DISCARD;
-	  } else if(current.link == '.') {
+	  } else if((current.link == '.') || (current.link == '_')){
 	  // Case:  key.
 		  if(prev.link != '.')
 			  new_child_graph(inner);

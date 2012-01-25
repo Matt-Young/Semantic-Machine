@@ -7,6 +7,7 @@
 #include "console.h"
 #include "g.h"
 // init list
+int pop_handler(Triple *node);
   int init_binder();
   int init_handlers();
   int init_tables();

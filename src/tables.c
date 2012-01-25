@@ -74,6 +74,7 @@ TABLE * get_table_name(const char * name) {
 	return (0);
 }
 
+
 const struct new_install{
 	int opindex;
 	int opid;
@@ -101,7 +102,7 @@ Mapper null_map(void * p,int * i);
   p->key = (char *) stmt; 
   p->link = opid;  p->pointer = 0;
   operands[opid].stmt = stmt;  // Look in the table context for stmt
-  operands[opid].handler = 0;
+  operands[opid].handler = pop_handler;
   operands[opid].properties = EV_Immediate;
   for(i=0; installs[format].map_name[i];i++) 
 	  operands[opid].maps[0]= (Mapper) find_trio_value(installs[format].map_name[i]);

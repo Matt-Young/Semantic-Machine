@@ -9,6 +9,7 @@ typedef void * Pointer;
 typedef int (*Handler)(Triple *);
 typedef int (*Mapper)(Pointer *pointer,int *type);
 typedef void * Code;
+
 /*
 #define SQLITE_INTEGER  1
 #define SQLITE_FLOAT    2
@@ -18,7 +19,8 @@ typedef void * Code;
 */
 enum {G_TYPE_NONE,G_TYPE_INTEGER,G_TYPE_FLOAT,
 	G_TYPE_TEXT,G_TYPE_BIT,G_TYPE_TRIPLE,G_TYPE_CODE,
-	G_TYPE_MAPPER,G_TYPE_HANDLER,G_TYPE_TABLE,G_TYPE_SYSTEM};
+	G_TYPE_MAPPER,G_TYPE_HANDLER,G_TYPE_TABLE,
+	G_TYPE_SYSTEM};
 
 #define G_TYPE_NULL 95
 #define GBASE "c:/soft/gbase"

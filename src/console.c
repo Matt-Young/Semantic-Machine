@@ -1,6 +1,6 @@
 // Console, set up
 #include "console.h"
-#define Debug_console
+
 int init_console() { return(0);}
 // These are here just to keep the std lib includes in one spot
 // and run test sequences
@@ -12,15 +12,14 @@ int init_console() { return(0);}
 int debug_counter = 0;
 #define test_0 "{abc.def.ghi}"
 #define test_1 "{abc,def,ghi}"
-#define test_2 "{Test2$SystemDecode}"
+#define test_2 "{abc}"
 #define test_3 ".'12'$12345678.0 $34 , 'a d'{ and}"
 #define test_4 "{TestAttribute$Testing}"
 char * G_line(char * line,int n) {
-	char * prompt="Hello\n";
 	memset(line,0,n);
 
 #ifdef Debug_console
-	G_strncpy(line,test_3,n);
+	G_strncpy(line,test_2,n);
 	//printf("%s\n",test_3);
 #else
 	fgets(line, n, stdin);

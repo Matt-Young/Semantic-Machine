@@ -7,21 +7,13 @@ typedef struct {
 //limits and constants
 #define OPERMAX 128
 extern OP operands[];
-// fundamental links
-#define G_EXIT 0
-#define G_SWAP 2
-#define G_POP 3
-#define G_APPEND 4
-#define G_UPDATE 5
-#define G_GRAPH_MAX 6
 #define GCHAR '_'
-#define G_CALL 8
-#define G_DUP 9
-#define G_EXEC 10
-#define G_SQL 11
-#define G_SCRIPT 15
-#define G_CONFIG 16
-#define G_DEBUG 17
+// fundamental operators
+enum { G_EXIT,G_NONE,G_SWAP,G_POP,
+	   G_CALL,G_DUP,G_EXEC,G_SQL,
+	   G_SCRIPT,G_CONFIG,G_DEBUG,
+	   G_APPEND,G_UPDATE,G_SYS_MAX};
+
 #define G_USERMIN 24
 #define G_SCRATCH  25
 #define SCRATCH_STR "25"
