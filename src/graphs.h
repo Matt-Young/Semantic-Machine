@@ -5,7 +5,6 @@ typedef struct  g {
   int end;
   TABLE * table;
   struct g * parent;
-  Triple pending_triple;
   int rowid;
 } GRAPH;
 typedef GRAPH * PGRAPH; 

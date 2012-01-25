@@ -9,11 +9,9 @@ typedef struct {
 extern OP operands[];
 #define GCHAR '_'
 // fundamental operators
-enum { G_EXIT,G_ECHO,G_SWAP,G_POP,
-	   G_CALL,G_DUP,G_EXEC,G_SQL,
-	   G_SCRIPT,G_CONFIG,G_DEBUG,
-	   G_APPEND,G_UPDATE,G_SYS_MAX};
-
+enum { SystemExit,SystemCall,SystemDup,SystemPop,
+		SystemExec,SystemScript,SystemDecode,SystemConfig,SystemEcho};
+#define SystemMax SystemEcho
 #define G_USERMIN 24
 #define G_SCRATCH  25
 #define SCRATCH_STR "25"

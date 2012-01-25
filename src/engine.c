@@ -139,7 +139,7 @@ int dup_handler(Triple *node){
 int ghandler(Triple top[],int status,Handler handler) { 
   if( (status != EV_Data) && (status != EV_Done) && (status != EV_Ok)  )
      G_error("ghandle entry",G_ERR_ENTRY);  
-  else if(status == EV_Done && (top->link & LINKMASK) < G_SYS_MAX ) 
+  else if(status == EV_Done && (top->link & LINKMASK) < SystemMax ) 
       return(status);
   if(status == EV_Done)
 	  set_ready_event(EV_No_data);
@@ -157,19 +157,21 @@ int ghandler(Triple top[],int status,Handler handler) {
 // this sifts through and finds a handler
 
 int triple(Triple top[],Handler handler) {
-  OP *op;
-  int status;
-  int events;
-  Code stmt; 
-  void * key;
-  key = 0;events=0;
-  status = top[0].link;
-  status &= EV_Overload;
-  events = set_ready_event(top[0].link & EV_Overload);
-  op = &operands[top[0].link && LINKMASK];
-  stmt = op->stmt;
-  if(!(op->properties & EV_No_bind))  
-	status = bind_sql(top,&stmt);
+	OP *op;
+	int status;
+	int events;
+	Code stmt; 
+	void * key;
+	key = 0;events=0;
+	status = EV_Ok;
+	events = set_ready_event(top[0].link & EV_Overload);
+	op = &operands[top[0].link && LINKMASK];
+	if(EV_Immediate & op->properties)
+		stmt = top[0].key;
+	else
+		stmt = op->stmt;
+	if(!(EV_No_bind & op->properties))
+		status = bind_sql(top,&stmt);
   if(status != EV_Ok) 
       G_error("bind \n",G_ERR_BIND);
  if((!stmt) || (events & EV_Overload))
@@ -188,27 +190,31 @@ int triple(Triple top[],Handler handler) {
 }
 
 
-typedef struct {
+const struct {
   char * name;
   int opid;
+  int properties;
   Handler handler;
-  } MAP;
-#define CALLS 9
-
-const MAP map[CALLS] = {
-  {"SystemExit",G_EXIT,exit_handler},{"SystemCall",G_CALL,call_handler},
-  {"SystemDup",G_DUP,dup_handler},{"SystemExit",G_POP,swap_handler},
-  {"SystemExec",G_EXEC,exec_handler},{"SystemScript",G_SQL,sql_handler},
-  {"SystemDecode",G_SCRIPT,script_handler},{"SystemConfig",G_CONFIG,config_handler},
-  {"SystemEcho",G_ECHO,echo_handler}
+  }  map[SystemMax +1] = {
+  {"SystemExit",SystemExit,EV_No_bind,exit_handler},
+  {"SystemCall",SystemCall,EV_No_bind,call_handler},
+  {"SystemDup",SystemDup,EV_No_bind,dup_handler},
+  {"SystemPop",SystemPop,EV_No_bind,pop_handler},
+  {"SystemExec",SystemExec,EV_No_bind,exec_handler},
+  {"SystemScript",SystemScript,EV_No_bind,sql_handler},
+  {"SystemDecode",SystemDecode,EV_No_bind,script_handler},
+  {"SystemConfig",SystemConfig,EV_No_bind,config_handler},
+  {"SystemEcho",SystemEcho,EV_No_bind,0}
 };
 int init_handlers() {
-  int i;
-   for(i=0;i < CALLS;i++) {
-     operands[map[i].opid].handler = map[i].handler;
-	 operands[map[i].opid].properties = EV_No_bind;
-	 operands[map[i].opid].stmt=0; 
-	 add_trio(map[i].name,G_TYPE_SYSTEM,(Pointer) map[i].opid);
+	int i;
+	i=0;
+	while( (i < SystemMax +1) && (map[i].name != 0)) {
+		operands[map[i].opid].handler = map[i].handler;
+		operands[map[i].opid].properties = map[i].properties;
+		operands[map[i].opid].stmt=0; 
+		add_trio(map[i].name,G_TYPE_SYSTEM,(Pointer) map[i].opid);
+		i++;
    }
    return 0;
 }
@@ -216,11 +222,15 @@ int init_machine() {
 	int status;
 	G_printf("%s\n",GBASE);
 	status = open_machine_layer(GBASE,&g_db);
-	status = init_handlers();
-	status = init_binder();
-	status = init_gfun();
-	status = init_tables();
-	status = init_filters();
+	if(status != EV_Ok) return status;
+	status = install_sql_script("select '_',95,0;",G_TYPE_NULL);
+	if(status != EV_Ok) return status;
+	G_printf("%s\n",GBASE);
+	status = init_handlers(); if(status != EV_Ok) return status;
+	status = init_binder(); if(status != EV_Ok) return status;
+	status = init_gfun(); if(status != EV_Ok) return status;
+	status = init_tables(); if(status != EV_Ok) return status;
+	status = init_filters(); if(status != EV_Ok) return status;
 	init_console();
   return status;
 }
@@ -244,8 +254,6 @@ int init_operands() {
 	for(i=G_USERMIN;i < OPERMAX;i++) {
 		operands[i].handler = event_handler;
 		operands[i].properties= EV_Null; }
-	install_sql_script("select '_',95,0;",G_TYPE_NULL);
-	G_printf("%s %d\n",GBASE,i);
 	return(i);
 	}
 int main(int argc, char * argv[])

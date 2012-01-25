@@ -14,7 +14,7 @@ int init_table_context() {
 #define Sql_create "drop table if exists %s; create table %s (key text,link integer, pointer integer);" 
 int del_create_table(TABLE *table) {
   char buff[400];char  *err;int status;
-  Triple t = {buff,G_EXEC,0};
+  Triple t = {buff,SystemExec,0};
   G_sprintf(buff,Sql_create,table->name,table->name);
     status = machine_exec(g_db,buff,&err);
   return( status);
@@ -82,10 +82,10 @@ const struct new_install{
 	char * sql;
 	char * map_name[4];
 } installs[] = {
-	{pop_triple_operator,G_POP,"select key,link,pointer from %s where (gfun(0,rowid) == rowid);",0},
-	{append_triple_operator,G_APPEND,"insert into %s values( ?, ?, ?) ;",
+	{pop_triple_operator,SystemMax+1,"select key,link,pointer from %s where (gfun(0,rowid) == rowid);",0},
+	{append_triple_operator,SystemMax+2,"insert into %s values( ?, ?, ?) ;",
 	  "BindTriple",0},
-	{update_triple_operator,G_UPDATE,"update %s set pointer = ? where rowid = (? + 1);",
+	{update_triple_operator,SystemMax+3,"update %s set pointer = ? where rowid = (? + 1);",
 	"BindSelfRow","BindSelfStart",0},
 	{0,0,0,0}
 };
@@ -100,6 +100,7 @@ Mapper null_map(void * p,int * i);
   // make an sql script
   G_sprintf(buff,installs[format].sql, table_name);
   status= machine_prepare(g_db,buff, &stmt);
+  if(status != EV_Ok) return status;
   p->key = (char *) stmt; 
   p->link = opid;  p->pointer = 0;
   operands[opid].stmt = stmt;  // Look in the table context for stmt

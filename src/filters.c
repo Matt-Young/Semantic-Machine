@@ -48,6 +48,5 @@ int init_filters() {
 	null_filter.g[0]=0;
 	null_filter.g[1]=0;
 	null_filter.properties= EV_Null;
-	init_table("console",1,&null_filter.event_table);
-	return(0);
+	return init_table("console",1,&null_filter.event_table);
 };

@@ -27,8 +27,9 @@ char * G_line(char * line,int n) {
 		//G_printf("%s",line);
 		return line;
 	//} else
-#endif
+#else
 	fgets(line, n, stdin);
+#endif
 	return line;
   }
 char * G_console(Console * console) { return G_line(console->base,console->size);}
