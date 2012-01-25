@@ -13,7 +13,7 @@ int debug_counter = 0;
 #define test_0 "{abc.def.ghi}"
 #define test_1 "{abc,def,ghi}"
 #define test_2 "{Test2$SystemDecode}"
-#define test_3 "...'12'$12345678. 34 , 'a d'{ and}"
+#define test_3 "...'12'$12345678.0 $34 , 'a d'{ and}"
 #define test_4 "{TestAttribute$Testing}"
 char * G_line(char * line,int n) {
 	char * prompt="Hello\n";
@@ -62,7 +62,7 @@ void G_exit() { exit(0);}
 int G_ispunct(int c){return ispunct(c);}
 void* G_memcpy(void* s, const void* ct, size_t n) {return memcpy(s, ct, (size_t) n);}
 void G_error(char * c,int i) {G_printf("error %d\n",c); G_exit(i);}
-
+int G_isdigit(int c) {return(isdigit(c));};
 char * G_gets(char * line) { return gets(line);}
-void G_debug(void * format) {}
+void G_debug(void * format){};
 #undef DEBUG

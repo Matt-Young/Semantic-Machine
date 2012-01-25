@@ -13,6 +13,7 @@ int G_atoi(const char* s);
 void G_memset(void* s, int c, int n);
 void* G_memcpy(void* s, const void* ct, int n);
 int G_ispunct(int c);
+int G_isdigit(int c);
 char *  G_gets(char * line);
 char * G_line(char * line,int n);
 char * G_InitConsole(Console * console,char * line,int size);

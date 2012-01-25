@@ -13,6 +13,6 @@
   int init_tables();
   int init_gfun();
   int init_console();
-  int parser(PGRAPH );
+  int parser(PGRAPH *);
   PGRAPH init_parser();
   int init_filters();

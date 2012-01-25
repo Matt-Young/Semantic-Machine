@@ -10,7 +10,6 @@ Mapper filter_map(Pointer * pointer,int * type) {
 return 0;
 }
 
-
 //  **  READY FOR RUNNING ******
 typedef struct {
   int count;
@@ -124,14 +123,17 @@ int events(FILTER * f) {
 	  delete_filter(child);
 	  return status;
   }
- 
-int init_run_console(FILTER *f) {
-	f->g[0] = init_parser();
-	f->event_table = f->g[0]->table;
-	f->event_triple = 
-		&f->event_table->operators[pop_triple_operator];
-	return(parser(f->g[0]));}
 
+int init_run_console(FILTER *f) {
+	int status; TABLE *table;
+	f->g[0] = init_parser();
+	table =f->g[0]->table;
+	f->event_table = table;
+	status=parser((PGRAPH *) &table->list);
+	f->event_triple = &table->operators[pop_triple_operator];
+	status= run_ready_graph(f); // run from concole table
+	return status;
+}
 int event_exec(FILTER * f) {
   int g_event = f->properties;
   switch(g_event) {

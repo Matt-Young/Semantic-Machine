@@ -8,16 +8,20 @@ typedef char * CharPointer;
 char * null_key = "_";
 int graph_counter;
 // Is it a character known to the syntax? '
-const char  *uglies = "_',.{}$";
+const char  *uglies = "'._,{}$"; // minuse the quote
+#define Dot uglies[1]
+#define Quote uglies[0]
 char  isugly(char ch) { 
 	const char * ptr = uglies;
 	while((*ptr) && ((*ptr) != ch)) ptr++;
 		return *ptr;}
+
 // Front end key word from text and json operators
 int key_op(Console * console,CharPointer *key,int * op) {
+	enum { quote = 1,numeric =2};
       int i;
 	  CharPointer ptr= console->current;
-	  int quoting;
+	  int events;
 	  if(*ptr == 0) {
 		  	console->current = console->base;
 			ptr = console->current;
@@ -25,26 +29,40 @@ int key_op(Console * console,CharPointer *key,int * op) {
 			if(console->base[0] == 0)
 				return -1;
 	  }
-	  i = 0; quoting=0;
+	  i = 0; events=0;
 	  while(isspace(*ptr)) ptr++;
-	  if(*ptr == 39) {// are we quoting?
+	  if(G_isdigit(*ptr) )
+		  events += numeric;
+	  if(*ptr == Quote) {// Quote char?
 		  ptr++;
 		  *key=ptr;
-		  while(*ptr != 39) ptr++;
-		  quoting = 1;ptr++;
-	  }
-	  else 
-		  *key=ptr;
-      while(!isugly(*ptr) && (*ptr != 0) ) {i++; ptr++;}
-	  *op = (int) *ptr;
-	  i = (int) ptr - (int) (*console->current); // char count
-	  if(!quoting) 
-		  if(ptr != console->base) 
-			while( ((*ptr) != 0) && isspace(*(ptr-1))) ptr--;
-	  *ptr = 0;
-	  console->current = ptr+1;
-      return i;
-    }
+		  if(*ptr  != Quote) {
+			  events += quote;
+		  ptr++;
+		  }
+	  } else *key=ptr;
+	  while(1) {
+		if(isugly(*ptr) || (*ptr == 0) ) {
+			if((events & numeric) && *ptr == Dot)
+				ptr++;
+			else if(!(events & quote) && (*ptr == Quote) ) {
+				*ptr = 0;ptr++; 
+			} else {
+				console->current = ptr+1;
+				while((ptr != console->base) && isspace(*(ptr-1))) ptr--;
+				break;
+			}	
+		  }else {
+			ptr++;
+		  	if(ptr >= &console->base[console->size])
+				return -1;
+			}
+		}
+		*op = (int) *console->current;
+		i = (int) ptr - (int) (*console->current); // char count
+		*ptr = 0;
+		return i;
+	}
 // apply known attributes
 void SetAttribute(Triple * destination,char * attribute) {
 	Trio * trio= find_trio(attribute);
@@ -78,7 +96,7 @@ int process_block(PGRAPH *inner) {
 	  next.pointer=(*inner)->row+1;
 #ifdef Debug_parser
 	  if(1) {
-	  G_printf("%s %c  ", next.key,next.link);
+		  G_printf("{%s  %c  %d}  ", next.key,next.link,next.pointer);
 	  next.link = DISCARD;
 	  } else
 #endif
