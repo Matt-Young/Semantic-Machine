@@ -1,7 +1,7 @@
 
 #include "all.h"
 #include "filter.h"
-const Triple NULL_Triple={"_",96,0};
+const Triple NULL_Triple={"_",'_',0};
 
 PGRAPH  set_ready_graph(FILTER *f) ;
 Mapper filter_map(Pointer * pointer,int * type) {
@@ -11,11 +11,12 @@ return 0;
 }
 
 //  **  READY FOR RUNNING ******
+typedef struct {int start;int row;int end;} RowSequence;
 typedef struct {
   int count;
-  PGRAPH self;
-  PGRAPH other;
-  PGRAPH result;
+  RowSequence self;
+  RowSequence other;
+  RowSequence result;
   FILTER *filter;
   int  events;
   Code stmt;
@@ -23,26 +24,22 @@ typedef struct {
 
 READYSET ready;
 Mapper map_self_row(Pointer * p,int *type) {
-	if(ready.self)
-		*p = (Pointer) ready.self->row;
+	*p = (Pointer) ready.self.row;
 	*type = G_TYPE_INTEGER;
 	return 0;
 	}
 Mapper map_self_start(Pointer * p,int *type) {
-	if(ready.self)
-		*p = (Pointer) ready.self->start;
+	*p = (Pointer) ready.self.start;
 	*type = G_TYPE_INTEGER;
 	return 0;
 	}
 Mapper map_other_row(Pointer * p,int *type) {
-	if(ready.other)
-		*p = (Pointer) ready.other->row;
+	*p = (Pointer) ready.other.row;
 	*type = G_TYPE_INTEGER;
 	return 0;
 	}
 Mapper map_other_start(Pointer * p,int *type) {
-	if(ready.other)
-		*p = (Pointer) ready.other->start;
+	*p = (Pointer) ready.other.start;
 	*type = G_TYPE_INTEGER;
 	return 0;
 	}
@@ -52,27 +49,32 @@ Mapper map_other_start(Pointer * p,int *type) {
 // it is always bound to the table context
 
 FILTER * ready_filter() { return ready.filter;}
-TABLE * self_table() { return ready.self->table;}
-GRAPH * self_graph(){ return (GRAPH *) ready.self->table->list;}
-GRAPH * other_graph(){ return (GRAPH *) ready.other->table->list;}
+//TABLE * self_table() { return ready.event_table;}
+//GRAPH * self_graph(){ return (GRAPH *) ready.self->table->list;}
+//GRAPH * other_graph(){ return (GRAPH *) ready.other->table->list;}
 // msthods on graph pointers
 int stopped_row() {
-if(ready.self->row == ready.self->end)
+if(ready.self.row == ready.self.end)
   return 1;
 return 0;
 }
 int incr_row(int delta) {
-  ready.self->row+= delta;return(ready.self->row);
+  ready.self.row+= delta;return(ready.self.row);
 }
-int _row() {return(ready.self->row);}
+int _row() {return(ready.self.row);}
 int set_row(int ivar) {
-  ready.self->row = ivar;
-  return(ready.self->row);
+  ready.self.row = ivar;
+  return(ready.self.row);
 }
 
 int reset_ready_set() {
   G_memset((void *) &ready,0,sizeof(ready));
   return 0;
+}
+void set_row_sequence(RowSequence * rows,PGRAPH f) {
+	 rows->row = convert_start(f);
+	 rows->row = convert_row(f);
+	 rows->row = convert_end(f);
 }
 int set_ready_event(int EV_event) {
 	ready.events |= EV_event;
@@ -82,9 +84,9 @@ int  run_ready_graph(FILTER *f) {
 	G_memset(&ready,0,sizeof(ready));
 	ready.filter = f;
   if(f->g[0]) 
-	 ready.self = f->g[0];
+	 set_row_sequence(&ready.self,f->g[0]);
   else if(f->g[1]) 
-	 ready.other = f->g[1];
+	 set_row_sequence(&ready.self,f->g[1]);
   return  triple(f->event_triple,0);
 }
 
@@ -98,6 +100,7 @@ int key_match(const char * k,const char * g) {
 }
 int events(FILTER * f) {
   int g_event=0;
+
   if(!f->g[0])
    g_event |= EV_Null;
   else  if(f->g[0]->end > f->g[0]->row) 
@@ -135,18 +138,25 @@ int init_run_console(FILTER *f) {
 	return status;
 }
 int event_exec(FILTER * f) {
-  int g_event = f->properties;
-  switch(g_event) {
-  case EV_Null:
-	  g_event = init_run_console(f);
-     break;
-  case EV_Debug:
-	  g_event = init_run_table(f,"config");
-	break;
-  default:
-	  g_event |=events(f);
-	  break;
-  }
+	 int g_event;
+	g_event = 0;
+	if(isnull_filter(f))
+		g_event |= EV_Null;
+	g_event |=  set_ready_event(0);
+	switch(g_event) {
+		case EV_Null:
+			g_event = init_run_console(f);
+		break; 
+		case EV_Debug:
+			g_event = init_run_table(f,"config");
+		break;
+		default:
+			g_event |=events(f);
+		break;
+	}
+	if(g_event)
+	  if(!isnull_filter(f))
+		  event_exec(f->parent);
     return(g_event);
   }
  void reset_G_columns(TABLE *t) { 
@@ -158,6 +168,7 @@ int event_exec(FILTER * f) {
 int event_handler(Triple * t) {
 	FILTER *f;
 	f = ready.filter;
+
 	f->properties |= operands[t->link].properties;
 	if(f->properties & EV_Null)
 	  event_exec(f);
@@ -186,35 +197,35 @@ void gfunction(Pointer context,int n, Pointer* v) {
   //printf("gfun: %d %d\n",x,m.self_row);
   switch(op) {
   case SELF_ROW:
-	 machine_result_int(context, ready.self->row+1);
-    if(x == ready.self->row+1) 
-      if(ready.self->row+1 != ready.self->end)
-        ready.self->row++;
+	 machine_result_int(context, ready.self.row+1);
+    if(x == ready.self.row+1) 
+      if(ready.self.row+1 != ready.self.end)
+        ready.self.row++;
     break;
   case OTHER_ROW:
-    machine_result_int(context, ready.other->row+1);
-    if(x == ready.other->row+1) 
-      if(ready.other->row+1 != ready.other->end)
-        ready.other->row++;
+    machine_result_int(context, ready.other.row+1);
+    if(x == ready.other.row+1) 
+      if(ready.other.row+1 != ready.other.end)
+        ready.other.row++;
     break;
   case RESULT_ROW:
-    machine_result_int(context, ready.result->row+1);
+    machine_result_int(context, ready.result.row+1);
     break;
   case GET_NEXT_ROW:
-    machine_result_int(context, ready.result->row);
+    machine_result_int(context, ready.result.row);
     break;
   case SET_NEXT_ROW:
-    machine_result_int(context, ready.result->row);
-    ready.self->end = x;
+    machine_result_int(context, ready.result.row);
+    ready.self.end = x;
     break;
   case SET_LINK:
     //current_graph->link = x;
-    ready.self->row++;
+    ready.self.row++;
     //current_graph->opclass = operands[x].properties;
     machine_result_int(context, 1);
     break;
   default:
-    G_printf("gfun: %d %d\n",x,ready.self->row);
+    G_printf("gfun: %d %d\n",x,ready.self.row);
     machine_result_int(context, 0);
   }
 }

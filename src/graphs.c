@@ -21,6 +21,15 @@ PGRAPH parent=child->parent;
 void restart_graph(PGRAPH graph) {
   graph->row = graph->start;
 }
+int convert_row(PGRAPH g) {
+	return (g->rowid + g->row);
+}
+int convert_start(PGRAPH g) {
+	return (g->rowid + g->start);
+}
+int convert_end(PGRAPH g) {
+	return (g->rowid + g->end);
+}
 void pass_parent_graph(PGRAPH graph) {
 PGRAPH parent = graph->parent;
 if(!parent)
@@ -34,14 +43,14 @@ int count_graph(PGRAPH graph) {
 int reset_graph(PGRAPH graph) {
   graph->row=0;
   graph->start=0;
-  graph->match_state = G_START;
-  return G_START;
+  return 0;
 }
 PGRAPH dup_graph(PGRAPH l1,PGRAPH l2) {
   l1->row = l2->row;
   l1->start = l2->row;
   l1->table = l2->table;
   l1->end = l2->end;
+  l1->rowid = convert_row(l2);
   l1->parent = l2;
   return l1;
 }
@@ -57,7 +66,6 @@ PGRAPH new_child_graph(PGRAPH *outer) {
   if(!(*outer)) return(0);  // call new_table_graph first
   inner = new_graph_context();
   dup_graph(inner,(*outer));
-  inner->match_state = G_START;
   *outer = inner;
   return inner;
 }

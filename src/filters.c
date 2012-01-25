@@ -5,6 +5,11 @@ FILTER null_filter;
 FILTER * filter_list;
 int newfilter=0;
 int oldfilter=0;
+int isnull_filter(FILTER * f) {
+	if(f == &null_filter)
+		return 1;
+	return 0;
+}
 FILTER * new_filter(FILTER * parent) {
 	FILTER * f;
 	if(!parent || !filter_list)

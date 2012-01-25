@@ -12,6 +12,7 @@ FILTER * new_filter(FILTER * parent);
 FILTER * close_filter(FILTER * f);
 int delete_filter_contents(FILTER * f);
 extern FILTER null_filter;
+int isnull_filter(FILTER * f);
 // events and properties
 
 #define EV_Overload 0x80

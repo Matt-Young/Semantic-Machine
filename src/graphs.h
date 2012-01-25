@@ -5,11 +5,11 @@ typedef struct  g {
   int end;
   TABLE * table;
   struct g * parent;
-  int match_state;
   Triple pending_triple;
+  int rowid;
 } GRAPH;
 typedef GRAPH * PGRAPH; 
-enum{G_START};
+
 PGRAPH new_child_graph(PGRAPH *);
 PGRAPH new_graph_context();
 PGRAPH delete_graph(PGRAPH *);
@@ -18,7 +18,9 @@ int append_graph(PGRAPH *,Triple );
 int del_table_graph(PGRAPH *);
 PGRAPH get_table_graph(int index);
 PGRAPH new_table_graph(TABLE * table);
-
+int convert_start(PGRAPH g);
+int convert_row(PGRAPH g);
+int convert_end(PGRAPH g);
 int count_graph(PGRAPH );
 void graph_counts() ;
 void reset_graphs(PGRAPH );

@@ -51,6 +51,7 @@ void free_table_context(PTABLE pt) {
 PGRAPH new_table_graph(TABLE * table) {
  table->list = new_graph_context(); 
 	table->list->table = table;
+table->list->rowid=1;
   return table->list;
 }
 char * NAME(TABLE *table) {
