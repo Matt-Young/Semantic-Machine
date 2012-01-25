@@ -49,18 +49,18 @@ int install_sql_script(char * ch,int opid) {
 // these are varable cheats for config state
   int variable;
 
-int  config_handler(Triple t) {
+int  config_handler(Triple *t) {
     int status=SQLITE_OK;
-    const char * ch = t.key; 
+    const char * ch = t->key; 
     //printf("Configure: \n");
-    switch(t.pointer)  {
+    switch(t->pointer)  {
       case 0: //opcode pointer
         variable = G_atoi(ch);
         if((OPERMAX < variable) ) 
           return(SQLITE_MISUSE);
       break;
       case 1: // install user script
-        ch = newkey(t.key);
+        ch = newkey(t->key);
         status = install_sql_script((char *) ch,variable);
         if(status != SQLITE_OK)
           G_error("Prepare",G_ERR_PREPARE);
@@ -73,54 +73,54 @@ int  config_handler(Triple t) {
     }
     return status;
     }
-int sql_handler(Triple node) {
+int sql_handler(Triple *node) {
   int status=SQLITE_OK;
-  install_sql_script((char *) node.key,G_SCRATCH);
+  install_sql_script((char *) node->key,G_SCRATCH);
   triple((Triple *) &SCRATCH_Triple,0);
   return status;
 }
-int call_handler(Triple node) {
+int call_handler(Triple *node) {
   int pointer;
   pointer  =  incr_row(0);
-  set_row(G_atoi(node.key));
+  set_row(G_atoi(node->key));
   set_row(pointer);
   return SQLITE_OK;
 }
-int exec_handler(Triple t) {
+int exec_handler(Triple *t) {
   int status;
   char *err;
-  status = machine_exec(g_db,t.key,&err);
+  status = machine_exec(g_db,t->key,&err);
   return status;
 }
 
-int swap_handler(Triple t) {return SQLITE_OK;}
+int swap_handler(Triple *t) {return SQLITE_OK;}
 int exit_handler(Triple node) {  
 return EV_Done;}
-int pop_handler(Triple node) {
+int pop_handler(Triple *node) {
   int status;
   Triple t;
   //incr_row(1);
-  unbind_triple(operands[node.link].stmt,&t);
+  unbind_triple(operands[node->link].stmt,&t);
   status = triple(&t,0);
   if(stopped_row() )
     status = EV_Done;
   return status;
 }
-int script_handler(Triple node) {  
+int script_handler(Triple *node) {  
   int id;
-  id = G_atoi(node.key);
+  id = G_atoi(node->key);
   G_printf("Script: \n%s\n",machine_script(operands[id].stmt));
   return SQLITE_OK;
 }
-int echo_handler(Triple node) {  
-  G_printf("Echo: \n%s %d \n",node.key,node.link);
+int echo_handler(Triple *node) {  
+  G_printf("Echo: \n%s %d \n",node->key,node->link);
   return SQLITE_OK;
 }
-int dup_handler(Triple node){
+int dup_handler(Triple *node){
   int id,i;
   char buff[400];
   int status;
-  id = G_atoi(node.key);
+  id = G_atoi(node->key);
   G_strcpy(buff,(const char *) machine_script(operands[id].stmt));
   status = install_sql_script(buff,G_SCRATCH);
   if(status != SQLITE_OK) G_error("Dup",G_ERR_DUP);
@@ -182,7 +182,7 @@ int triple(Triple top[],Handler handler) {
 typedef struct {
   char * name;
   int opid;
-  int (*handler)(Triple);
+  Handler handler;
   } MAP;
 #define CALLS 8
 
