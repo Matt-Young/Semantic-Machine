@@ -9,6 +9,7 @@ typedef struct  g {
   Triple pending_triple;
 } GRAPH;
 typedef GRAPH * PGRAPH; 
+enum{G_START};
 PGRAPH new_child_graph(PGRAPH *);
 PGRAPH new_graph_context();
 PGRAPH delete_graph(PGRAPH *);

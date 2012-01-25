@@ -34,7 +34,6 @@ void delkey(const char * key) {
   {oldcount++; G_free( (void *) key);}
 }
 
-int output_filter(Triple t);
 int install_sql_script(char * ch,int opid) {
   int status;
   status =
@@ -96,7 +95,7 @@ int exec_handler(Triple t) {
 
 int swap_handler(Triple t) {return SQLITE_OK;}
 int exit_handler(Triple node) {  
-return G_DONE;}
+return EV_Done;}
 int pop_handler(Triple node) {
   int status;
   Triple t;
@@ -104,7 +103,7 @@ int pop_handler(Triple node) {
   unbind_triple(operands[node.link].stmt,&t);
   status = triple(&t,0);
   if(stopped_row() )
-    status = G_DONE;
+    status = EV_Done;
   return status;
 }
 int script_handler(Triple node) {  
@@ -130,17 +129,17 @@ int dup_handler(Triple node){
   return SQLITE_OK;
 }
   
-int ghandler(Triple top,int status,int (*handler)(Triple)) { 
+int ghandler(Triple top[],int status,Handler handler) { 
   if( (status != SQLITE_ROW) && (status != SQLITE_DONE) && (status != SQLITE_OK)  )
      G_error("ghandle entry",G_ERR_ENTRY);  
-  else if(status == SQLITE_DONE && (top.link & LINKMASK) <= G_GRAPH_MAX ) 
+  else if(status == SQLITE_DONE && (top->link & LINKMASK) <= G_GRAPH_MAX ) 
       return(status);
   if(status == SQLITE_DONE)
 	  set_ready_event(EV_No_data);
   if(handler)
     status = handler(top);
-  else if(operands[top.link & LINKMASK].handler)
-    status = operands[top.link & LINKMASK].handler(top);
+  else if(operands[top->link & LINKMASK].handler)
+    status = operands[top->link & LINKMASK].handler(top);
 
   return status;
 }
@@ -150,7 +149,7 @@ int ghandler(Triple top,int status,int (*handler)(Triple)) {
 // The link then holds the specified graph operator, 
 // this sifts through and finds a handler
 
-int triple(Triple top[],int (*handler)(Triple)) {
+int triple(Triple top[],Handler handler) {
   OP *op;
   int status;
   int events;
@@ -165,11 +164,11 @@ int triple(Triple top[],int (*handler)(Triple)) {
   if(status != SQLITE_OK) 
       G_error("bind \n",G_ERR_BIND);
  if((!stmt) || (events & EV_Overload))
-	 status = ghandler(top[0],status,handler);
+	 status = ghandler(top,status,handler);
  else {
 	 do {
 		status = machine_step(stmt );
-		status = ghandler(top[0],status,handler);
+		status = ghandler(top,status,handler);
 		}  while( status == SQLITE_ROW );
 	machine_reset(stmt);
 	}

@@ -6,7 +6,7 @@ typedef struct {
   int pointer;
 } Triple;
 typedef void * Pointer; 
-typedef int (*Handler)(Triple);
+typedef int (*Handler)(Triple *);
 typedef int (*Mapper)(Pointer *pointer,int *type);
 typedef void * Code;
 /*

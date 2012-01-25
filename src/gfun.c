@@ -155,10 +155,10 @@ int event_exec(FILTER * f) {
  int do_square(int mode,FILTER *f);
  
 // Arrive here when some operaors has produced events
-int event_handler(Triple t) {
+int event_handler(Triple * t) {
 	FILTER *f;
 	f = ready.filter;
-	f->properties |= operands[t.link].properties;
+	f->properties |= operands[t->link].properties;
 	if(f->properties & EV_Null)
 	  event_exec(f);
 	else if(f->properties & EV_Square)  {

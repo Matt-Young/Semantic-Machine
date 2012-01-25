@@ -13,6 +13,7 @@ FILTER * close_filter(FILTER * f);
 int delete_filter_contents(FILTER * f);
 extern FILTER null_filter;
 // events and properties
+
 #define EV_Overload 0x80
 #define EV_Null 0x01  // Do some null operation
 #define EV_No_bind 0x02 // This event requires no binding
@@ -25,3 +26,4 @@ extern FILTER null_filter;
 #define EV_Incomplete 0x100  // DUnno
 #define EV_Debug EV_Overload
 #define EV_No_data 0x200
+#define EV_Done	0x200 
