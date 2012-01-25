@@ -13,7 +13,7 @@ int debug_counter = 0;
 #define test_0 "{abc.def.ghi}"
 #define test_1 "{abc,def,ghi}"
 #define test_2 "{Test2$SystemDecode}"
-#define test_3 "...'12'$12345678.0 $34 , 'a d'{ and}"
+#define test_3 ".'12'$12345678.0 $34 , 'a d'{ and}"
 #define test_4 "{TestAttribute$Testing}"
 char * G_line(char * line,int n) {
 	char * prompt="Hello\n";

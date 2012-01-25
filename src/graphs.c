@@ -6,6 +6,18 @@
 // current innermost graph on a descending sequence.
 
 int del_count=0,new_count=0;
+ PGRAPH new_graph_context() {
+	   new_count++;
+  return (PGRAPH) G_calloc(sizeof(GRAPH));
+  }
+ PGRAPH free_graph_context(PGRAPH  child) {
+PGRAPH parent=child->parent;
+  if(del_count >= new_count)
+    G_error("Bad graph",G_ERR_GRAPH);
+  G_free((void *) child);
+  del_count++;
+  return parent;
+  }	
 void restart_graph(PGRAPH graph) {
   graph->row = graph->start;
 }
@@ -40,14 +52,13 @@ void reset_graphs(PGRAPH inner) {
   }
 }
 
-PGRAPH new_graph(PGRAPH *outer) {
+PGRAPH new_child_graph(PGRAPH *outer) {
   PGRAPH inner;
   if(!(*outer)) return(0);  // call new_table_graph first
-  inner = (PGRAPH) G_calloc(sizeof(GRAPH));
+  inner = new_graph_context();
   dup_graph(inner,(*outer));
   inner->match_state = G_START;
   *outer = inner;
-  new_count++;
   return inner;
 }
 
@@ -56,15 +67,10 @@ PGRAPH delete_graph(PGRAPH *list) {
   child = *list;
   if(!child)
 	  return 0;
-  if(del_count >= new_count)
-    G_error("Bad graph",G_ERR_GRAPH);
-  parent = child->parent;
+  parent=free_graph_context(child);
   if(parent)
     parent->row = child->row;
-  G_free((void *) child);
-  *list = parent;
-  del_count++;
-  return parent;
+   return *list;
 }
 void close_update_graph(PGRAPH *list) { 
   int status; 
@@ -82,15 +88,7 @@ int del_table_graph(PGRAPH *inner) {
  }
   return 0;
 }
-int new_table_graph(TABLE * table) {
-  PGRAPH inner;
- if(table->list) del_table_graph(&table->list);
-  inner = (PGRAPH) G_calloc(sizeof(GRAPH));
-  new_count++;
-	table->list = inner; 
-	inner->table = table;
-  return 0;
-}
+
 int append_graph(PGRAPH *list,Triple node) {
   int status=0;
   TABLE * t = (*list)->table;

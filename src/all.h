@@ -1,11 +1,10 @@
 // All includes
 #include "g_types.h"
 #include "names.h"
-#include "console.h"
-#include "binds.h"
 #include "tables.h"
 #include "graphs.h"
 #include "engine.h"
+#include "console.h"
 #include "g.h"
 // init list
   int init_binder();

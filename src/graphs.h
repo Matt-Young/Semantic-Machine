@@ -9,16 +9,14 @@ typedef struct  g {
   Triple pending_triple;
 } GRAPH;
 typedef GRAPH * PGRAPH; 
-PGRAPH self_graph();
-PGRAPH other_graph();
-PGRAPH new_graph(PGRAPH *);
+PGRAPH new_child_graph(PGRAPH *);
+PGRAPH new_graph_context();
 PGRAPH delete_graph(PGRAPH *);
 void close_update_graph(PGRAPH *);
 int append_graph(PGRAPH *,Triple );
 int del_table_graph(PGRAPH *);
-int new_table_graph(TABLE * table);
 PGRAPH get_table_graph(int index);
-//void reset_G_columns();
+PGRAPH new_table_graph(TABLE * table);
 
 int count_graph(PGRAPH );
 void graph_counts() ;
@@ -27,13 +25,12 @@ int reset_graph(PGRAPH );
 PGRAPH dup_graph(PGRAPH l1,PGRAPH l2);
 void pass_parent_graph(PGRAPH );
 PGRAPH new_graph_by_index(int);
-#define pop_triple_operator 0
-#define append_triple_operator 1
-#define triple_data_0 2
-#define update_triple_operator 3
-#define triple_data_1 4
-#define select_triple_operator 5
-#define installed_triple_operator 6
+// layout of triplet installed in table contaxts
+enum {
+	pop_triple_operator,
+	append_triple_operator,triple_data_0,
+	update_triple_operator,triple_data_1,
+	select_triple_operator, installed_triple_operator};
 
 
 

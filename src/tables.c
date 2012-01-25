@@ -48,7 +48,11 @@ void free_table_context(PTABLE pt) {
 	G_free((void *) pt);
 	del_table_count++;
 }
-
+PGRAPH new_table_graph(TABLE * table) {
+ table->list = new_graph_context(); 
+	table->list->table = table;
+  return table->list;
+}
 char * NAME(TABLE *table) {
   return table->name;
 }
