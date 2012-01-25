@@ -1,84 +1,21 @@
 #include "sqlite_msgs.h"
 #include "all.h"
 #include <ctype.h>
-
+#define Debug_parser
 #define DISCARD 256
 #define Line_size 256
 typedef char * CharPointer;
-char * null_key = "_";
+
 int graph_counter;
-
-// Is it a character known to the syntax? '
-const char  *uglies = "'._,{}$!"; // minuse the quote
-enum {QuoteSyntax,DotSyntax,NullSyntax,CommaSyntax};
-char  isugly(char ch) { 
-	const char * ptr = uglies;
-	while((*ptr) && ((*ptr) != ch)) ptr++;
-		return *ptr;}
-
-// Front end key word from text and json operators
-int key_op(Console * console,CharPointer *key,int * op) {
-	enum { quote = 1,numeric =2};
-      int i;
-	  CharPointer ptr= console->current;
-	  int start= (int) console->current;
-	  int events;
-	  if(*ptr == 0) {
-		  	console->current = console->base;
-			ptr = console->current;
-			G_console(console);  // get a line of data
-			if(console->base[0] == 0)
-				return -1;
-	  }
-	  i = 0; events=0;
-	  while(isspace(*ptr)) ptr++;
-	  if(G_isdigit(*ptr) )
-		  events += numeric;
-	  if(*ptr == uglies[QuoteSyntax]) {// Quote char?
-		  ptr++;
-		  *key=ptr;
-		  if(*ptr  != uglies[QuoteSyntax]) {
-			  events += quote;
-		  ptr++;
-		  }
-	  } else *key=ptr;
-	  while(1) {
-		if(isugly(*ptr) || (*ptr == 0) ) {
-			if((events & numeric) && *ptr == uglies[DotSyntax])
-				ptr++;
-			else if(!(events & quote) && (*ptr == uglies[QuoteSyntax]) ) {
-				*ptr = 0;ptr++; 
-			} else { char * tmp;
-				*op = (int) *ptr;
-				console->current = ptr+1;
-				tmp = ptr; while((tmp != console->base) && isspace(*(tmp-1))) tmp--;
-				*tmp = 0;
-				break;
-			}	
-		  }else {
-			ptr++;
-		  	if(ptr >= &console->base[console->size])
-				return -1;
-			}
-		}
-	  	if((*ptr == 0) || ((*ptr) == uglies[QuoteSyntax]))
-			*op = uglies[NullSyntax];
-		else
-			*op = *ptr;
-		i =  start - (int) *console->current; // char count
-		*ptr = 0;
-		if(!(*key[0])) 
-			*key = null_key;  // valid null key
-		return i;
-	}
-// apply known attributes
-void SetAttribute(Triple * destination,char * attribute) {
-	Trio * trio= find_trio(attribute);
-	if(trio) {
-		if(trio->type == G_TYPE_BIT) 
-			destination->link += (int) trio->value;  
-		else if(trio->type == G_TYPE_SYSTEM)
-			destination->link = (int) trio->value;
+// apply known attributes using name substitution
+void SetAttribute(Triple * destination,Triple * attribute) {
+	Trio * trio;
+	if(G_strcmp(attribute->key,"local") && (attribute->key[0] != '_'))
+		return;
+	trio= find_trio(destination->key);
+	if(trio && (int) trio->type == G_TYPE_SYSTEM) {
+		destination->link =  (int) trio->value;
+		attribute->link = DISCARD;
 	}
 }
 // buils a subgraph on inner from user text
@@ -95,20 +32,19 @@ int process_block(PGRAPH *inner) {
   named_count=0;
   new_child_graph(inner); // enclose this work in a subgraph
   for(;;) {
-	  nchars =key_op(&console,&next.key,&next.link);
+	  nchars =G_keyop(&console,&next.key,&next.link);
       if(nchars < 0)
 		break;
-
 	  next.pointer=(*inner)->row+1;
 #ifdef Debug_parser
-	 // if(1) {
-		  G_printf("{%10s %c  %4d}\n", next.key,next.link,next.pointer);
+	 //if(1) {
+		  G_printf("<%10s %c  %4d>\n", next.key,next.link,next.pointer);
 	  //next.link = DISCARD;
-	  //} //else
+	 // } else
 #endif
 	  // Handle attributes immediately
 	if(current.link == '$') {
-		SetAttribute(&current,next.key);
+		SetAttribute(&current,&next);
 			 current.link = DISCARD;
 	}
 	// Erase the bracket

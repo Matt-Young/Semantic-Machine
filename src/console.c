@@ -13,8 +13,8 @@ int init_console() { return(0);}
 int debug_counter = 0;
 #define test_0 "{abc.def.ghi}"
 #define test_1 "{abc,def,ghi}"
-#define test_2 "{abc}"
-#define test_3 ".'12'$12345678.0 $34 , 'a d'{ and}"
+#define test_2 "{SystemConfig$local}"
+#define test_3 "SystemConfig$local , 'a d'{ and}"
 #define test_4 "{TestAttribute$Testing}"
 #endif
 char * G_line(char * line,int n) {
@@ -24,7 +24,7 @@ char * G_line(char * line,int n) {
 	debug_counter++; debug_counter &= 0x03;
 	if(debug_counter != 0) {
 		G_strncpy(line,test_2,n);
-		G_printf("%s",line);
+		//G_printf("%s",line);
 		return line;
 	} else
 #endif
@@ -69,4 +69,67 @@ void G_error(char * c,int i) {G_printf("error %d\n",c); G_exit(i);}
 int G_isdigit(int c) {return(isdigit(c));};
 char * G_gets(char * line) { return gets(line);}
 void G_debug(void * format){};
-#undef DEBUG
+// Is it a character known to the syntax? '
+const char  *uglies = "'._,{}$!"; // minuse the quote
+char * null_key = "_";
+enum {QuoteSyntax,DotSyntax,NullSyntax,CommaSyntax};
+char  isugly(char ch) { 
+	const char * ptr = uglies;
+	while((*ptr) && ((*ptr) != ch)) ptr++;
+		return *ptr;}
+typedef char * CharPointer;
+// Front end key word from text and json operators
+int G_keyop(Console * console,CharPointer *key,int * op) {
+	enum { quote = 1,numeric =2};
+      int i;
+	  CharPointer ptr= console->current;
+	  int start= (int) console->current;
+	  int events;
+	  if(*ptr == 0) {
+		  	console->current = console->base;
+			ptr = console->current;
+			G_console(console);  // get a line of data
+			if(console->base[0] == 0)
+				return -1;
+	  }
+	  i = 0; events=0;
+	  while(isspace(*ptr)) ptr++;
+	  if(G_isdigit(*ptr) )
+		  events += numeric;
+	  if(*ptr == uglies[QuoteSyntax]) {// Quote char?
+		  ptr++;
+		  *key=ptr;
+		  if(*ptr  != uglies[QuoteSyntax]) {
+			  events += quote;
+		  ptr++;
+		  }
+	  } else *key=ptr;
+	  while(1) {
+		if(isugly(*ptr) || (*ptr == 0) ) {
+			if((events & numeric) && *ptr == uglies[DotSyntax])
+				ptr++;
+			else if(!(events & quote) && (*ptr == uglies[QuoteSyntax]) ) {
+				*ptr = 0;ptr++; 
+			} else { char * tmp;
+				console->current = ptr+1;
+				tmp = ptr; while((tmp != console->base) && isspace(*(tmp-1))) tmp--;
+				if(isspace(*tmp)) *tmp = 0;
+				break;
+			}	
+		  }else {
+			ptr++;
+		  	if(ptr >= &console->base[console->size])
+				return -1;
+			}
+		}
+	  	if((*ptr == 0) || !isugly(*ptr) )
+			*op = uglies[NullSyntax];
+		else
+			*op = *ptr;
+		i =  start - (int) *console->current; // char count
+		*ptr = 0;
+		if(!(*key[0])) 
+			*key = null_key;  // valid null key
+		return i;
+	}
+

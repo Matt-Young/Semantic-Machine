@@ -15,7 +15,6 @@ extern FILTER null_filter;
 int isnull_filter(FILTER * f);
 // events and properties
 
-#define EV_Overload 0x80
 #define EV_Null 0x01  // Do some null operation
 #define EV_No_bind 0x02 // This event requires no binding
 #define EV_Immediate 0x04  //The statement in the key value

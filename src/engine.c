@@ -18,7 +18,13 @@ void unbind_triple(Code stmt,Triple *t) {
   t->link= machine_column_int(stmt, 1);
   t->pointer= machine_column_int(stmt, 2);
 }
-
+int machine_triple(Code stmt,Triple * t) {
+	int status;
+	status = machine_step(stmt );
+	if(status==SQLITE_ROW)
+		unbind_triple(stmt,t);
+	return(status);
+}
 
 int newcount=0;
 int oldcount=0;
@@ -49,30 +55,32 @@ int install_sql_script(char * ch,int opid) {
 // these are varable cheats for config state
   int variable;
 
-int  config_handler(Triple *t) {
+int  config_handler(Triple t[]) {
     int status=SQLITE_OK;
-    const char * ch = t->key; 
-    //printf("Configure: \n");
-    switch(t->pointer)  {
-      case 0: //opcode pointer
-        variable = G_atoi(ch);
-        if((OPERMAX < variable) ) 
-          return(SQLITE_MISUSE);
-      break;
-      case 1: // install user script
-        ch = newkey(t->key);
-        status = install_sql_script((char *) ch,variable);
-        if(status != SQLITE_OK)
-          G_error("Prepare",G_ERR_PREPARE);
-        delkey(ch);
-        if(status != SQLITE_OK)
-          G_error("Prepare",G_ERR_PREPARE);
-        break;
-      default: // parameters
-        break;
-    }
-    return status;
-    }
+	Code stmt = operands[t[0].link].stmt;
+	const char * ch = t->key;
+	int count = t[0].pointer;
+	int opid;Triple var;
+	opid = G_atoi(t->key);
+	if((OPERMAX < opid) ) 
+		return(SQLITE_MISUSE);
+
+    while(count) {
+		status = machine_triple(stmt,&var);
+		if(status != SQLITE_OK)
+			G_error("Prepare",G_ERR_PREPARE);
+		if(status == SQLITE_ROW) {
+			if(count == 0 )  // install user script
+				status = install_sql_script(var.key,opid);
+			 else  // Install map
+				operands[opid].maps[count-1]=
+					(Mapper) find_trio_value(var.key);
+		} else
+			return status;
+		count--;
+		}
+	return SQLITE_OK;
+	}
 int sql_handler(Triple *node) {
   int status=SQLITE_OK;
   install_sql_script((char *) node->key,G_SCRATCH);
@@ -99,7 +107,6 @@ return EV_Done;}
 int pop_handler(Triple *node) {
   int status;
   Triple t;
-  //incr_row(1);
   unbind_triple(operands[node->link].stmt,&t);
   status = triple(&t,0);
   if(stopped_row() )

@@ -9,6 +9,7 @@ typedef void * Pointer;
 typedef int (*Handler)(Triple *);
 typedef int (*Mapper)(Pointer *pointer,int *type);
 typedef void * Code;
+#define EV_Overload 0x80
 
 /*
 #define SQLITE_INTEGER  1
