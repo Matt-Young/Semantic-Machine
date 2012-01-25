@@ -40,4 +40,22 @@ int machine_install_callback(Pointer g_db,char * name,int nargs,Pointer gfunctio
 void machine_result_int(Pointer context, int value);
 int machine_value_int(Pointer * v);
 char * machine_script(Pointer stmt);
+int machine_triple(Code stmt,Triple * t);
+int machine_bind_int(Code stmt,int index,int value);
+int machine_bind_text(Code stmt,int index,char * ch);
+#define EV_Ok 0x00
+#define EV_Null 0x01  // Do some null operation
+#define EV_No_bind 0x02 // This event requires no binding
+#define EV_Immediate 0x04  //The statement in the key value
+#define EV_Set 0x08  // Operator begines a new descent elemtn for the curren set
+#define EV_Matchable 0x10  // Key value is matchable
+#define EV_Matched 0x20  // And matched
+#define EV_Square 0x40 // Square table looms ahead
+#define EV_Error 0x80 // Operand containd the statement
+#define EV_Incomplete 0x100  // Dunno
+#define EV_Debug EV_Overload
+#define EV_Data 0x200
+#define EV_Done	0x400 
+#define EV_Operand 0x800
+#define EV_No_data 0x1000
 #endif

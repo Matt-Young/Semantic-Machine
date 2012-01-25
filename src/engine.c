@@ -1,5 +1,5 @@
 // G engine
-#include "sqlite_msgs.h"
+
 #include "all.h"
 #include "filter.h"
 
@@ -18,13 +18,7 @@ void unbind_triple(Code stmt,Triple *t) {
   t->link= machine_column_int(stmt, 1);
   t->pointer= machine_column_int(stmt, 2);
 }
-int machine_triple(Code stmt,Triple * t) {
-	int status;
-	status = machine_step(stmt );
-	if(status==SQLITE_ROW)
-		unbind_triple(stmt,t);
-	return(status);
-}
+
 
 int newcount=0;
 int oldcount=0;
@@ -47,7 +41,7 @@ int install_sql_script(char * ch,int opid) {
   operands[opid].handler=event_handler;
         operands[opid].maps[0] = 0;
  operands[opid].properties=0;
-        return (SQLITE_OK);
+        return (EV_Ok);
 }
 
 
@@ -56,33 +50,39 @@ int install_sql_script(char * ch,int opid) {
   int variable;
 
 int  config_handler(Triple t[]) {
-    int status=SQLITE_OK;
+    int status=EV_Ok;
 	Code stmt = operands[t[0].link].stmt;
 	const char * ch = t->key;
 	int count = t[0].pointer;
 	int opid;Triple var;
-	opid = G_atoi(t->key);
-	if((OPERMAX < opid) ) 
-		return(SQLITE_MISUSE);
+	Trio * trio;
 
     while(count) {
 		status = machine_triple(stmt,&var);
-		if(status != SQLITE_OK)
+		if(status != EV_Ok)
 			G_error("Prepare",G_ERR_PREPARE);
-		if(status == SQLITE_ROW) {
+		if(status == EV_Data) {
 			if(count == 0 )  // install user script
 				status = install_sql_script(var.key,opid);
-			 else  // Install map
-				operands[opid].maps[count-1]=
-					(Mapper) find_trio_value(var.key);
-		} else
-			return status;
+			if(count ==1) {
+				opid = G_atoi(t->key);
+				if((OPERMAX < opid) ) 
+					return(EV_Incomplete);
+			} else  { // Install map
+				trio = find_trio(var.key);
+				if(!trio || (trio->type != G_TYPE_MAPPER))
+					return(EV_Incomplete);
+				else
+					operands[opid].maps[count-1]= (Mapper) trio->value;
+			} 
+		}else
+			return(status);
 		count--;
 		}
-	return SQLITE_OK;
+	return EV_Ok;
 	}
 int sql_handler(Triple *node) {
-  int status=SQLITE_OK;
+  int status=EV_Ok;
   install_sql_script((char *) node->key,G_SCRATCH);
   triple((Triple *) &SCRATCH_Triple,0);
   return status;
@@ -92,7 +92,7 @@ int call_handler(Triple *node) {
   pointer  =  incr_row(0);
   set_row(G_atoi(node->key));
   set_row(pointer);
-  return SQLITE_OK;
+  return EV_Ok;
 }
 int exec_handler(Triple *t) {
   int status;
@@ -101,7 +101,7 @@ int exec_handler(Triple *t) {
   return status;
 }
 
-int swap_handler(Triple *t) {return SQLITE_OK;}
+int swap_handler(Triple *t) {return EV_Ok;}
 int exit_handler(Triple *node) {  
 return EV_Done;}
 int pop_handler(Triple *node) {
@@ -117,11 +117,11 @@ int script_handler(Triple *node) {
   int id;
   id = G_atoi(node->key);
   G_printf("Script: \n%s\n",machine_script(operands[id].stmt));
-  return SQLITE_OK;
+  return EV_Ok;
 }
 int echo_handler(Triple *node) {  
   G_printf("Echo: \n%s %d \n",node->key,node->link);
-  return SQLITE_OK;
+  return EV_Ok;
 }
 int dup_handler(Triple *node){
   int id,i;
@@ -130,18 +130,18 @@ int dup_handler(Triple *node){
   id = G_atoi(node->key);
   G_strcpy(buff,(const char *) machine_script(operands[id].stmt));
   status = install_sql_script(buff,G_SCRATCH);
-  if(status != SQLITE_OK) G_error("Dup",G_ERR_DUP);
+  if(status != EV_Ok) G_error("Dup",G_ERR_DUP);
   for(i=0;operands[id].maps[i];i++) 
     operands[G_SCRATCH].maps[i] = operands[id].maps[i];
-  return SQLITE_OK;
+  return EV_Ok;
 }
   
 int ghandler(Triple top[],int status,Handler handler) { 
-  if( (status != SQLITE_ROW) && (status != SQLITE_DONE) && (status != SQLITE_OK)  )
+  if( (status != EV_Data) && (status != EV_Done) && (status != EV_Ok)  )
      G_error("ghandle entry",G_ERR_ENTRY);  
-  else if(status == SQLITE_DONE && (top->link & LINKMASK) < G_SYS_MAX ) 
+  else if(status == EV_Done && (top->link & LINKMASK) < G_SYS_MAX ) 
       return(status);
-  if(status == SQLITE_DONE)
+  if(status == EV_Done)
 	  set_ready_event(EV_No_data);
   if(handler)
     status = handler(top);
@@ -170,7 +170,7 @@ int triple(Triple top[],Handler handler) {
   stmt = op->stmt;
   if(!(op->properties & EV_No_bind))  
 	status = bind_sql(top,&stmt);
-  if(status != SQLITE_OK) 
+  if(status != EV_Ok) 
       G_error("bind \n",G_ERR_BIND);
  if((!stmt) || (events & EV_Overload))
 	 status = ghandler(top,status,handler);
@@ -178,7 +178,7 @@ int triple(Triple top[],Handler handler) {
 	 do {
 		status = machine_step(stmt );
 		status = ghandler(top,status,handler);
-		}  while( status == SQLITE_ROW );
+		}  while( status == EV_Data );
 	machine_reset(stmt);
 	}
 	
@@ -193,13 +193,14 @@ typedef struct {
   int opid;
   Handler handler;
   } MAP;
-#define CALLS 8
+#define CALLS 9
 
 const MAP map[CALLS] = {
   {"SystemExit",G_EXIT,exit_handler},{"SystemCall",G_CALL,call_handler},
   {"SystemDup",G_DUP,dup_handler},{"SystemExit",G_POP,swap_handler},
   {"SystemExec",G_EXEC,exec_handler},{"SystemScript",G_SQL,sql_handler},
-  {"SystemDecode",G_SCRIPT,script_handler},{"SystemConfig",G_CONFIG,config_handler}
+  {"SystemDecode",G_SCRIPT,script_handler},{"SystemConfig",G_CONFIG,config_handler},
+  {"SystemEcho",G_ECHO,echo_handler}
 };
 int init_handlers() {
   int i;

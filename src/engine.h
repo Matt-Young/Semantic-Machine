@@ -9,7 +9,7 @@ typedef struct {
 extern OP operands[];
 #define GCHAR '_'
 // fundamental operators
-enum { G_EXIT,G_NONE,G_SWAP,G_POP,
+enum { G_EXIT,G_ECHO,G_SWAP,G_POP,
 	   G_CALL,G_DUP,G_EXEC,G_SQL,
 	   G_SCRIPT,G_CONFIG,G_DEBUG,
 	   G_APPEND,G_UPDATE,G_SYS_MAX};

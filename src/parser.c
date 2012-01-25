@@ -1,4 +1,4 @@
-#include "sqlite_msgs.h"
+
 #include "all.h"
 #include <ctype.h>
 #define Debug_parser
@@ -94,6 +94,6 @@ int parser(PGRAPH *pt) {
 #else
     return process_block(pt);
 #endif
-  return(SQLITE_OK);
+  return(EV_Ok);
 }
 

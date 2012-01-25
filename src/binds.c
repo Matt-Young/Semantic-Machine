@@ -5,7 +5,6 @@ for insert, update and selectg.
 Table stuff really doesn belong here, as table are going to be an
 an index system built on the sqlite_master
 */
-#include "../include/sqlite3.h"
 #include "all.h"
 #include "filter.h"
 
@@ -24,20 +23,20 @@ Mapper map_triple(Pointer *pointer,int *type) {
 int local_handler(Triple t) {
 	char buffer[200];
   G_sprintf(buffer + G_strlen(buffer)," %s ,",t.key);
-  return SQLITE_OK;
+  return EV_Ok;
 }
 
 // Get bound up for a n sql step
  void look_stmt(Code stmt) ;
   int bind_sql(Triple top[],Code *stmt) {
-  int status=SQLITE_OK;
+  int status=EV_Ok;
   Pointer pointer;
   int type;
   int index;
   Mapper * a;
   // Get and set the stmt
   	if(operands[top[0].link].properties & EV_Immediate)
-		*stmt = (sqlite3_stmt *) top[0].key;
+		*stmt = (Code) top[0].key;
 	else if( operands[top[0].link].properties & EV_Operand)
 		*stmt = operands[top[0].link].stmt; // operand table rules
 	else
@@ -48,19 +47,16 @@ int local_handler(Triple t) {
 	while(*a) {
 		(*a) ( (Pointer *) &pointer,&type);
 		switch(type) {
-			case SQLITE_TEXT:
-				status = sqlite3_bind_text(*stmt,index++,
-				(char * ) pointer, G_strlen((char * ) pointer),0);
-					
+			case G_TYPE_TEXT:
+				status = machine_bind_text(*stmt,index++,(char *) pointer);
 			break;
-			case SQLITE_INTEGER:
-				status = sqlite3_bind_int(*stmt,index++,(int) pointer);
+			case G_TYPE_INTEGER:
+				status = machine_bind_int(*stmt,index++,(int) pointer);
 			break;
 			case G_TYPE_TRIPLE:
-				status = sqlite3_bind_text(*stmt,index++, 
-					(char * ) top[1].key, G_strlen(top[1].key),0);
-				status = sqlite3_bind_int(*stmt,index++,top[1].link);
-				status = sqlite3_bind_int(*stmt,index++,top[1].pointer);
+				status = machine_bind_text(*stmt,index++,top[1].key);
+				status = machine_bind_int(*stmt,index++,top[1].link);
+				status = machine_bind_int(*stmt,index++,top[1].pointer);
 				look_stmt(*stmt);
 			break;
 			case G_TYPE_CODE:
@@ -70,7 +66,7 @@ int local_handler(Triple t) {
 			}
 		a++;
 		} 
-  return SQLITE_OK;
+  return EV_Ok;
 }
   // tios local to binds
   Trio bind_trios[] ={ {"BindNull",G_TYPE_MAPPER,(Mapper) null_map},
@@ -79,5 +75,5 @@ int local_handler(Triple t) {
   int init_binder() {add_trios(bind_trios);return(0);}
  void look_stmt(Code stmt) {
 	 char buff[200];
-	  G_sprintf(buff,"Script: \n%s\n",sqlite3_sql(stmt));
+	  G_sprintf(buff,"Script: \n%s\n",machine_script(stmt));
   }

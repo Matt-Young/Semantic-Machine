@@ -13,7 +13,7 @@ int init_console() { return(0);}
 int debug_counter = 0;
 #define test_0 "{abc.def.ghi}"
 #define test_1 "{abc,def,ghi}"
-#define test_2 "{SystemConfig$local}"
+#define test_2 "{SystemEcho$local}"
 #define test_3 "SystemConfig$local , 'a d'{ and}"
 #define test_4 "{TestAttribute$Testing}"
 #endif
@@ -21,12 +21,12 @@ char * G_line(char * line,int n) {
 	memset(line,0,n);
 
 #ifdef Debug_console
-	debug_counter++; debug_counter &= 0x03;
-	if(debug_counter != 0) {
+	debug_counter++; debug_counter &= 0x01;
+	if(debug_counter != 0) 
 		G_strncpy(line,test_2,n);
 		//G_printf("%s",line);
 		return line;
-	} else
+	//} else
 #endif
 	fgets(line, n, stdin);
 	return line;
