@@ -3,29 +3,31 @@
 #include <ctype.h>
 #define Debug_parser
 #define DISCARD 256
+#define Line_size 256
 typedef char * CharPointer;
 char * null_key = "_";
 int graph_counter;
-// Collects alphnumerics unti the next punctuation mark, does quote '
-const char  *uglies = "_',.{}!$";
+// Is it a character known to the syntax? '
+const char  *uglies = "_',.{}$";
 char  isugly(char ch) { 
 	const char * ptr = uglies;
 	while((*ptr) && ((*ptr) != ch)) ptr++;
 		return *ptr;}
-int key_op(const CharPointer base,CharPointer *current,CharPointer *key,int * op) {
+// Front end key word from text and json operators
+int key_op(Console * console,CharPointer *key,int * op) {
       int i;
-	  CharPointer ptr= *current;
+	  CharPointer ptr= console->current;
 	  int quoting;
 	  if(*ptr == 0) {
-		  	*current = base;
-			ptr = *current;
-			G_line(base);
-			if(base[0] == 0)
+		  	console->current = console->base;
+			ptr = console->current;
+			G_console(console);  // get a line of data
+			if(console->base[0] == 0)
 				return -1;
 	  }
 	  i = 0; quoting=0;
 	  while(isspace(*ptr)) ptr++;
-	  if(*ptr == 39) {
+	  if(*ptr == 39) {// are we quoting?
 		  ptr++;
 		  *key=ptr;
 		  while(*ptr != 39) ptr++;
@@ -35,12 +37,12 @@ int key_op(const CharPointer base,CharPointer *current,CharPointer *key,int * op
 		  *key=ptr;
       while(!isugly(*ptr) && (*ptr != 0) ) {i++; ptr++;}
 	  *op = (int) *ptr;
-	  i = (int) ptr - (int) (*current); // char count
+	  i = (int) ptr - (int) (*console->current); // char count
 	  if(!quoting) 
-		  if(ptr != base) 
+		  if(ptr != console->base) 
 			while( ((*ptr) != 0) && isspace(*(ptr-1))) ptr--;
 	  *ptr = 0;
-	  *current = ptr+1;
+	  console->current = ptr+1;
       return i;
     }
 // apply known attributes
@@ -54,18 +56,20 @@ void SetAttribute(Triple * destination,char * attribute) {
 	}
 }
 // buils a subgraph on inner from user text
+
 int process_block(PGRAPH *inner) {
   Triple prev,current,next;
-  char line[200],*start;
+  Console console;
   int nchars,named_count;
+  char line[Line_size];
+  G_InitConsole(&console,line,Line_size);
   prev.link = DISCARD;
   current.link = DISCARD;
-  G_memset(line,0,200);
-  start = line;
+  G_memset(line,0,Line_size);
   named_count=0;
   new_graph(inner); // enclose this work in a subgraph
   for(;;) {
-	  nchars =key_op(line,&start,&next.key,&next.link);
+	  nchars =key_op(&console,&next.key,&next.link);
       if(nchars < 0)
 		break;
       if(next.link == 0) next.link='_'; // default operator
@@ -119,15 +123,13 @@ int process_block(PGRAPH *inner) {
   return(count_graph(*inner));
 }
 
-PGRAPH init_parser(char * name) {
+PGRAPH init_parser() {
 	int status;
-  TABLE * t = get_table_name(name);
+  TABLE * t = get_table_name("console");
   status = new_table_graph(t); 
   return(t->list);
 }
-int parser() {
-  TABLE * t = get_table_name("console");
-  PGRAPH * pt = (PGRAPH *) (&t->list);
+int parser(PGRAPH *pt) {
 #ifdef Debug_parser
   for(;;)process_block(pt);
 #else

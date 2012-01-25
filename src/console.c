@@ -15,19 +15,25 @@ int debug_counter = 0;
 #define test_2 "{Test2$SystemDecode}"
 #define test_3 "...'12'$12345678. 34 , 'a d'{ and}"
 #define test_4 "{TestAttribute$Testing}"
-char * G_line(char * line) {
+char * G_line(char * line,int n) {
 	char * prompt="Hello\n";
-	memset(line,0,200);
+	memset(line,0,n);
 
 #ifdef Debug_console
-	G_strcpy(line,test_3);
+	G_strncpy(line,test_3,n);
 	//printf("%s\n",test_3);
 #else
-	fgets(line, 100, stdin);
+	fgets(line, n, stdin);
 #endif
 	return line;
   }
-
+char * G_console(Console * console) { return G_line(console->base,console->size);}
+char * G_InitConsole(Console * console,char * line,int size) {
+  console->size=size;
+  console->base=line;
+  console->current=line;
+  return console->base;
+  }
 void G_printf( const char *fmt, ...) 
 {    
  va_list argptr;

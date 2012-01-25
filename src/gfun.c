@@ -124,13 +124,13 @@ int events(FILTER * f) {
 	  delete_filter(child);
 	  return status;
   }
- extern PGRAPH init_parser(char *);
+ 
 int init_run_console(FILTER *f) {
-	f->g[0] = init_parser("console");
+	f->g[0] = init_parser();
 	f->event_table = f->g[0]->table;
 	f->event_triple = 
 		&f->event_table->operators[pop_triple_operator];
-	return(parser());}
+	return(parser(f->g[0]));}
 
 int event_exec(FILTER * f) {
   int g_event = f->properties;
