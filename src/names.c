@@ -3,8 +3,8 @@
 #include "console.h"
 // Just a quick utility to store name value pairs
 // All names here should be constant
-#define MAXNAMES 100
-Trio g_names[MAXNAMES];
+
+Trio g_names[LocalSymbolCount];
 int  g_name_count;
 
 int add_trio(char * name,int type,Pointer value) {

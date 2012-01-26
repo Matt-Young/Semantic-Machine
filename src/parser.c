@@ -46,7 +46,7 @@ int process_block(PGRAPH *inner) {
 			 current.link = DISCARD;
 	}
 	// Erase the bracket
-	else if(current.link == '{') { //{ key:{   or .} or ,{
+	else if(current.link == '{') { //{ key:{   or .{ or ,{ or key{ or !{
 			if(prev.link != ':')
 				new_child_graph(inner);
 		 current.link = DISCARD;
@@ -75,18 +75,31 @@ int process_block(PGRAPH *inner) {
       close_update_graph(inner);  
   return(EV_Ok);
 }
-#undef Debug_parser
+#define Debug_parser
 PGRAPH init_parser() {
   TABLE * t = get_table_name("console");
   new_table_graph(t); 
   return(t->list);
 }
-
+int Graph_test(PGRAPH *pt);
 int parser(PGRAPH *pt) {
 #ifdef Debug_parser
-  for(;;)
-#endif
+  Graph_test(pt);
+#else
 	process_block(pt);
+#endif
   return(EV_Ok);
 }
-
+//const  Triple G_null_graph 
+int Graph_test(PGRAPH *pt) {
+#ifdef Debug_parser {
+	int i;
+	Triple t= {"_",'_',0};
+	for(i=0;i < 5;i++ ) 
+	append_graph(pt,t);
+	while((*pt) && count_graph(*pt))
+      close_update_graph(pt);  
+	//del_table_graph(PGRAPH *inner)
+#endif
+  return(EV_Ok);
+}

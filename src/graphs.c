@@ -70,6 +70,7 @@ PGRAPH delete_graph(PGRAPH *list) {
 	child = *list;
 	if(!child)
 		return 0;
+	(*list) = child->parent;
 	if(child->parent)
 		child->parent->row = child->row;
 	free_graph_context(child);

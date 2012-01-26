@@ -138,9 +138,8 @@ int init_run_console(FILTER *f) {
 	f->event_table = table;
 	status=parser((PGRAPH *) &table->list);
 	f->event_triple = &table->operators[pop_triple_operator];
-	status= set_ready_graph(f); // run from console table
-	status = triple(f->event_triple,0);
-	return status;
+	status = init_run_table(f,"cosole"); 
+	return set_ready_graph(f); // run from console table
 }
 int event_exec(FILTER * f) {
 	 int g_event;
@@ -225,8 +224,8 @@ Trio gfun_accessor_list[] = {
 	{ "Filter",G_TYPE_MAPPER, (Mapper) filter_map},
 	{"BindSelfRow",G_TYPE_MAPPER,(Mapper) map_self_row},
 	{"BindSelfStart",G_TYPE_MAPPER,(Mapper) map_self_start}, 
-	{"BindOtherRow",G_TYPE_MAPPER,(Mapper) map_self_row},
-	{"BindOtherStart",G_TYPE_MAPPER,(Mapper) map_self_start}, 	
+	{"BindOtherRow",G_TYPE_MAPPER,(Mapper) map_other_row},
+	{"BindOtherStart",G_TYPE_MAPPER,(Mapper) map_other_start}, 	
 	{0,00,} };
 int init_gfun() {
 	add_trios(gfun_accessor_list);
