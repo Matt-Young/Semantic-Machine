@@ -138,8 +138,7 @@ int init_run_console(FILTER *f) {
 	status= set_ready_graph(f);
 	table =f->g[0]->table;
 	f->event_table = table;
-	f->event_triple = &table->operators[pop_triple_operator];
-	triple(f->event_triple,0);
+	f->event_triple = (Triple *) &G_null_graph;
 	status=parser((PGRAPH *) &table->list);
 	f->event_triple = &table->operators[pop_triple_operator];
 	status = init_run_table(f,"console"); 

@@ -35,7 +35,7 @@ int machine_install_callback(Pointer g_db,char * name,int nargs,Pointer gfunctio
 		(xFunc) gfunction,0,0,0));
 }
 void machine_result_int(Pointer context, int value) {
-	void sqlite3_result_int((sqlite3_context*) context, int value);}
+	void sqlite3_result_int(sqlite3_context * context, int value);}
 
 int machine_value_int(Pointer v) {
 	return sqlite3_value_int((sqlite3_value*)v);}

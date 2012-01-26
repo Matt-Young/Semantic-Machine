@@ -39,13 +39,13 @@ int machine_reset(Code stmt);
 int machine_exec(Pointer g_db,char * buff,char ** err);
 int machine_install_callback(Pointer g_db,char * name,int nargs,Pointer gfunction);
 void machine_result_int(Pointer context, int value);
-int machine_value_int(Pointer  v[]);
+int machine_value_int(Pointer  v);
 char * machine_script(Pointer stmt);
 int machine_triple(Code stmt,Triple * t);
 int machine_bind_int(Code stmt,int index,int value);
 int machine_bind_text(Code stmt,int index,char * ch);
 void unbind_triple(Code stmt,Triple *t);
-
+extern const Triple G_null_graph;
 #define EV_Ok 0x00
 #define EV_Null 0x01  // Do some null operation
 #define EV_Data 0x02
@@ -61,4 +61,5 @@ void unbind_triple(Code stmt,Triple *t);
 #define EV_Square 0x2000 // Square table looms ahead
 #define EV_Incomplete 0x4000 // Square table looms ahead
 #define EV_Debug 0x8000
+#define EV_Init 0x10000
 #endif

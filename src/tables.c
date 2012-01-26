@@ -82,7 +82,7 @@ const struct new_install{
 	char * sql;
 	char * map_name[4];
 } installs[] = {
-	{pop_triple_operator,SystemMax+1,"select key,link,pointer from %s where (gfun(9,rowid) == rowid);",0},
+	{pop_triple_operator,SystemMax+1,"select key,link,pointer from %s where (gfun(0,rowid) == rowid);",0},
 	{append_triple_operator,SystemMax+2,"insert into %s values( ?, ?, ?) ;",
 	  "BindTriple",0},
 	{update_triple_operator,SystemMax+3,"update %s set pointer = ? where rowid = ?;",
