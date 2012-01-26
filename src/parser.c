@@ -29,12 +29,10 @@ int process_block(PGRAPH *inner) {
   prev.link = DISCARD;
   current.link = DISCARD;
   G_memset(line,0,Line_size);
-  named_count=0;
+  named_count=0;nchars=0;
   new_child_graph(inner); // enclose this work in a subgraph
-  for(;;) {
+  while(nchars >= 0) {
 	  nchars =G_keyop(&console,&next.key,&next.link);
-      if(nchars < 0)
-		break;
 	  next.pointer=(*inner)->row+1;
 #ifdef Debug_parser
 	 //if(1) {
@@ -78,18 +76,18 @@ int process_block(PGRAPH *inner) {
       close_update_graph(inner);  
   return(EV_Ok);
 }
-
+#undef Debug_parser
 PGRAPH init_parser() {
   TABLE * t = get_table_name("console");
   new_table_graph(t); 
   return(t->list);
 }
+
 int parser(PGRAPH *pt) {
 #ifdef Debug_parser
-  for(;;)process_block(pt);
-#else
-    return process_block(pt);
+  for(;;)
 #endif
+	process_block(pt);
   return(EV_Ok);
 }
 

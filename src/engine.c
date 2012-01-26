@@ -2,7 +2,7 @@
 
 #include "all.h"
 #include "filter.h"
-
+#undef Debug_engine
 Pointer g_db;
 #define NVARS 5
 OP operands[OperatorMaximum];
@@ -151,7 +151,13 @@ int ghandler(Triple top[],int status,Handler handler) {
   return status;
 }
 
-
+  // Get the stmt
+Code get_stmt(int opid,Triple * top) {
+  	if(operands[opid].properties & EV_Overload)
+		return (Code) top[0].key;
+	else 
+		return operands[opid].stmt; // operand table rules
+	}
 // We get here when a graph produces a triplet that heads a subsequence
 // The link then holds the specified graph operator, 
 // this sifts through and finds a handler
@@ -164,14 +170,11 @@ int triple(Triple top[],Handler handler) {
 	key = 0;stmt=0;
 	status = EV_Ok;
 	opid = top[0].link;
+	stmt = get_stmt(opid,top);
 	op = &operands[ opid & OperatorMask];
 	set_ready_event(op->properties);
-	if(EV_Overload & op->properties)
-		stmt = top[0].key;
-	else
-		stmt = op->stmt;
 	if(!(EV_No_bind & op->properties))
-		status = bind_sql(top,&stmt);
+		status = bind_code(top,stmt);
   if(status != EV_Ok) 
       G_error("bind \n",G_ERR_BIND);
  if(!stmt)
@@ -244,7 +247,7 @@ Trio engine_trios[] = {
 	{0,0,0}};
 
 // defult operands
-const Triple G_null_graph = {"_",'_',0};
+const  Triple G_null_graph = {"_",'_',0};
 int init_operands() {
 	int i; 
 	G_memset(operands,0,sizeof(operands));
@@ -263,11 +266,15 @@ int main(int argc, char * argv[])
 	add_trios(engine_trios);
 	status = init_machine();
 	print_trios();
-	G_memcpy(&test,&G_null_graph,sizeof(Triple));
+	test=G_null_graph;
 #ifdef Debug_engine
    test.link |= EV_Overload;
 #endif
-  for(;;) triple(&test,0);
+   status=0;
+  for(;;){ 
+	  status++; 
+	  test=G_null_graph;
+	  triple(&test,0);}
   G_exit(0);
 }
 void print_triple(Triple t) { G_printf(" %s %d %d\n",t.key,t.link,t.pointer);}

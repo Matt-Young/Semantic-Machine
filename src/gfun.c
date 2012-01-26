@@ -3,7 +3,6 @@
 #include "filter.h"
 const Triple NULL_Triple={"_",'_',0};
 
-PGRAPH  set_ready_graph(FILTER *f) ;
 Mapper filter_map(Pointer * pointer,int * type) {
 *pointer = (void *) &null_filter;
 *type = 6;
@@ -17,6 +16,7 @@ typedef struct {
   RowSequence self;
   RowSequence other;
   RowSequence result;
+  char * table_name;
   FILTER *filter;
   int  events;
   Code stmt;
@@ -72,22 +72,24 @@ int reset_ready_set() {
   return 0;
 }
 void set_row_sequence(RowSequence * rows,PGRAPH f) {
-	 rows->row = convert_start(f);
-	 rows->row = convert_row(f);
-	 rows->row = convert_end(f);
+	int rowid = offset_row(f);
+	 rows->row += rowid;
+	 rows->end = rowid;
+	 rows->start = rowid;
 }
 int set_ready_event(int EV_event) {
 	ready.events |= EV_event;
 	return ready.events; }
 
-int  run_ready_graph(FILTER *f) {
+int  set_ready_graph(FILTER *f) {
+	PGRAPH active;
 	G_memset(&ready,0,sizeof(ready));
 	ready.filter = f;
-  if(f->g[0]) 
-	 set_row_sequence(&ready.self,f->g[0]);
-  else if(f->g[1]) 
-	 set_row_sequence(&ready.self,f->g[1]);
-  return  triple(f->event_triple,0);
+	active = f->g[1];
+	if(f->g[0]) active = f->g[0];
+	ready.table_name = active->table->name;
+	 set_row_sequence(&ready.self,active);  
+  return  EV_Ok;
 }
 
 int key_match(const char * k,const char * g) {
@@ -122,7 +124,8 @@ int events(FILTER * f) {
 	  child->event_triple  = &table->operators[pop_triple_operator];
 	  new_table_graph(table);
 	  child->g[0] = (PGRAPH) table->list;
-	  status = run_ready_graph(child);
+	  status = set_ready_graph(child);
+	  triple(child->event_triple,0);
 	  delete_filter(child);
 	  return status;
   }
@@ -130,11 +133,13 @@ int events(FILTER * f) {
 int init_run_console(FILTER *f) {
 	int status; TABLE *table;
 	f->g[0] = init_parser();
+	status= set_ready_graph(f);
 	table =f->g[0]->table;
 	f->event_table = table;
 	status=parser((PGRAPH *) &table->list);
 	f->event_triple = &table->operators[pop_triple_operator];
-	status= run_ready_graph(f); // run from concole table
+	status= set_ready_graph(f); // run from console table
+	status = triple(f->event_triple,0);
 	return status;
 }
 int event_exec(FILTER * f) {

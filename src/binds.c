@@ -28,40 +28,33 @@ int local_handler(Triple t) {
 
 // Get bound up for a n sql step
  void look_stmt(Code stmt) ;
-  int bind_sql(Triple top[],Code *stmt) {
+  int bind_code(Triple top[],Code stmt) {
   int status=EV_Ok;
   Pointer pointer;
   int type;
   int index;
   Mapper * a;
-  // Get and set the stmt
-  	if(operands[top[0].link].properties & EV_Overload)
-		*stmt = (Code) top[0].key;
-	else 
-		*stmt = operands[top[0].link].stmt; // operand table rules
-	if(!stmt)
-		return (0);
-	look_stmt(*stmt);
+
+	look_stmt(stmt);
 	a = operands[top[0].link].maps;
 	index =1;
 	while(*a) {
 		(*a) ( (Pointer *) &pointer,&type);
 		switch(type) {
 			case G_TYPE_TEXT:
-				status = machine_bind_text(*stmt,index++,(char *) pointer);
+				status = machine_bind_text(stmt,index++,(char *) pointer);
 			break;
 			case G_TYPE_INTEGER:
-				status = machine_bind_int(*stmt,index++,(int) pointer);
+				status = machine_bind_int(stmt,index++,(int) pointer);
 			break;
 			case G_TYPE_TRIPLE:
-				status = machine_bind_text(*stmt,index++,top[1].key);
-				status = machine_bind_int(*stmt,index++,top[1].link);
-				status = machine_bind_int(*stmt,index++,top[1].pointer);
-				look_stmt(*stmt);
+				status = machine_bind_text(stmt,index++,top[1].key);
+				status = machine_bind_int(stmt,index++,top[1].link);
+				status = machine_bind_int(stmt,index++,top[1].pointer);
+				look_stmt(stmt);
 			break;
 			case G_TYPE_CODE:
-				G_debug(*stmt);
-				*stmt = 0; // cancel this event
+				G_debug(stmt);
 				break;
 			}
 		a++;

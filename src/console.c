@@ -1,6 +1,6 @@
 // Console, set up
 #include "console.h"
-
+#define Debug_console
 int init_console() { return(0);}
 // These are here just to keep the std lib includes in one spot
 // and run test sequences
@@ -13,7 +13,7 @@ int init_console() { return(0);}
 int debug_counter = 0;
 #define test_0 "{abc.def.ghi}"
 #define test_1 "{abc,def,ghi}"
-#define test_2 "{SystemEcho$local}"
+#define test_2 "{abc}"
 #define test_3 "SystemConfig$local , 'a d'{ and}"
 #define test_4 "{TestAttribute$Testing}"
 #endif
@@ -24,8 +24,9 @@ char * G_line(char * line,int n) {
 	debug_counter++; debug_counter &= 0x01;
 	if(debug_counter != 0) 
 		G_strncpy(line,test_2,n);
-		//G_printf("%s",line);
-		return line;
+	else
+		debug_counter=0;
+	return line;
 	//} else
 #else
 	fgets(line, n, stdin);
@@ -127,7 +128,8 @@ int G_keyop(Console * console,CharPointer *key,int * op) {
 			*op = uglies[NullSyntax];
 		else
 			*op = *ptr;
-		i =  start - (int) *console->current; // char count
+		i =   (int) console->current;
+		i -= start ; // char count
 		*ptr = 0;
 		if(!(*key[0])) 
 			*key = null_key;  // valid null key

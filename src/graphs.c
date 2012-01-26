@@ -21,15 +21,10 @@ PGRAPH parent=child->parent;
 void restart_graph(PGRAPH graph) {
   graph->row = graph->start;
 }
-int convert_row(PGRAPH g) {
-	return (g->rowid + g->row);
+int offset_row(PGRAPH g) {
+	return (g->rowid);
 }
-int convert_start(PGRAPH g) {
-	return (g->rowid + g->start);
-}
-int convert_end(PGRAPH g) {
-	return (g->rowid + g->end);
-}
+
 void pass_parent_graph(PGRAPH graph) {
 PGRAPH parent = graph->parent;
 if(!parent)
@@ -50,7 +45,7 @@ PGRAPH dup_graph(PGRAPH l1,PGRAPH l2) {
   l1->start = l2->row;
   l1->table = l2->table;
   l1->end = l2->end;
-  l1->rowid = convert_row(l2);
+  l1->rowid = l2->rowid+l1->start;
   l1->parent = l2;
   return l1;
 }
