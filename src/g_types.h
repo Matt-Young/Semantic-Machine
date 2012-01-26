@@ -26,6 +26,7 @@ enum {G_TYPE_NONE,G_TYPE_INTEGER,G_TYPE_FLOAT,
 
 #define G_TYPE_NULL 95
 #define GBASE "c:/soft/gbase"
+#define GFUN "gfun"
 #define LocalSymbolCount 100
 // Generics that cover sqlite3
 extern Pointer g_db;
@@ -38,7 +39,7 @@ int machine_reset(Code stmt);
 int machine_exec(Pointer g_db,char * buff,char ** err);
 int machine_install_callback(Pointer g_db,char * name,int nargs,Pointer gfunction);
 void machine_result_int(Pointer context, int value);
-int machine_value_int(Pointer * v);
+int machine_value_int(Pointer  v[]);
 char * machine_script(Pointer stmt);
 int machine_triple(Code stmt,Triple * t);
 int machine_bind_int(Code stmt,int index,int value);

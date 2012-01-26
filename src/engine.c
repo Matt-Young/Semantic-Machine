@@ -160,7 +160,7 @@ Code get_stmt(int opid,Triple * top) {
 
 int triple(Triple top[],Handler handler) {
 	OP *op;
-	int status;int opid;
+	int status;int opid,overload;
 	Code stmt; 
 	void * key;
 	key = 0;stmt=0;
@@ -168,16 +168,23 @@ int triple(Triple top[],Handler handler) {
 	opid = top[0].link;
 	stmt = get_stmt(opid,top);
 	op = &operands[ opid & OperatorMask];
+	overload = opid & OperatorMSB;
 	if(!handler)
 		handler = op->handler;
 	set_ready_event(op->properties);
-	set_ready_code(stmt);
+	set_ready_code(stmt,opid);
 	if(!(EV_No_bind & op->properties))
 		status = bind_code(top,stmt);
 	if(status != EV_Ok) 
 		G_error("bind \n",G_ERR_BIND);
-	if(!stmt)
-		status = ghandler(top,status,handler);
+	if(!stmt || overload) {
+		if(overload) 
+			set_ready_event(EV_Overload);
+		if(handler)
+			status = ghandler(top,status,handler);
+		else
+			status = EV_Incomplete;
+	}
 	else {
 		do {
 			status = machine_step(stmt );
@@ -275,8 +282,9 @@ Trio engine_trios[] = {
 		for(;;){ 
 			status++; 
 			test=G_null_graph;
+			test.link = OperatorMSB; // console overload
 			op = operands[GCHAR];
-			triple(&test,0);}
+			triple(&test,event_handler);}
 		G_exit(0);
 	}
 void print_triple(Triple *t) { 

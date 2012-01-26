@@ -76,6 +76,7 @@ int process_block(PGRAPH *inner) {
   return(EV_Ok);
 }
 #define Debug_parser
+//#undef Debug_parser
 PGRAPH init_parser() {
   TABLE * t = get_table_name("console");
   new_table_graph(t); 
@@ -92,7 +93,7 @@ int parser(PGRAPH *pt) {
 }
 //const  Triple G_null_graph 
 int Graph_test(PGRAPH *pt) {
-#ifdef Debug_parser {
+#ifdef Debug_parser 
 	int i;
 	Triple t= {"_",'_',0};
 	for(i=0;i < 5;i++ ) 

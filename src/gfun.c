@@ -20,6 +20,7 @@ typedef struct {
   FILTER *filter;
   int  events;
   Code stmt;
+  int opid;
 }  READYSET;
 
 READYSET ready;
@@ -78,8 +79,9 @@ void set_row_sequence(RowSequence * rows,PGRAPH f) {
 int set_ready_event(int EV_event) {
 	ready.events |= EV_event;
 	return ready.events; }
-Code set_ready_code(Code code) {
+Code set_ready_code(Code code,int opid) {
 	ready.stmt = code;
+	ready.opid = opid;
 	return ready.stmt; }
 int  set_ready_graph(FILTER *f) {
 	PGRAPH active;
@@ -136,9 +138,11 @@ int init_run_console(FILTER *f) {
 	status= set_ready_graph(f);
 	table =f->g[0]->table;
 	f->event_table = table;
+	f->event_triple = &table->operators[pop_triple_operator];
+	triple(f->event_triple,0);
 	status=parser((PGRAPH *) &table->list);
 	f->event_triple = &table->operators[pop_triple_operator];
-	status = init_run_table(f,"cosole"); 
+	status = init_run_table(f,"console"); 
 	return set_ready_graph(f); // run from console table
 }
 int event_exec(FILTER * f) {
@@ -149,18 +153,16 @@ int event_exec(FILTER * f) {
 	if(isnull_filter(f))
 		g_event |= EV_Null;
 	g_event |=  set_ready_event(0);
-	switch(g_event) {
-		case EV_Null:
+	if(g_event & EV_Overload) {
+		if((ready.opid & OperatorMask) == 0) {
 			g_event = machine_triple(ready.stmt,&t);
 			print_triple(&t);
 			g_event = init_run_console(f);
-		break; 
-		case EV_Debug:
-			g_event = init_run_table(f,"config");
-		break;
-		default:
-			g_event |=events(f);
-		break;
+		} else 
+			if ((ready.opid & OperatorMask) == 1) {}
+	}if(g_event & EV_Null) {
+			g_event = machine_triple(ready.stmt,&t);
+			print_triple(&t);
 	}
 	if(g_event)
 	  if(!isnull_filter(f))
@@ -190,8 +192,8 @@ int event_handler(Triple * t) {
  
 //G function call backs from inside sql
 enum {CallbackSelf,CallbackOther,CallbackResult,CallbackExperiment};
-void gfunction(Pointer context,int n, Pointer* v) {
-	// graph pointers already mappep to machine rows
+void gfunction(Pointer context,int n, Pointer v[]) {
+	// graph pointers already mapped to machine rows
   int op = machine_value_int(v[0]);
   int x = machine_value_int(v[1]);
   //printf("gfun: %d %d\n",x,m.self_row);

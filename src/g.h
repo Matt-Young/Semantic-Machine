@@ -1,6 +1,6 @@
 
 // Three reserved names for local use b all G machines.
-#define GFUN "gfun"
+
 enum {G_ERR_INDEX,G_ERR_PREPARE,G_ERR_DUP,
 	G_ERR_ENTRY,G_ERR_Handler,G_ERR_BIND ,G_ERR_GRAPH,
 	G_ERR_SCHEMA, G_ERR_FILTER,G_ERR_UNKNOWN};

@@ -17,7 +17,7 @@ enum { SystemExit,SystemCall,SystemDup,SystemPop,
 #define OperatorMaximum 128
 #define OperatorMask 0x7f
 #define OperatorMSB 0x80
-Code set_ready_code(Code stmt);
+Code set_ready_code(Code stmt,int opid);
 int get_system_call(char * name);
 int triple(Triple top[],Handler);
 int set_ready_event(int EV_event);
