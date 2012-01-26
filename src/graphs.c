@@ -71,20 +71,20 @@ PGRAPH new_child_graph(PGRAPH *outer) {
 }
 
 PGRAPH delete_graph(PGRAPH *list) {
-  PGRAPH parent,child;
+  PGRAPH child;
   child = *list;
   if(!child)
 	  return 0;
-  parent=free_graph_context(child);
-  if(parent)
-    parent->row = child->row;
+  if(child->parent)
+    child->parent->row = child->row;
+  free_graph_context(child);
    return *list;
 }
 void close_update_graph(PGRAPH *list) { 
   int status; 
   TABLE * table = (*list)->table;
    Triple * data = &table->operators[triple_data_1];
-  data->key= (char *) table->index;
+  data->key= "Not needed";
   status = triple(&table->operators[update_triple_operator],0);
   //pass_parent_graph(*lis
   delete_graph(list);

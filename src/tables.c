@@ -85,7 +85,7 @@ const struct new_install{
 	{pop_triple_operator,SystemMax+1,"select key,link,pointer from %s where (gfun(0,rowid) == rowid);",0},
 	{append_triple_operator,SystemMax+2,"insert into %s values( ?, ?, ?) ;",
 	  "BindTriple",0},
-	{update_triple_operator,SystemMax+3,"update %s set pointer = ? where rowid = (? + 1);",
+	{update_triple_operator,SystemMax+3,"update %s set pointer = ? where rowid = ?;",
 	"BindSelfRow","BindSelfStart",0},
 	{0,0,0,0}
 };
@@ -104,7 +104,7 @@ Mapper null_map(void * p,int * i);
   p->key = (char *) stmt; 
   p->link = opid;  p->pointer = 0;
   operands[opid].stmt = stmt;  // Look in the table context for stmt
-  operands[opid].handler = pop_handler;
+  operands[opid].handler = 0;  // These installs should never need a handler
   operands[opid].properties = EV_Overload;
   for(i=0; installs[format].map_name[i];i++) 
 	  operands[opid].maps[0]= (Mapper) find_trio_value(installs[format].map_name[i]);

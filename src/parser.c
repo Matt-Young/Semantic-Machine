@@ -74,13 +74,9 @@ int process_block(PGRAPH *inner) {
 	 current = next; 
     }  
   // finish up
-  while((*inner)->parent) {
-    if(count_graph(*inner))
-      delete_graph(inner);
-     else  
+  while((*inner) && count_graph(*inner))
       close_update_graph(inner);  
-  }
-  return(count_graph(*inner));
+  return(EV_Ok);
 }
 
 PGRAPH init_parser() {

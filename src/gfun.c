@@ -182,43 +182,29 @@ int event_handler(Triple * t) {
     }
  
 //G function call backs from inside sql
-#define SELF_ROW 0
-#define OTHER_ROW 1
-#define RESULT_ROW 2
-#define GET_NEXT_ROW 3
-#define SET_NEXT_ROW 4
-#define GET_ROW 5
-#define SET_ROW 6
-#define SET_LINK 7
+enum {CallbackSelf,CallbackOther,CallbackResult,CallbackExperiment};
 void gfunction(Pointer context,int n, Pointer* v) {
-
+	// graph pointers already mappep to machine rows
   int op = machine_value_int(v[0]);
   int x = machine_value_int(v[1]);
   //printf("gfun: %d %d\n",x,m.self_row);
   switch(op) {
-  case SELF_ROW:
-	 machine_result_int(context, ready.self.row+1);
-    if(x == ready.self.row+1) 
-      if(ready.self.row+1 != ready.self.end)
+  case CallbackSelf:
+	 machine_result_int(context, ready.self.row);
+    if(x == ready.self.row) 
+      if(ready.self.row != ready.self.end)
         ready.self.row++;
     break;
-  case OTHER_ROW:
-    machine_result_int(context, ready.other.row+1);
-    if(x == ready.other.row+1) 
-      if(ready.other.row+1 != ready.other.end)
+  case CallbackOther:
+    machine_result_int(context, ready.other.row);
+    if(x == ready.other.row) 
+      if(ready.other.row != ready.other.end)
         ready.other.row++;
     break;
-  case RESULT_ROW:
-    machine_result_int(context, ready.result.row+1);
-    break;
-  case GET_NEXT_ROW:
+  case CallbackResult:
     machine_result_int(context, ready.result.row);
     break;
-  case SET_NEXT_ROW:
-    machine_result_int(context, ready.result.row);
-    ready.self.end = x;
-    break;
-  case SET_LINK:
+  case CallbackExperiment:
     //current_graph->link = x;
     ready.self.row++;
     //current_graph->opclass = operands[x].properties;

@@ -5,14 +5,16 @@ typedef struct {
   int properties;
   } OP;
 //limits and constants
-#define OPERMAX 128
 extern OP operands[];
 #define GCHAR '_'
-// fundamental operators
+// Operator space on the predicate
 enum { SystemExit,SystemCall,SystemDup,SystemPop,
 		SystemExec,SystemScript,SystemDecode,SystemConfig,SystemEcho};
 #define SystemMax SystemEcho
-#define G_USERMIN 24
+#define SystemUser SystemMax + 4
+#define OperatorMaximum 128
+#define OperatorMask 0x7f
+#define OperatorMSB 0x80
 #define G_SCRATCH  25
 #define SCRATCH_STR "25"
 int get_system_call(char * name);

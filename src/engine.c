@@ -5,7 +5,7 @@
 
 Pointer g_db;
 #define NVARS 5
-OP operands[OPERMAX];
+OP operands[OperatorMaximum];
 #define LINKMASK 0x7f
 // Another cheat to trip up re-entry
 Triple triple_var;
@@ -66,7 +66,7 @@ int  config_handler(Triple t[]) {
 				status = install_sql_script(var.key,opid);
 			if(count ==1) {
 				opid = G_atoi(t->key);
-				if((OPERMAX < opid) ) 
+				if((OperatorMaximum < opid) ) 
 					return(EV_Incomplete);
 			} else  { // Install map
 				trio = find_trio(var.key);
@@ -158,13 +158,13 @@ int ghandler(Triple top[],int status,Handler handler) {
 
 int triple(Triple top[],Handler handler) {
 	OP *op;
-	int status;
-	int events;
+	int status;int opid;
 	Code stmt; 
 	void * key;
-	key = 0;events=0;
+	key = 0;stmt=0;
 	status = EV_Ok;
-	op = &operands[top[0].link && LINKMASK];
+	opid = top[0].link;
+	op = &operands[ opid & OperatorMask];
 	set_ready_event(op->properties);
 	if(EV_Overload & op->properties)
 		stmt = top[0].key;
@@ -183,9 +183,6 @@ int triple(Triple top[],Handler handler) {
 		}  while( status == EV_Data );
 	machine_reset(stmt);
 	}
-	
-  if(key)
-    delkey((const char *) key);
   return status;
 }
 
@@ -251,7 +248,7 @@ const Triple G_null_graph = {"_",'_',0};
 int init_operands() {
 	int i; 
 	G_memset(operands,0,sizeof(operands));
-	for(i=G_USERMIN;i < OPERMAX;i++) {
+	for(i=SystemUser;i < OperatorMaximum;i++) {
 		operands[i].handler = event_handler;
 		operands[i].properties= EV_Null; }
 	return(i);
