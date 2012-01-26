@@ -49,9 +49,7 @@ Mapper map_other_start(Pointer * p,int *type) {
 // it is always bound to the table context
 
 FILTER * ready_filter() { return ready.filter;}
-//TABLE * self_table() { return ready.event_table;}
-//GRAPH * self_graph(){ return (GRAPH *) ready.self->table->list;}
-//GRAPH * other_graph(){ return (GRAPH *) ready.other->table->list;}
+
 // msthods on graph pointers
 int stopped_row() {
 if(ready.self.row == ready.self.end)
@@ -80,7 +78,9 @@ void set_row_sequence(RowSequence * rows,PGRAPH f) {
 int set_ready_event(int EV_event) {
 	ready.events |= EV_event;
 	return ready.events; }
-
+Code set_ready_code(Code code) {
+	ready.stmt = code;
+	return ready.stmt; }
 int  set_ready_graph(FILTER *f) {
 	PGRAPH active;
 	G_memset(&ready,0,sizeof(ready));
@@ -144,12 +144,16 @@ int init_run_console(FILTER *f) {
 }
 int event_exec(FILTER * f) {
 	 int g_event;
+	 Triple t;
 	g_event = 0;
+
 	if(isnull_filter(f))
 		g_event |= EV_Null;
 	g_event |=  set_ready_event(0);
 	switch(g_event) {
 		case EV_Null:
+			g_event = machine_triple(ready.stmt,&t);
+			print_triple(&t);
 			g_event = init_run_console(f);
 		break; 
 		case EV_Debug:
@@ -173,8 +177,7 @@ int event_exec(FILTER * f) {
 int event_handler(Triple * t) {
 	FILTER *f;
 	f = ready.filter;
-
-	f->properties |= operands[t->link].properties;
+	f->properties = ready.events;
 	if(f->properties & EV_Null)
 	  event_exec(f);
 	else if(f->properties & EV_Square)  {
@@ -210,9 +213,7 @@ void gfunction(Pointer context,int n, Pointer* v) {
     machine_result_int(context, ready.result.row);
     break;
   case CallbackExperiment:
-    //current_graph->link = x;
     ready.self.row++;
-    //current_graph->opclass = operands[x].properties;
     machine_result_int(context, 1);
     break;
   default:

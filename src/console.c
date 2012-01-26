@@ -72,7 +72,7 @@ int G_isdigit(int c) {return(isdigit(c));};
 char * G_gets(char * line) { return gets(line);}
 void G_debug(void * format){};
 // Is it a character known to the syntax? '
-const char  *uglies = "'._,{}$!"; // minuse the quote
+const char  *uglies = "'._,{}$!";
 char * null_key = "_";
 enum {QuoteSyntax,DotSyntax,NullSyntax,CommaSyntax};
 char  isugly(char ch) { 

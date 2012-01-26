@@ -11,13 +11,13 @@ extern OP operands[];
 enum { SystemExit,SystemCall,SystemDup,SystemPop,
 		SystemExec,SystemScript,SystemDecode,SystemConfig,SystemEcho};
 #define SystemMax SystemEcho
-#define SystemUser SystemMax + 4
+#define SystemUser SystemMax + 6
+#define SystemScratch SystemUser +1
+#define SystemNull '_'
 #define OperatorMaximum 128
 #define OperatorMask 0x7f
 #define OperatorMSB 0x80
-#define G_SCRATCH  25
-#define SCRATCH_STR "25"
+Code set_ready_code(Code stmt);
 int get_system_call(char * name);
-int install_sql_script(char * ch,int opid);
 int triple(Triple top[],Handler);
 int set_ready_event(int EV_event);

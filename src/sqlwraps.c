@@ -51,11 +51,13 @@ int machine_bind_text(Code stmt,int index,char * ch) {
 		ch,G_strlen( ch),0));}
 
 int machine_triple(Code stmt,Triple * t) {
-	int status;
-	status = machine_step(stmt );
-	if(status==SQLITE_ROW)
-		unbind_triple(stmt,t);
-	return(status);
+	unbind_triple(stmt,t);
+	return(EV_Ok);
+}
+void unbind_triple(Code stmt,Triple *t) {
+	t->key = (char  *) machine_column_text(stmt,0); 
+	t->link= machine_column_int(stmt, 1);
+	t->pointer= machine_column_int(stmt, 2);
 }
 
 

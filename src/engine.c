@@ -10,54 +10,50 @@ OP operands[OperatorMaximum];
 // Another cheat to trip up re-entry
 Triple triple_var;
 
-const Triple SCRATCH_Triple = {"Scratch",G_SCRATCH,0};
+const Triple SCRATCH_Triple = {"Scratch",SystemScratch,0};
 //triple bind, unbind
 
-void unbind_triple(Code stmt,Triple *t) {
-   t->key = (char  *) machine_column_text(stmt,0); 
-  t->link= machine_column_int(stmt, 1);
-  t->pointer= machine_column_int(stmt, 2);
-}
+
 
 
 int newcount=0;
 int oldcount=0;
 char * newkey(const char * key) {
-    int size = G_strlen(key)+1;
-    char * p = (char *) G_malloc(size);
-    G_strncpy(p,key,size);
-    newcount++;
-    return(p);
-  }
+	int size = G_strlen(key)+1;
+	char * p = (char *) G_malloc(size);
+	G_strncpy(p,key,size);
+	newcount++;
+	return(p);
+}
 void delkey(const char * key) { 
-  if(oldcount < newcount) 
-  {oldcount++; G_free( (void *) key);}
+	if(oldcount < newcount) 
+	{oldcount++; G_free( (void *) key);}
 }
 
 int install_sql_script(char * ch,int opid) {
-  int status;
-  status =
-	  machine_prepare(g_db,ch,&operands[opid].stmt);
-  operands[opid].handler=event_handler;
-        operands[opid].maps[0] = 0;
- operands[opid].properties=0;
-        return (EV_Ok);
+	int status;
+	status =
+		machine_prepare(g_db,ch,&operands[opid].stmt);
+	operands[opid].handler=event_handler;
+	operands[opid].maps[0] = 0;
+	operands[opid].properties=0;
+	return (EV_Ok);
 }
 
 
 // install key at installed operand position pointer
 // these are varable cheats for config state
-  int variable;
+int variable;
 
 int  config_handler(Triple t[]) {
-    int status=EV_Ok;
+	int status=EV_Ok;
 	Code stmt = operands[t[0].link].stmt;
 	const char * ch = t->key;
 	int count = t[0].pointer;
 	int opid;Triple var;
 	Trio * trio;
 
-    while(count) {
+	while(count) {
 		status = machine_triple(stmt,&var);
 		if(status != EV_Ok)
 			G_error("Prepare",G_ERR_PREPARE);
@@ -78,86 +74,86 @@ int  config_handler(Triple t[]) {
 		}else
 			return(status);
 		count--;
-		}
-	return EV_Ok;
 	}
+	return EV_Ok;
+}
 int sql_handler(Triple *node) {
-  int status=EV_Ok;
-  install_sql_script((char *) node->key,G_SCRATCH);
-  triple((Triple *) &SCRATCH_Triple,0);
-  return status;
+	int status=EV_Ok;
+	install_sql_script((char *) node->key,SystemScratch);
+	triple((Triple *) &SCRATCH_Triple,0);
+	return status;
 }
 int call_handler(Triple *node) {
-  int pointer;
-  pointer  =  incr_row(0);
-  set_row(G_atoi(node->key));
-  set_row(pointer);
-  return EV_Ok;
+	int pointer;
+	pointer  =  incr_row(0);
+	set_row(G_atoi(node->key));
+	set_row(pointer);
+	return EV_Ok;
 }
 int exec_handler(Triple *t) {
-  int status;
-  char *err;
-  status = machine_exec(g_db,t->key,&err);
-  return status;
+	int status;
+	char *err;
+	status = machine_exec(g_db,t->key,&err);
+	return status;
 }
 
 int swap_handler(Triple *t) {return EV_Ok;}
 int exit_handler(Triple *node) {  
-return EV_Done;}
+	return EV_Done;}
 int pop_handler(Triple *node) {
-  int status;
-  Triple t;
-  unbind_triple(operands[node->link].stmt,&t);
-  status = triple(&t,0);
-  if(stopped_row() )
-    status = EV_Done;
-  return status;
+	int status;
+	Triple t;
+	unbind_triple(operands[node->link].stmt,&t);
+	status = triple(&t,0);
+	if(stopped_row() )
+		status = EV_Done;
+	return status;
 }
 int script_handler(Triple *node) {  
-  int id;
-  id = G_atoi(node->key);
-  G_printf("Script: \n%s\n",machine_script(operands[id].stmt));
-  return EV_Ok;
+	int id;
+	id = G_atoi(node->key);
+	G_printf("Script: \n%s\n",machine_script(operands[id].stmt));
+	return EV_Ok;
 }
 int echo_handler(Triple *node) {  
-  G_printf("Echo: \n%s %d \n",node->key,node->link);
-  return EV_Ok;
+	G_printf("Echo: \n%s %d \n",node->key,node->link);
+	return EV_Ok;
 }
 int dup_handler(Triple *node){
-  int id,i;
-  char buff[400];
-  int status;
-  id = G_atoi(node->key);
-  G_strcpy(buff,(const char *) machine_script(operands[id].stmt));
-  status = install_sql_script(buff,G_SCRATCH);
-  if(status != EV_Ok) G_error("Dup",G_ERR_DUP);
-  for(i=0;operands[id].maps[i];i++) 
-    operands[G_SCRATCH].maps[i] = operands[id].maps[i];
-  return EV_Ok;
+	int id,i;
+	char buff[400];
+	int status;
+	id = G_atoi(node->key);
+	G_strcpy(buff,(const char *) machine_script(operands[id].stmt));
+	status = install_sql_script(buff,SystemScratch);
+	if(status != EV_Ok) G_error("Dup",G_ERR_DUP);
+	for(i=0;operands[id].maps[i];i++) 
+		operands[SystemScratch].maps[i] = operands[id].maps[i];
+	return EV_Ok;
 }
-  
+
 int ghandler(Triple top[],int status,Handler handler) { 
-  if( (status != EV_Data) && (status != EV_Done) && (status != EV_Ok)  )
-     G_error("ghandle entry",G_ERR_ENTRY);  
-  else if(status == EV_Done && (top->link & LINKMASK) < SystemMax ) 
-      return(status);
-  if(status == EV_Done)
-	  set_ready_event(EV_Done);
-  if(handler)
-    status = handler(top);
-  else if(operands[top->link & LINKMASK].handler)
-    status = operands[top->link & LINKMASK].handler(top);
+	if( (status != EV_Data) && (status != EV_Done) && (status != EV_Ok)  )
+		G_error("ghandle entry",G_ERR_ENTRY);  
+	else if(status == EV_Done && (top->link & LINKMASK) < SystemMax ) 
+		return(status);
+	if(status == EV_Done)
+		set_ready_event(EV_Done);
+	if(handler)
+		status = handler(top);
+	else if(operands[top->link & LINKMASK].handler)
+		status = operands[top->link & LINKMASK].handler(top);
 
-  return status;
+	return status;
 }
 
-  // Get the stmt
+// Get the stmt
 Code get_stmt(int opid,Triple * top) {
-  	if(operands[opid].properties & EV_Overload)
+	if(operands[opid].properties & EV_Overload)
 		return (Code) top[0].key;
 	else 
 		return operands[opid].stmt; // operand table rules
-	}
+}
 // We get here when a graph produces a triplet that heads a subsequence
 // The link then holds the specified graph operator, 
 // this sifts through and finds a handler
@@ -172,39 +168,42 @@ int triple(Triple top[],Handler handler) {
 	opid = top[0].link;
 	stmt = get_stmt(opid,top);
 	op = &operands[ opid & OperatorMask];
+	if(!handler)
+		handler = op->handler;
 	set_ready_event(op->properties);
+	set_ready_code(stmt);
 	if(!(EV_No_bind & op->properties))
 		status = bind_code(top,stmt);
-  if(status != EV_Ok) 
-      G_error("bind \n",G_ERR_BIND);
- if(!stmt)
-	 status = ghandler(top,status,handler);
- else {
-	 do {
-		status = machine_step(stmt );
+	if(status != EV_Ok) 
+		G_error("bind \n",G_ERR_BIND);
+	if(!stmt)
 		status = ghandler(top,status,handler);
+	else {
+		do {
+			status = machine_step(stmt );
+			status = ghandler(top,status,handler);
 		}  while( status == EV_Data );
-	machine_reset(stmt);
+		machine_reset(stmt);
 	}
-  return status;
+	return status;
 }
 
 
 const struct {
-  char * name;
-  int opid;
-  int properties;
-  Handler handler;
-  }  map[SystemMax +1] = {
-  {"SystemExit",SystemExit,EV_No_bind,exit_handler},
-  {"SystemCall",SystemCall,EV_No_bind,call_handler},
-  {"SystemDup",SystemDup,EV_No_bind,dup_handler},
-  {"SystemPop",SystemPop,EV_No_bind,pop_handler},
-  {"SystemExec",SystemExec,EV_No_bind,exec_handler},
-  {"SystemScript",SystemScript,EV_No_bind,sql_handler},
-  {"SystemDecode",SystemDecode,EV_No_bind,script_handler},
-  {"SystemConfig",SystemConfig,EV_No_bind,config_handler},
-  {"SystemEcho",SystemEcho,EV_No_bind,0}
+	char * name;
+	int opid;
+	int properties;
+	Handler handler;
+}  map[SystemMax +1] = {
+	{"SystemExit",SystemExit,EV_No_bind,exit_handler},
+	{"SystemCall",SystemCall,EV_No_bind,call_handler},
+	{"SystemDup",SystemDup,EV_No_bind,dup_handler},
+	{"SystemPop",SystemPop,EV_No_bind,pop_handler},
+	{"SystemExec",SystemExec,EV_No_bind,exec_handler},
+	{"SystemScript",SystemScript,EV_No_bind,sql_handler},
+	{"SystemDecode",SystemDecode,EV_No_bind,script_handler},
+	{"SystemConfig",SystemConfig,EV_No_bind,config_handler},
+	{"SystemEcho",SystemEcho,EV_No_bind,0}
 };
 int init_handlers() {
 	int i;
@@ -215,30 +214,24 @@ int init_handlers() {
 		operands[map[i].opid].stmt=0; 
 		add_trio(map[i].name,G_TYPE_SYSTEM,(Pointer) map[i].opid);
 		i++;
-   }
-   return 0;
+	}
+	return 0;
 }
 int init_machine() {
 	int status;
-	G_printf("%s\n",GBASE);
-	status = open_machine_layer(GBASE,&g_db);
-	if(status != EV_Ok) return status;
-	status = install_sql_script("select '_',95,0;",G_TYPE_NULL);
-	if(status != EV_Ok) return status;
-	G_printf("%s\n",GBASE);
 	status = init_handlers(); if(status != EV_Ok) return status;
 	status = init_binder(); if(status != EV_Ok) return status;
 	status = init_gfun(); if(status != EV_Ok) return status;
 	status = init_tables(); if(status != EV_Ok) return status;
 	status = init_filters(); if(status != EV_Ok) return status;
 	init_console();
-  return status;
+	return status;
 }
 
 Mapper map_debugger(Pointer * p,int *type) {
 	*type = G_TYPE_CODE;
 	return 0;
-	}
+}
 Handler g_debugger(Triple );
 int g_debugger_state;
 Trio engine_trios[] = { 
@@ -246,37 +239,47 @@ Trio engine_trios[] = {
 	{ "Testing", G_TYPE_BIT, (Pointer) EV_Overload},
 	{0,0,0}};
 
-// defult operands
-const  Triple G_null_graph = {"_",'_',0};
-int init_operands() {
-	int i; 
-	G_memset(operands,0,sizeof(operands));
-	for(i=SystemUser;i < OperatorMaximum;i++) {
-		operands[i].handler = event_handler;
-		operands[i].properties= EV_Null; }
-	return(i);
+	// defult operands
+	const  Triple G_null_graph = {"_",'_',0};
+	int init_operands() {
+		int i; 
+		G_memset(operands,0,sizeof(operands));
+		for(i=SystemUser;i < OperatorMaximum;i++) {
+			operands[i].handler = event_handler;
+			operands[i].properties= EV_Null; }
+	i = install_sql_script("select '_',98,0;",SystemNull);
+		return(i);
 	}
-int main(int argc, char * argv[])
-{
-	int status; 
-	Triple test;
-	g_debugger_state=0;
-	init_operands();
-	init_trios();
-	add_trios(engine_trios);
-	status = init_machine();
-	print_trios();
-	test=G_null_graph;
+	int main(int argc, char * argv[])
+	{
+		int status; 
+		OP op;
+		Triple test;
+
+		status = open_machine_layer(GBASE,&g_db);
+		if(status != EV_Ok) G_exit();
+		G_printf("%s\n",GBASE);
+		g_debugger_state=0;
+		init_operands();
+		op = operands[GCHAR];
+		init_trios();
+		add_trios(engine_trios);
+		status = init_machine();
+		op = operands[GCHAR];
+		print_trios();
+		test=G_null_graph;
 #ifdef Debug_engine
-   test.link |= EV_Overload;
+		test.link |= EV_Overload;
 #endif
-   status=0;
-  for(;;){ 
-	  status++; 
-	  test=G_null_graph;
-	  triple(&test,0);}
-  G_exit(0);
-}
-void print_triple(Triple t) { G_printf(" %s %d %d\n",t.key,t.link,t.pointer);}
-// his is a little debgger, and stays ith this file
-Handler g_debugger(Triple t) {print_triple(t);return 0;}
+		status=0;
+		for(;;){ 
+			status++; 
+			test=G_null_graph;
+			op = operands[GCHAR];
+			triple(&test,0);}
+		G_exit(0);
+	}
+void print_triple(Triple *t) { 
+		G_printf(" %s %d %d\n",t->key,t->link,t->pointer);}
+	// his is a little debgger, and stays ith this file
+	Handler g_debugger(Triple t) {print_triple(&t);return 0;}

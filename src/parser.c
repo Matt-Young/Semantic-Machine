@@ -41,33 +41,32 @@ int process_block(PGRAPH *inner) {
 	 // } else
 #endif
 	  // Handle attributes immediately
-	if(current.link == '$') {
+	if(current.link == '$') { // key$
 		SetAttribute(&current,&next);
 			 current.link = DISCARD;
 	}
 	// Erase the bracket
-	else if(current.link == '{') {
+	else if(current.link == '{') { //{ key:{   or .} or ,{
 			if(prev.link != ':')
 				new_child_graph(inner);
 		 current.link = DISCARD;
-	  } else if((current.link == '.') || (current.link == '_')){
-	  // Case:  key.
-		  if((prev.link != '.') && (prev.link != '.'))
-			  new_child_graph(inner);
-           append_graph(inner,current);
-	}  else if(current.link == ',' ) {
-// Case: key,X
-		if((prev.link != '.') && (prev.link != DISCARD) )
-			close_update_graph(inner);
+	} else if((current.link == '.') || (current.link == '_')){ // key. key_
+//
+		append_graph(inner,current);
+	} else if(current.link == ',' ) {  // key,
+//
+		close_update_graph(inner);
 		new_child_graph(inner);
 		append_graph(inner,current);
 // Case: key:X
-	} else if(current.link == ':' )  {  
+	} else if(current.link == ':' )  {  // key:
 		named_count++;
         new_child_graph(inner);  
         append_graph(inner,current);
-	  } else if(current.link == '}' ) 
+	  } else if(current.link == '}' ) { //  | key} |
+		append_graph(inner,current);
 		close_update_graph(inner);
+	}
      prev = current;
 	 current = next; 
     }  
