@@ -7,16 +7,18 @@
 typedef char * CharPointer;
 
 int graph_counter;
+
 // apply known attributes using name substitution
-void SetAttribute(Triple * destination,Triple * attribute) {
+int SetAttribute(Triple * current,Triple * next) {
 	Trio * trio;
-	if(G_strcmp(attribute->key,"local") && (attribute->key[0] != '_'))
-		return;
-	trio= find_trio(destination->key);
+	if( G_strcmp(current->key,SystemNameSpace) )
+		return 0;
+	trio= find_trio(next->key);
 	if(trio && (int) trio->type == G_TYPE_SYSTEM) {
-		destination->link =  (int) trio->value;
-		attribute->link = DISCARD;
+		next->link =  (int) trio->value;
+		return 1;
 	}
+	return 0;
 }
 // builds a subgraph on inner from user text
 
@@ -35,31 +37,30 @@ int process_block(PGRAPH *inner) {
 	  nchars =G_keyop(&console,&next.key,&next.link);
 	  next.pointer=(*inner)->row+1;
 #ifdef Debug_parser
-	 //if(1) {
-		  G_printf("<%10s %c  %4d>\n", next.key,next.link,next.pointer);
-	  //next.link = DISCARD;
-	 // } else
+	  G_printf("|%10s |%2x-%c | %4d|\n", next.key,next.link,next.link,next.pointer);
 #endif
-	  // Handle attributes immediately
-	if(current.link == '$') { // key$
-		SetAttribute(&current,&next);
-			 current.link = DISCARD;
-	}
-	// Erase the bracket
-	else if(current.link == '{') { //{ key:{   or .{ or ,{ or key{ or !{
-			if(prev.link != ':')
-				new_child_graph(inner);
-		 current.link = DISCARD;
-	} else if((current.link == '.') || (current.link == '_')){ // key. key_
-//
+	  // Replace the { ad the : if local name space
+	  // Handle local names immediately
+	  if((current.link == ':') && SetAttribute(&current,&next) ) {
+		  current.link = DISCARD;
+		  // Erase the bracket
+	  }else if(current.link == '{') { // _{ or key:{   or .{ or ,{ or key{ or !{
+		  if(prev.link != ':' || prev.link != '!')
+			  new_child_graph(inner);
+		  current.link = DISCARD;
+	  } 
+	// Check grammar
+	 else if((current.link == '.') || (current.link == '_')
+		|| (current.link == '$')){ // key. key_ key$
 		append_graph(inner,current);
-	} else if(current.link == ',' ) {  // key,
+	} else if(current.link == ',' ) {  // key,key or  key{key, or key.key, or :key,
 //
+		if(prev.link != '{')
 		close_update_graph(inner);
 		new_child_graph(inner);
 		append_graph(inner,current);
 // Case: key:X
-	} else if(current.link == ':' )  {  // key:
+	} else if((current.link == ':') || (current.link == '!'))  {  // key: key!
 		named_count++;
         new_child_graph(inner);  
         append_graph(inner,current);
@@ -67,7 +68,7 @@ int process_block(PGRAPH *inner) {
 		append_graph(inner,current);
 		close_update_graph(inner);
 	}
-     prev = current;
+	prev = current;
 	 current = next; 
     }  
   // finish up
@@ -76,42 +77,46 @@ int process_block(PGRAPH *inner) {
   return(EV_Ok);
 }
 #define Debug_parser
-//#undef Debug_parser
-void graph_look(PGRAPH *  list) {
-	PGRAPH  graph = (*list);
-	GRAPH g ;
-	g = *graph;
-	return;
-}
+#undef Debug_parser
+
 PGRAPH init_parser() {
   TABLE * t = get_table_name("console");
   new_table_graph(t); 
   return(t->list);
 }
 int Graph_test(PGRAPH *pt);
+void graph_look(PGRAPH *  list);
 int parser(PGRAPH *pt) {
 #ifdef Debug_parser
   Graph_test(pt);
 #else
 	process_block(pt);
 #endif
+	G_buff_counts();
   return(EV_Ok);
 }
 //const  Triple G_null_graph 
-int Graph_test(PGRAPH *pt) {
 #ifdef Debug_parser 
+void graph_look(PGRAPH *  list) {
+	PGRAPH  graph = (*list);
+	GRAPH g ;
+	g = *graph;
+	return;
+}
+int Graph_test(PGRAPH *pt) {
+
 	int i;
 	Triple t= {"_",'_',0};
 	for(i=0;i < 5;i++ ){
 		graph_look(pt);
 	append_graph(pt,t);
-	graph_look(pt);}
+}
+	graph_look(pt);
 	while((*pt) && count_graph(*pt)){
 		graph_look(pt);
       close_update_graph(pt);  
 	  graph_look(pt);
 	}
-	//del_table_graph(PGRAPH *inner)
-#endif
   return(EV_Ok);
 }
+#endif

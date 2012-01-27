@@ -3,22 +3,30 @@
 // Null is always operational
 FILTER null_filter;
 FILTER * filter_list;
-int newfilter=0;
-int oldfilter=0;
+extern int new_filter_count;
+extern int old_filter_count;
 int isnull_filter(FILTER * f) {
 	if(f == &null_filter)
 		return 1;
 	return 0;
 }
-FILTER * new_filter(FILTER * parent) {
+FILTER * new_filter_context(FILTER * parent) {
 	FILTER * f;
 	if(!parent || !filter_list)
 		return 0;
 	 f = (FILTER *) G_calloc(sizeof(FILTER));
-    newfilter++;
+    new_filter_count++;
     f->parent = parent;
     f->status =  parent->status;
     return(f);
+  }
+FILTER * delete_filter_context(FILTER * f) {
+  FILTER * g = f->parent;
+  if(old_filter_count >= new_filter_count) 
+    G_error("Filter",G_ERR_FILTER);
+  old_filter_count++;
+  G_free( (void *) f);
+  return g;
   }
 FILTER * close_filter(FILTER * f) {
   delete_graph((PGRAPH *) f->g[0]->table->list);
@@ -26,13 +34,7 @@ FILTER * close_filter(FILTER * f) {
   return delete_filter(f);
 }
 FILTER *delete_filter(FILTER * f) {
-  FILTER * g;
-  if(oldfilter >= newfilter) 
-    G_error("Filter",G_ERR_FILTER);
-  g = (FILTER *) f->parent; 
-  oldfilter++; 
-  G_free( (void *) f);
-  return g;
+  return delete_filter_context(f);
   }
 int delete_filter_contents(FILTER * f) {
 	PGRAPH g;

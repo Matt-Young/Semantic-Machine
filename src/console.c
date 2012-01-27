@@ -11,11 +11,11 @@ int init_console() { return(0);}
 #include <stdarg.h>
 #ifdef Debug_console
 int debug_counter = 0;
-#define test_0 "{abc.def.ghi}"
+#define test_0 "{abc.def:jon,!ghiartbc.dtrhef:joswtrhn,!ghsrthi}"
 #define test_1 "{abc,def,ghi}"
 #define test_2 "{abc}"
 #define test_3 "SystemConfig$local , 'a d'{ and}"
-#define test_4 "{TestAttribute$Testing}"
+#define test_4 "{SystemEcho$local}"
 #endif
 char * G_line(char * line,int n) {
 	memset(line,0,n);
@@ -23,7 +23,7 @@ char * G_line(char * line,int n) {
 #ifdef Debug_console
 	debug_counter++; debug_counter &= 0x01;
 	if(debug_counter != 0) 
-		G_strncpy(line,test_2,n);
+		G_strncpy(line,test_4,n);
 	else
 		debug_counter=0;
 	return line;
@@ -72,9 +72,13 @@ int G_isdigit(int c) {return(isdigit(c));};
 char * G_gets(char * line) { return gets(line);}
 void G_debug(void * format){};
 // Is it a character known to the syntax? '
-const char  *uglies = "'._,{}$!";
+const char  *uglies = "'._,{}$!:";
 char * null_key = "_";
 enum {QuoteSyntax,DotSyntax,NullSyntax,CommaSyntax};
+int isin(char c,char *str) {
+	while((*str != 0) && (*str != c) ) str++;
+	return *str;
+}
 char  isugly(char ch) { 
 	const char * ptr = uglies;
 	while((*ptr) && ((*ptr) != ch)) ptr++;
@@ -131,8 +135,17 @@ int G_keyop(Console * console,CharPointer *key,int * op) {
 		i =   (int) console->current;
 		i -= start ; // char count
 		*ptr = 0;
-		if(!(*key[0])) 
+		if(!((*key)[0])) 
 			*key = null_key;  // valid null key
 		return i;
 	}
+int old_filter_count;
+int new_filter_count;
+int del_graph_count,new_graph_count;
+int del_table_count,new_table_count;
+void G_buff_counts(){
+	printf("F: %d %d\n",old_filter_count,new_filter_count);
+	printf("G: %d %d\n",del_graph_count,new_graph_count);
+	printf("T: %d %d\n",del_table_count,new_table_count);
+}
 

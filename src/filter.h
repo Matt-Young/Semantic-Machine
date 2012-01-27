@@ -8,7 +8,7 @@ typedef struct f {
 } FILTER;
 int event_exec(FILTER *f);
 FILTER *delete_filter(FILTER * f);
-FILTER * new_filter(FILTER * parent);
+FILTER * new_filter_context(FILTER * parent);
 FILTER * close_filter(FILTER * f);
 int delete_filter_contents(FILTER * f);
 extern FILTER null_filter;

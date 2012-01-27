@@ -169,7 +169,7 @@ int triple(Triple top[],Handler handler) {
 		handler = op->handler;
 	events = set_ready_event(op->properties);
 	if(events & EV_Debug)
-		G_printf("D\n");
+		G_printf("Debug event\n");
 	set_ready_code(stmt,opid);
 	if(!(EV_No_bind & op->properties))
 		status = bind_code(top,stmt);

@@ -20,4 +20,4 @@ char * G_InitConsole(Console * console,char * line,int size);
 char * G_console(Console * console);
 void G_debug(void * format);
 int G_keyop(Console * console,char * *key,int * op);
-
+void G_buff_counts();

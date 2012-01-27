@@ -120,7 +120,7 @@ int events(FILTER * f) {
 // sql table name will cuse events overned by filter paerent->child
  int init_run_table(FILTER * parent,char * name) {
 	  TABLE * table; int status;
-	  FILTER * child = new_filter(parent);
+	  FILTER * child = new_filter_context(parent);
 	  init_table(name,0,&table);
 	  child->event_table=table;
 	  child->event_triple  = &table->operators[pop_triple_operator];
@@ -140,6 +140,8 @@ int init_run_console(FILTER *f) {
 	f->event_table = table;
 	f->event_triple = (Triple *) &G_null_graph;
 	status=parser((PGRAPH *) &table->list);
+	
+		/*
 	f->event_table =  get_table_context("console");
 	f->g[0] = (PGRAPH) new_table_graph(table);
 	f->event_triple = &table->operators[pop_triple_operator];
@@ -147,6 +149,7 @@ int init_run_console(FILTER *f) {
 	ready.self.end=4;
 	status = triple(f->event_triple,event_handler);
 	release_table_context(f->event_table );
+	*/
 	return status;
 }
 int event_exec(FILTER * f) {

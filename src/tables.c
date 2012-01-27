@@ -5,7 +5,7 @@
 #define NUMBER_TABLES 20
 PTABLE triple_tables[NUMBER_TABLES];
 
-int del_table_count=0,new_table_count=0;
+extern int del_table_count,new_table_count;
 PTABLE  new_table_context() {
   PTABLE pt;
   pt = (PTABLE) G_calloc(sizeof(TABLE));
@@ -63,16 +63,6 @@ int del_table_rows(TABLE *table) {
 	return(status);
 }
 
-
-
-
-char * NAME(TABLE *table) {
-  return table->name;
-}
-int ATTRIBUTE(TABLE *table) {
-  return table->attribute;
-}
-
 TABLE * TABLE_POINTER(int i) { return triple_tables[i];}
 void set_table_name(char * name,int index) { triple_tables[index]->name =  name;}
 PGRAPH get_table_graph(int i){return triple_tables[i]->list;}
@@ -86,7 +76,6 @@ TABLE * get_table_name(const char * name) {
 		}
 	return (0);
 }
-
 
 const struct new_install{
 	int opindex;

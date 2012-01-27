@@ -27,6 +27,7 @@ enum {G_TYPE_NONE,G_TYPE_INTEGER,G_TYPE_FLOAT,
 #define G_TYPE_NULL 95
 #define GBASE "c:/soft/gbase"
 #define GFUN "gfun"
+#define SystemNameSpace "local"
 #define LocalSymbolCount 100
 // Generics that cover sqlite3
 extern Pointer g_db;
