@@ -144,6 +144,7 @@ int init_run_console(FILTER *f) {
 	f->g[0] = (PGRAPH) new_table_graph(table);
 	f->event_triple = &table->operators[pop_triple_operator];
 	set_ready_graph(f); // run from console table
+	ready.self.end=4;
 	status = triple(f->event_triple,event_handler);
 	release_table_context(f->event_table );
 	return status;
