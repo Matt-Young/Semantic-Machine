@@ -14,9 +14,9 @@ PGRAPH new_graph_context();
 PGRAPH delete_graph(PGRAPH *);
 void close_update_graph(PGRAPH *);
 int append_graph(PGRAPH *,Triple );
-int del_table_graph(PGRAPH *);
-PGRAPH get_table_graph(int index);
-PGRAPH new_table_graph(TABLE * table);
+int release_graph_list(PGRAPH *);
+
+
 int offset_row(PGRAPH g);
 int count_graph(PGRAPH );
 void graph_counts() ;

@@ -6,10 +6,46 @@
 PTABLE triple_tables[NUMBER_TABLES];
 
 int del_table_count=0,new_table_count=0;
-int init_table_context() {
- G_memset(triple_tables,0,sizeof(triple_tables));
- del_table_count=0,new_table_count=0;
-  return 0;}
+PTABLE  new_table_context() {
+  PTABLE pt;
+  pt = (PTABLE) G_calloc(sizeof(TABLE));
+  new_table_count++;
+return(pt);}
+
+void free_table_context(PTABLE pt) {
+   if(del_table_count >= new_table_count)
+		G_error("Bad table",G_ERR_GRAPH);
+	G_free((void *) pt);
+	del_table_count++;
+}
+
+PTABLE  get_table_context(char * name) {
+  PTABLE pt; int i;
+  pt = new_table_context();
+  pt->name = (char *) G_calloc(G_strlen(name));
+  G_strcpy(pt->name,name);
+  pt->list = 0;
+  pt->attribute = G_TYPE_TABLE;
+
+  for(i=0;i< NUMBER_TABLES;i++) {if(triple_tables[i]==0) break;}
+  pt->index = i;
+  triple_tables[i] = pt;
+  return pt;
+}
+void release_table_context(PTABLE pt) {
+   triple_tables[pt->index]=0;
+    G_free((void *) pt->name);
+	G_free((void *) pt);
+	del_table_count++;
+}
+Pointer new_table_graph(PTABLE table) {
+	PGRAPH gr =  new_graph_context();
+	table->list =  (Pointer) gr;
+	gr->table = table;
+	gr->rowid=1; // SQL offset
+	return table->list;
+}
+
 // direct sql utilities
 #define Sql_create "drop table if exists %s; create table %s (key text,link integer, pointer integer);" 
 int del_create_table(TABLE *table) {
@@ -27,33 +63,9 @@ int del_table_rows(TABLE *table) {
 	return(status);
 }
 
-PTABLE  new_table_context(char * name) {
-  PTABLE pt;int i;
-  pt = (PTABLE) G_calloc(sizeof(GRAPH));
-  pt->name = (char *) G_calloc(G_strlen(name));
-  pt->list = 0;
-  pt->attribute = G_TYPE_TABLE;
-  G_strcpy(pt->name,name);
-  for(i=0;i< NUMBER_TABLES;i++) {if(triple_tables[i]==0) break;}
-  pt->index = i;
-  triple_tables[i] = pt;
-  new_table_count++;
-  return pt;
-}
-void free_table_context(PTABLE pt) {
-   if(del_table_count >= new_table_count)
-		G_error("Bad table",G_ERR_GRAPH);
-   triple_tables[pt->index]=0;
-    G_free((void *) pt->name);
-	G_free((void *) pt);
-	del_table_count++;
-}
-PGRAPH new_table_graph(TABLE * table) {
- table->list = new_graph_context(); 
-	table->list->table = table;
-table->list->rowid=1; // SQL offset
-  return table->list;
-}
+
+
+
 char * NAME(TABLE *table) {
   return table->name;
 }
@@ -112,23 +124,24 @@ Mapper null_map(void * p,int * i);
 }
 
 int init_table(char * name,int options,TABLE **table) {
-  int status = SQLITE_OK;
-  int i;
-  *table =  new_table_context(name);
-  if(options)
-	del_create_table(*table);
-  for(i=0; i < NBUILTINS;i++) {
-		make_stmt(*table,i,name);
-  }
-  return status;
-}
+	 int status = SQLITE_OK;
+	 int i;
+	 *table =  get_table_context(name);
+	 if(options)
+		 del_create_table(*table);
+	 for(i=0; i < NBUILTINS;i++) {
+		 make_stmt(*table,i,name);
+	 }
+	 return status;
+ }
 void gfunction(Pointer context,int n,Pointer * v);
 
  Trio table_trios[] = {{"TablesInit",0,0},{0,0,0}};
 int init_tables() {
 	int status;
 	add_trios(table_trios);
-	init_table_context();
+	G_memset(triple_tables,0,sizeof(triple_tables));
+	del_table_count=0,new_table_count=0;
 	status = machine_install_callback(g_db,GFUN,2,gfunction);
 	return status;
 }

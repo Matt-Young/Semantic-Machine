@@ -37,8 +37,8 @@ FILTER *delete_filter(FILTER * f) {
 int delete_filter_contents(FILTER * f) {
 	PGRAPH g;
 	g = f->g[0];
-	if(g) del_table_graph((PGRAPH *)g->table->list);
-	free_table_context(f->event_table);
+	if(g) release_graph_list((PGRAPH *)g->table->list);
+	release_table_context(f->event_table);
 	delete_filter(f);
 	return(0);
 }

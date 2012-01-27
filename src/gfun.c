@@ -140,9 +140,13 @@ int init_run_console(FILTER *f) {
 	f->event_table = table;
 	f->event_triple = (Triple *) &G_null_graph;
 	status=parser((PGRAPH *) &table->list);
+	f->event_table =  get_table_context("console");
+	f->g[0] = (PGRAPH) new_table_graph(table);
 	f->event_triple = &table->operators[pop_triple_operator];
-	status = init_run_table(f,"console"); 
-	return set_ready_graph(f); // run from console table
+	set_ready_graph(f); // run from console table
+	status = triple(f->event_triple,event_handler);
+	release_table_context(f->event_table );
+	return status;
 }
 int event_exec(FILTER * f) {
 	 int g_event;

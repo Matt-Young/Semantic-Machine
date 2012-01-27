@@ -11,7 +11,7 @@ typedef struct  {
   int attribute;
   Triple operators[NBUILTINS + 5];  // operand sequences for triple machine
   int index;
-  struct g * list;  //points to the innermost current graph
+  Pointer list;  //points to the innermost current graph
   COLINFO  info;
 } TABLE;
 #define TABLE_SQUARE 1
@@ -24,7 +24,8 @@ int ATTRIBUTE(TABLE *);
 TABLE * TABLE_POINTER(int i);
 int DELETE_TABLE(TABLE *);
 int init_table(char * name,int options,TABLE **table);
-
+PTABLE get_table_context(char *);
 void set_table_name(char * name,int index);
-TABLE * get_table_name(const char * name);
-void free_table_context(PTABLE pt);
+PTABLE get_table_name(const char * name);
+void release_table_context(PTABLE pt);
+Pointer new_table_graph(PTABLE table);
