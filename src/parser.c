@@ -18,7 +18,7 @@ void SetAttribute(Triple * destination,Triple * attribute) {
 		attribute->link = DISCARD;
 	}
 }
-// buils a subgraph on inner from user text
+// builds a subgraph on inner from user text
 
 int process_block(PGRAPH *inner) {
   Triple prev,current,next;
@@ -77,6 +77,12 @@ int process_block(PGRAPH *inner) {
 }
 #define Debug_parser
 //#undef Debug_parser
+void graph_look(PGRAPH *  list) {
+	PGRAPH  graph = (*list);
+	GRAPH g ;
+	g = *graph;
+	return;
+}
 PGRAPH init_parser() {
   TABLE * t = get_table_name("console");
   new_table_graph(t); 
@@ -96,10 +102,15 @@ int Graph_test(PGRAPH *pt) {
 #ifdef Debug_parser 
 	int i;
 	Triple t= {"_",'_',0};
-	for(i=0;i < 5;i++ ) 
+	for(i=0;i < 5;i++ ){
+		graph_look(pt);
 	append_graph(pt,t);
-	while((*pt) && count_graph(*pt))
+	graph_look(pt);}
+	while((*pt) && count_graph(*pt)){
+		graph_look(pt);
       close_update_graph(pt);  
+	  graph_look(pt);
+	}
 	//del_table_graph(PGRAPH *inner)
 #endif
   return(EV_Ok);

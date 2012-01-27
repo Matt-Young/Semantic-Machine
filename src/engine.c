@@ -12,10 +12,6 @@ Triple triple_var;
 
 const Triple SCRATCH_Triple = {"Scratch",SystemScratch,0};
 //triple bind, unbind
-
-
-
-
 int newcount=0;
 int oldcount=0;
 char * newkey(const char * key) {
@@ -160,10 +156,10 @@ Code get_stmt(int opid,Triple * top) {
 
 int triple(Triple top[],Handler handler) {
 	OP *op;
-	int status;int opid,overload;
+	int status;int opid,overload,events;
 	Code stmt; 
 	void * key;
-	key = 0;stmt=0;
+	key = 0;stmt=0;events=0;
 	status = EV_Ok;
 	opid = top[0].link;
 	stmt = get_stmt(opid,top);
@@ -171,7 +167,9 @@ int triple(Triple top[],Handler handler) {
 	overload = opid & OperatorMSB;
 	if(!handler)
 		handler = op->handler;
-	set_ready_event(op->properties);
+	events = set_ready_event(op->properties);
+	if(events & EV_Debug)
+		G_printf("D\n");
 	set_ready_code(stmt,opid);
 	if(!(EV_No_bind & op->properties))
 		status = bind_code(top,stmt);
@@ -239,7 +237,7 @@ Mapper map_debugger(Pointer * p,int *type) {
 	*type = G_TYPE_CODE;
 	return 0;
 }
-Handler g_debugger(Triple );
+Handler g_debugger(Triple *);
 int g_debugger_state;
 Trio engine_trios[] = { 
 	{ "Debug", G_TYPE_HANDLER, g_debugger},
@@ -284,10 +282,17 @@ Trio engine_trios[] = {
 			test=G_null_graph;
 			test.link = OperatorMSB; // console overload
 			op = operands[GCHAR];
+			status = EV_Debug;
+			status = SystemMax+3;
+			operands[SystemMax+3].properties |= EV_Debug;
 			triple(&test,event_handler);}
 		G_exit(0);
 	}
 void print_triple(Triple *t) { 
 		G_printf(" %s %d %d\n",t->key,t->link,t->pointer);}
 	// his is a little debgger, and stays ith this file
-	Handler g_debugger(Triple t) {print_triple(&t);return 0;}
+	Handler g_debugger(Triple *t) {
+		print_triple(t);
+		
+		return 0;
+	}

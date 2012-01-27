@@ -73,8 +73,8 @@ int reset_ready_set() {
 void set_row_sequence(RowSequence * rows,PGRAPH f) {
 	int rowid = offset_row(f);
 	 rows->row += rowid;
-	 rows->end = rowid;
-	 rows->start = rowid;
+	 rows->end += rowid;
+	 rows->start += rowid;
 }
 int set_ready_event(int EV_event) {
 	ready.events |= EV_event;

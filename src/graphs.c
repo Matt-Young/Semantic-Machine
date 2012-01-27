@@ -79,6 +79,7 @@ PGRAPH delete_graph(PGRAPH *list) {
 void close_update_graph(PGRAPH *list) { 
 	int status; 
 	TABLE * table = (*list)->table;
+	PGRAPH * graph = (*list);
 	Triple * data = &table->operators[triple_data_1];
 	data->key= "Not needed";
 	status = triple(&table->operators[update_triple_operator],0);
