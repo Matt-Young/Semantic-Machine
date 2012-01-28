@@ -15,6 +15,7 @@ enum { SystemExit,SystemCall,SystemDup,SystemPop,
 #define SystemScratch SystemUser +1
 #define SystemNull '_'
 #define OperatorMaximum 128
+#define OperatorConsole 127
 #define OperatorMask 0x7f
 #define OperatorMSB 0x80
 Code set_ready_code(Code stmt,int opid);

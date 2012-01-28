@@ -161,7 +161,7 @@ int event_exec(FILTER * f) {
 		g_event |= EV_Null;
 	g_event |=  set_ready_event(0);
 	if(g_event & EV_Overload) {
-		if((ready.opid & OperatorMask) == 0) {
+		if((ready.opid & OperatorMask) == OperatorConsole) {
 			g_event = machine_triple(ready.stmt,&t);
 			print_triple(&t);
 			g_event = init_run_console(f);

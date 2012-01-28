@@ -87,7 +87,7 @@ const struct new_install{
 	"select key,link,pointer from %s where (gfun(0,rowid) == rowid);",0,0,0,0},
 	{append_triple_operator,SystemMax+2,"insert into %s values( ?, ?, ?) ;",
 	  "BindTriple",0,0,0},
-	{update_triple_operator,SystemMax+3,"update %s set pointer = ? where rowid = ?;",
+	{update_triple_operator,SystemMax+3,"update %s set pointer = (?-1) where rowid = ?;",
 	"BindSelfRow","BindSelfStart",0,0},
 	{0,0,0,0}
 };

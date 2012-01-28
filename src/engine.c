@@ -273,17 +273,13 @@ Trio engine_trios[] = {
 		op = operands[GCHAR];
 		print_trios();
 		test=G_null_graph;
-#ifdef Debug_engine
-		test.link |= EV_Overload;
-#endif
+		test.link = (OperatorConsole | EV_Overload);
 		status=0;
 		for(;;){ 
 			status++; 
 			test=G_null_graph;
 			test.link = OperatorMSB; // console overload
 			op = operands[GCHAR];
-			status = EV_Debug;
-			status = SystemMax+3;
 			operands[SystemMax+3].properties |= EV_Debug;
 			triple(&test,event_handler);}
 		G_exit(0);

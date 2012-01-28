@@ -15,23 +15,23 @@ int debug_counter = 0;
 #define test_1 "{abc,def,ghi}"
 #define test_2 "{abc}"
 #define test_3 "SystemConfig$local , 'a d'{ and}"
-#define test_4 "{SystemEcho$local}"
+#define test_4 "{local:SystemEcho}"
 #endif
-char * G_line(char * line,int n) {
-	memset(line,0,n);
-
+int G_line(char * line,int n) {
+	int count=0;
 #ifdef Debug_console
 	debug_counter++; debug_counter &= 0x01;
-	if(debug_counter != 0) 
+	if(debug_counter != 0) {
 		G_strncpy(line,test_4,n);
+		count = strlen(line);
+	}
 	else
 		debug_counter=0;
-	return line;
 	//} else
 #else
-	fgets(line, n, stdin);
+	count=  fgets(line, n, stdin);
 #endif
-	return line;
+	return count;
   }
 char * G_console(Console * console) { return G_line(console->base,console->size);}
 char * G_InitConsole(Console * console,char * line,int size) {

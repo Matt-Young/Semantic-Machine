@@ -1,4 +1,6 @@
-typedef struct {char * base; char * current; int size;} Console;
+typedef struct {char * buff; char * base; char * current; int size;} Console;
+char * G_InitConsole(Console * console,char * buff,int size);
+char * G_console(Console * console);
 void G_exit();
 void* G_malloc(int size);
 void* G_calloc(int size);
@@ -15,9 +17,8 @@ void* G_memcpy(void* s, const void* ct, int n);
 int G_ispunct(int c);
 int G_isdigit(int c);
 char *  G_gets(char * line);
-char * G_line(char * line,int n);
-char * G_InitConsole(Console * console,char * line,int size);
-char * G_console(Console * console);
+int G_line(char * line,int n);
+
 void G_debug(void * format);
 int G_keyop(Console * console,char * *key,int * op);
 void G_buff_counts();

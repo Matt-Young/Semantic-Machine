@@ -15,7 +15,7 @@ int SetAttribute(Triple * current,Triple * next) {
 		return 0;
 	trio= find_trio(next->key);
 	if(trio && (int) trio->type == G_TYPE_SYSTEM) {
-		next->link =  (int) trio->value;
+		next->link =  (int) trio->value | OperatorMSB;
 		return 1;
 	}
 	return 0;
@@ -41,8 +41,9 @@ int process_block(PGRAPH *inner) {
 #endif
 	  // Replace the { ad the : if local name space
 	  // Handle local names immediately
-	  if((current.link == ':') && SetAttribute(&current,&next) ) {
-		  current.link = DISCARD;
+	  if(current.link == ':') {
+		  if( SetAttribute(&current,&next) ) 
+			  current.link = DISCARD;
 		  // Erase the bracket
 	  }else if(current.link == '{') { // _{ or key:{   or .{ or ,{ or key{ or !{
 		  if(prev.link != ':' || prev.link != '!')
@@ -51,7 +52,7 @@ int process_block(PGRAPH *inner) {
 	  } 
 	// Check grammar
 	 else if((current.link == '.') || (current.link == '_')
-		|| (current.link == '$')){ // key. key_ key$
+		|| (current.link & OperatorMSB)){ // key. key_ key$ key.overload
 		append_graph(inner,current);
 	} else if(current.link == ',' ) {  // key,key or  key{key, or key.key, or :key,
 //
@@ -87,6 +88,7 @@ PGRAPH init_parser() {
 int Graph_test(PGRAPH *pt);
 void graph_look(PGRAPH *  list);
 int parser(PGRAPH *pt) {
+	append_graph(pt, G_null_graph);
 #ifdef Debug_parser
   Graph_test(pt);
 #else

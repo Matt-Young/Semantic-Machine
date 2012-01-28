@@ -10,7 +10,6 @@ typedef int (*Handler)(Triple *);
 typedef int (*Mapper)(Pointer *pointer,int *type);
 typedef void * Code;
 
-
 /*
 #define SQLITE_INTEGER  1
 #define SQLITE_FLOAT    2
