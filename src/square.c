@@ -56,7 +56,7 @@ Triple ct,dt;
         d = init_col_info(f->g[1]->table);
         while(d->index < d->col_count) {
 			dt = column_decoder(d); 
-			f->properties = operands[dt.link].properties;
+			f->events = operands[dt.link].properties;
            event_exec(f);
           }
 	  }

@@ -16,6 +16,7 @@ void G_memset(void* s, int c, int n);
 void* G_memcpy(void* s, const void* ct, int n);
 int G_ispunct(int c);
 int G_isdigit(int c);
+int isin(char c,const char *str);
 char *  G_gets(char * line);
 int G_line(char * line,int n);
 

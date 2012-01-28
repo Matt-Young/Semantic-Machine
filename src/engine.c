@@ -161,10 +161,11 @@ int triple(Triple top[],Handler handler) {
 	void * key;
 	key = 0;stmt=0;events=0;
 	status = EV_Ok;
-	opid = top[0].link;
+	opid = top[0].link & OperatorMask;
+	overload = top[0].link & OperatorMSB;
 	stmt = get_stmt(opid,top);
-	op = &operands[ opid & OperatorMask];
-	overload = opid & OperatorMSB;
+	op = &operands[ opid ];
+	
 	if(!handler)
 		handler = op->handler;
 	events = set_ready_event(op->properties);
@@ -251,7 +252,7 @@ Trio engine_trios[] = {
 		G_memset(operands,0,sizeof(operands));
 		for(i=SystemUser;i < OperatorMaximum;i++) {
 			operands[i].handler = event_handler;
-			operands[i].properties= EV_Null; }
+			operands[i].properties= 0; }
 	i = install_sql_script("select '_',98,0;",SystemNull);
 		return(i);
 	}
@@ -273,14 +274,15 @@ Trio engine_trios[] = {
 		op = operands[GCHAR];
 		print_trios();
 		test=G_null_graph;
-		test.link = (OperatorConsole | EV_Overload);
+		
 		status=0;
 		for(;;){ 
 			status++; 
 			test=G_null_graph;
-			test.link = OperatorMSB; // console overload
+			test.link = (OperatorConsole | OperatorMSB); // console overload
+			test.key = 0;
 			op = operands[GCHAR];
-			operands[SystemMax+3].properties |= EV_Debug;
+			//operands[SystemMax+3].properties |= EV_Debug;
 			triple(&test,event_handler);}
 		G_exit(0);
 	}

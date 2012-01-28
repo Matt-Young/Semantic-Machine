@@ -6,7 +6,7 @@ enum {G_ERR_INDEX,G_ERR_PREPARE,G_ERR_DUP,
 	G_ERR_SCHEMA, G_ERR_FILTER,G_ERR_UNKNOWN};
 extern const Triple SCRATCH_Triple;
 extern const Triple NULL_Triple;
-int bind_code(Triple top[],Code );
+
 int gfun_callback(Triple t);
 void G_error(char * c,int i);
 void print_triple(Triple *t);

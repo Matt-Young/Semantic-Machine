@@ -103,18 +103,15 @@ int key_match(const char * k,const char * g) {
     return 0;
 }
 int events(FILTER * f) {
-  int g_event=0;
-
-  if(!f->g[0])
-   g_event |= EV_Null;
-  else  if(f->g[0]->end > f->g[0]->row) 
-		g_event |= EV_Incomplete;
-  else if(f->g[1])
-	 if(f->g[1]->end  > f->g[1]->row) 
-		g_event |= EV_Incomplete;
-  g_event |= set_ready_event(0);
- //if((f->properties & EV_Matchable) && key_match(f->
-  return (g_event);
+	if(!f->g[0])
+		f->events |= EV_Null;
+	else  if(f->g[0]->end > f->g[0]->row) 
+		f->events |= EV_Incomplete;
+	else if(f->g[1] && (f->g[1]->end  > f->g[1]->row)) 
+			f->events |= EV_Incomplete;
+	//if(isnull_filter(f))
+	//	f->events |= EV_Null;
+	return (f->events);
 }
 
 // sql table name will cuse events overned by filter paerent->child
@@ -153,12 +150,9 @@ int init_run_console(FILTER *f) {
 	return status;
 }
 int event_exec(FILTER * f) {
-	 int g_event;
-	 Triple t;
-	g_event = 0;
-
-	if(isnull_filter(f))
-		g_event |= EV_Null;
+	int g_event;
+	Triple t;
+	g_event = f->events;
 	g_event |=  set_ready_event(0);
 	if(g_event & EV_Overload) {
 		if((ready.opid & OperatorMask) == OperatorConsole) {
@@ -168,14 +162,12 @@ int event_exec(FILTER * f) {
 		} else 
 			if ((ready.opid & OperatorMask) == 1) {}
 	}if(g_event & EV_Null) {
-			g_event = machine_triple(ready.stmt,&t);
-			print_triple(&t);
+		g_event = machine_triple(ready.stmt,&t);
+		print_triple(&t);
 	}
-	if(g_event)
-	  if(!isnull_filter(f))
-		  event_exec(f->parent);
-    return(g_event);
-  }
+	event_exec(f->parent);
+	return(g_event);
+}
  void reset_G_columns(TABLE *t) { 
    t->info.col_count = 0;
  }
@@ -185,10 +177,10 @@ int event_exec(FILTER * f) {
 int event_handler(Triple * t) {
 	FILTER *f;
 	f = ready.filter;
-	f->properties = ready.events;
-	if(f->properties & EV_Null)
+	f->events = ready.events;
+	if(f->events & EV_Null)
 	  event_exec(f);
-	else if(f->properties & EV_Square)  {
+	else if(f->events & EV_Square)  {
 		if(f->g[0]->table->attribute == TABLE_SQUARE)  do_square(0,f);
 		else if(f->g[1]->table->attribute == TABLE_SQUARE) do_square(1,f);
 		} else

@@ -27,39 +27,40 @@ int local_handler(Triple t) {
 }
 
 // Get bound up for a n sql step
- void look_stmt(Code stmt) ;
-  int bind_code(Triple top[],Code stmt) {
-  int status=EV_Ok;
-  Pointer pointer;
-  int type;
-  int index;
-  Mapper * a;
-
+void look_stmt(Code stmt) ;
+int bind_code(Triple * top,Code stmt) {
+	int opid=top->link & OperatorMask;
+	int status=EV_Ok;
+	Pointer pointer;
+	int type;
+	int index;
+	Mapper * a;
+	top++;
 	look_stmt(stmt);
-	a = operands[top[0].link].maps;
+	a = operands[opid].maps;
 	index =1;
 	while(*a) {
 		(*a) ( (Pointer *) &pointer,&type);
 		switch(type) {
-			case G_TYPE_TEXT:
-				status = machine_bind_text(stmt,index++,(char *) pointer);
+		case G_TYPE_TEXT:
+			status = machine_bind_text(stmt,index++,(char *) pointer);
 			break;
-			case G_TYPE_INTEGER:
-				status = machine_bind_int(stmt,index++,(int) pointer);
+		case G_TYPE_INTEGER:
+			status = machine_bind_int(stmt,index++,(int) pointer);
 			break;
-			case G_TYPE_TRIPLE:
-				status = machine_bind_text(stmt,index++,top[1].key);
-				status = machine_bind_int(stmt,index++,top[1].link);
-				status = machine_bind_int(stmt,index++,top[1].pointer);
-				look_stmt(stmt);
+		case G_TYPE_TRIPLE:
+			status = machine_bind_text(stmt,index++,top->key);
+			status = machine_bind_int(stmt,index++,top->link);
+			status = machine_bind_int(stmt,index++,top->pointer);
+			look_stmt(stmt);
 			break;
-			case G_TYPE_CODE:
-				G_debug(stmt);
-				break;
-			}
+		case G_TYPE_CODE:
+			G_debug(stmt);
+			break;
+		}
 		a++;
-		} 
-  return EV_Ok;
+	} 
+	return EV_Ok;
 }
   // tios local to binds
   Trio bind_trios[] ={ {"BindNull",G_TYPE_MAPPER,(Mapper) null_map},
@@ -68,5 +69,6 @@ int local_handler(Triple t) {
   int init_binder() {add_trios(bind_trios);return(0);}
  void look_stmt(Code stmt) {
 	 char buff[200];
+	 if(stmt)
 	  G_sprintf(buff,"Script: \n%s\n",machine_script(stmt));
   }

@@ -3,7 +3,7 @@ typedef struct f {
   PGRAPH g[2];
   Triple * event_triple;
   TABLE * event_table;
-  int properties;
+  int events;
   struct f *parent,*sibling;
 } FILTER;
 int event_exec(FILTER *f);

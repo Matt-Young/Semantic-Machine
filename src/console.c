@@ -72,10 +72,10 @@ int G_isdigit(int c) {return(isdigit(c));};
 char * G_gets(char * line) { return gets(line);}
 void G_debug(void * format){};
 // Is it a character known to the syntax? '
-const char  *uglies = "'._,{}$!:";
+const char  *uglies = "'._,{}$!:@";
 char * null_key = "_";
 enum {QuoteSyntax,DotSyntax,NullSyntax,CommaSyntax};
-int isin(char c,char *str) {
+int isin(char c,const char *str) {
 	while((*str != 0) && (*str != c) ) str++;
 	return *str;
 }
