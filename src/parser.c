@@ -8,7 +8,7 @@ typedef char * CharPointer;
 
 int graph_counter;
 
-// apply known attributes using name substitution
+// apply known attributewhen detected in the input stream
 int SetAttribute(Triple * current,Triple * next) {
 	Trio * trio;
 	if( G_strcmp(current->key,SystemNameSpace) )
@@ -25,18 +25,20 @@ int SetAttribute(Triple * current,Triple * next) {
 int process_block(PGRAPH *inner) {
 	Triple prev,current,next;
 	Console console;
-	int nchars,named_count;
-	char line[Line_size]; G_InitConsole(&console,line,Line_size);
+	int nchars;
+	char line[Line_size]; 
+	G_InitConsole(&console,line,Line_size);
 	prev.link = DISCARD;
 	current.link = DISCARD;
-	G_memset(line,0,Line_size);
-	named_count=0;nchars=0;
+	nchars=0;
 	new_child_graph(inner); // enclose this work in a subgraph
 	while(nchars >= 0) {
+			//G_memset(&next,0,sizeof(next));
 		nchars =G_keyop(&console,&next.key,&next.link);
+		//look_graph = *(*inner);
 		next.pointer=(*inner)->row+1;
 #ifdef Debug_parser
-		G_printf("|%10s |%2x-%c | %4d|\n", next.key,next.link,next.link,next.pointer);
+		G_printf("|%10s| |%c| |%4d|\n", next.key,next.link,next.pointer);
 #endif
 		// Replace the { ad the : if local name space
 		// Handle local names immediately

@@ -1,6 +1,6 @@
 typedef struct {char * buff; char * base; char * current; int size;} Console;
 char * G_InitConsole(Console * console,char * buff,int size);
-char * G_console(Console * console);
+int G_console(Console * console);
 void G_exit();
 void* G_malloc(int size);
 void* G_calloc(int size);
@@ -18,7 +18,7 @@ int G_ispunct(int c);
 int G_isdigit(int c);
 int isin(char c,const char *str);
 char *  G_gets(char * line);
-int G_line(char * line,int n);
+char * G_line(char * line,int n);
 
 void G_debug(void * format);
 int G_keyop(Console * console,char * *key,int * op);

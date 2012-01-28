@@ -274,7 +274,7 @@ Trio engine_trios[] = {
 		op = operands[GCHAR];
 		print_trios();
 		test=G_null_graph;
-		
+
 		status=0;
 		for(;;){ 
 			status++; 

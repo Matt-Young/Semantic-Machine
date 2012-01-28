@@ -137,7 +137,9 @@ int init_run_console(FILTER *f) {
 	f->event_table = table;
 	f->event_triple = (Triple *) &G_null_graph;
 	status=parser((PGRAPH *) &table->list);
-	
+		return status;
+}
+
 		/*
 	f->event_table =  get_table_context("console");
 	f->g[0] = (PGRAPH) new_table_graph(table);
@@ -147,8 +149,6 @@ int init_run_console(FILTER *f) {
 	status = triple(f->event_triple,event_handler);
 	release_table_context(f->event_table );
 	*/
-	return status;
-}
 int event_exec(FILTER * f) {
 	int g_event;
 	Triple t;
@@ -165,7 +165,6 @@ int event_exec(FILTER * f) {
 		g_event = machine_triple(ready.stmt,&t);
 		print_triple(&t);
 	}
-	event_exec(f->parent);
 	return(g_event);
 }
  void reset_G_columns(TABLE *t) { 
