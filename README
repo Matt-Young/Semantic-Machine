@@ -1,1 +1,5 @@
-A collection of files that work with sqlite3, mainly to implement a nested store or serialize format for storing BSON data.  
+A collection of files that work with sqlite3, mainly to implement a 
+nested store or serialize format for storing BSON data.  The point is to use Bson streams as bots for
+the purpose of remote query, machine to machine query and query processing, ontology navigation, and dynamic distribution of data.
+
+All data is assumed to be Bson format, except fo the Json console.  All data is assumed capable of bot travel by key work navigation.
