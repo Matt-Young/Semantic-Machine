@@ -120,11 +120,11 @@ int events(FILTER * f) {
 	  FILTER * child = new_filter_context(parent);
 	  init_table(name,0,&table);
 	  child->event_table=table;
-	  child->event_triple  = &table->operators[pop_triple_operator];
+	  child->initial_triple  = &table->operators[pop_triple_operator];
 	  new_table_graph(table);
 	  child->g[0] = (PGRAPH) table->list;
 	  status = set_ready_graph(child);
-	  triple(child->event_triple,0);
+	  triple(child->initial_triple,0);
 	  delete_filter(child);
 	  return status;
   }
@@ -135,7 +135,7 @@ int init_run_console(FILTER *f) {
 	status= set_ready_graph(f);
 	table =f->g[0]->table;
 	f->event_table = table;
-	f->event_triple = (Triple *) &G_null_graph;
+	f->initial_triple = (Triple *) &G_null_graph;
 	status=parser((PGRAPH *) &table->list);
 		return status;
 }
@@ -143,10 +143,10 @@ int init_run_console(FILTER *f) {
 		/*
 	f->event_table =  get_table_context("console");
 	f->g[0] = (PGRAPH) new_table_graph(table);
-	f->event_triple = &table->operators[pop_triple_operator];
+	f->initial_triple = &table->operators[pop_triple_operator];
 	set_ready_graph(f); // run from console table
 	ready.self.end=4;
-	status = triple(f->event_triple,event_handler);
+	status = triple(f->initial_triple,event_handler);
 	release_table_context(f->event_table );
 	*/
 int event_exec(FILTER * f) {
@@ -154,7 +154,9 @@ int event_exec(FILTER * f) {
 	Triple t;
 	g_event = f->events;
 	g_event |=  set_ready_event(0);
-	if(g_event & EV_Overload) {
+	if(f->event_triple->link == '@')
+		init_run_table(f,f->event_triple->key);
+	else if(g_event & EV_Overload) {
 		if((ready.opid & OperatorMask) == OperatorConsole) {
 			g_event = machine_triple(ready.stmt,&t);
 			print_triple(&t);
@@ -176,6 +178,7 @@ int event_exec(FILTER * f) {
 int event_handler(Triple * t) {
 	FILTER *f;
 	f = ready.filter;
+	f->event_triple = t;
 	f->events = ready.events;
 	if(f->events & EV_Null)
 	  event_exec(f);

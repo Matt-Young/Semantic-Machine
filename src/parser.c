@@ -7,19 +7,23 @@
 typedef char * CharPointer;
 
 int graph_counter;
-
+int isin(char ,char *);
 // apply known attributewhen detected in the input stream
 int SetAttribute(Triple * current,Triple * next) {
 	Trio * trio;
 	if( G_strcmp(current->key,SystemNameSpace) )
 		return 0;
 	trio= find_trio(next->key);
-	if(trio && (int) trio->type == G_TYPE_SYSTEM) {
-		next->link =  (int) trio->value | OperatorMSB;
+	if(trio) { 
+		if( (int) trio->type == G_TYPE_BIT) 
+			next->link =  (int) trio->value | OperatorMSB;
+		else if( (int) trio->type == G_TYPE_BIT)
+			set_ready_event(EV_SystemEvent);
+		else return 0;
 		return 1;
+		} else
+		return 0;
 	}
-	return 0;
-}
 // builds a subgraph on inner from user text
 
 int process_block(PGRAPH *inner) {

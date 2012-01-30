@@ -61,5 +61,6 @@ extern const Triple G_null_graph;
 #define EV_Square 0x2000 // Square table looms ahead
 #define EV_Incomplete 0x4000 // Square table looms ahead
 #define EV_Debug 0x8000
-#define EV_Init 0x10000
+#define EV_Ugly 0x10000
+#define EV_SystemEvent 0x20000
 #endif

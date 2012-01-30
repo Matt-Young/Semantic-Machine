@@ -1,10 +1,11 @@
 typedef struct f { 
-  int status;
-  PGRAPH g[2];
-  Triple * event_triple;
-  TABLE * event_table;
-  int events;
-  struct f *parent,*sibling;
+	int status;
+	PGRAPH g[2];
+	Triple * initial_triple;
+	Triple * event_triple;
+	TABLE * event_table;
+	int events;
+	struct f *parent,*sibling;
 } FILTER;
 int event_exec(FILTER *f);
 FILTER *delete_filter(FILTER * f);

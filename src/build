@@ -1,0 +1,3 @@
+SRC="binds.c engine.c console.c"
+all: program
+  gcc ${SRC}

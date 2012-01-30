@@ -147,6 +147,8 @@ int ghandler(Triple top[],int status,Handler handler) {
 Code get_stmt(int opid,Triple * top) {
 	if(operands[opid].properties & EV_Overload)
 		return (Code) top[0].key;
+	else if(operands[opid].properties & EV_Ugly)
+		return 0;
 	else 
 		return operands[opid].stmt; // operand table rules
 }
@@ -242,7 +244,7 @@ Handler g_debugger(Triple *);
 int g_debugger_state;
 Trio engine_trios[] = { 
 	{ "Debug", G_TYPE_HANDLER, g_debugger},
-	{ "Testing", G_TYPE_BIT, (Pointer) EV_Overload},
+	{ "Testing", G_TYPE_BIT, (Pointer) EV_SystemEvent},
 	{0,0,0}};
 
 	// defult operands
@@ -252,7 +254,11 @@ Trio engine_trios[] = {
 		G_memset(operands,0,sizeof(operands));
 		for(i=SystemUser;i < OperatorMaximum;i++) {
 			operands[i].handler = event_handler;
-			operands[i].properties= 0; }
+			if(G_isugly(i) )
+				operands[i].properties = EV_Ugly;
+			else
+				operands[i].properties= 0; 
+		}
 	i = install_sql_script("select '_',98,0;",SystemNull);
 		return(i);
 	}
@@ -261,7 +267,6 @@ Trio engine_trios[] = {
 		int status; 
 		OP op;
 		Triple test;
-
 		status = open_machine_layer(GBASE,&g_db);
 		if(status != EV_Ok) G_exit();
 		G_printf("%s\n",GBASE);
@@ -276,13 +281,17 @@ Trio engine_trios[] = {
 		test=G_null_graph;
 
 		status=0;
+		// Main loop. Send nulls until 
+		// an event triggers another
+		// stating triple
 		for(;;){ 
 			status++; 
 			test=G_null_graph;
-			test.link = (OperatorConsole | OperatorMSB); // console overload
-			test.key = 0;
+			test.link = 
+				(OperatorConsole | OperatorMSB); // console overload
 			op = operands[GCHAR];
-			//operands[SystemMax+3].properties |= EV_Debug;
+			if(set_ready_event(0) & EV_SystemEvent)
+				test.link = '@';
 			triple(&test,event_handler);}
 		G_exit(0);
 	}

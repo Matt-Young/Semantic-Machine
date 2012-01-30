@@ -45,9 +45,9 @@ int G_atoi(const char* s){ return atoi(s);}
 void G_memset(void* s, int c, int n) {memset(s,c,n);}
 void G_exit() { exit(0);}
 int G_ispunct(int c){return ispunct(c);}
-void* G_memcpy(void* s, const void* ct, size_t n) {return memcpy(s, ct, (size_t) n);}
+void* G_memcpy(void* s, const void* ct, int n) {return memcpy(s, ct, (size_t) n);}
 void G_error(char * c,int i) {G_printf("error %d\n",c); G_exit(i);}
-int G_isdigit(int c) {return(isdigit(c));};
+int G_isdigit(int c) {return(isdigit(c));}
 char * G_gets(char * line) { return gets(line);}
 void G_debug(void * format){};
 
@@ -68,11 +68,11 @@ char * G_InitConsole(Console * console,char * line,int size) {
 const char  *uglies = "'._,{}$!:@";
 char * null_key = "_";
 enum {QuoteSyntax,DotSyntax,NullSyntax,CommaSyntax};
-int isin(char c,char *str) {
+int isin(char c,const char *str) {
 	while((*str)  && (*str != c) ) str++;
 	return *str;
 }
-char  isugly(char ch) { 
+int  G_isugly(char ch) { 
 	return isin(ch,uglies);
 }
 
@@ -103,7 +103,7 @@ int G_keyop(Console * console,char * *key,int * op) {
 		}
 	} else *key=ptr;
 	while(1) {
-		if(isugly(*ptr) || (*ptr == 0) ) {
+		if(G_isugly(*ptr) || (*ptr == 0) ) {
 			if((events & numeric) && *ptr == uglies[DotSyntax])
 				ptr++;
 			else if(!(events & quote) && (*ptr == uglies[QuoteSyntax]) ) {
@@ -120,7 +120,7 @@ int G_keyop(Console * console,char * *key,int * op) {
 				return -1;
 		}
 	}
-	if((*ptr == 0) || !isugly(*ptr) )
+	if((*ptr == 0) || !G_isugly(*ptr) )
 		*op = uglies[NullSyntax];
 	else
 		*op = *ptr;
@@ -143,18 +143,20 @@ void G_buff_counts(){
 	printf("T: %d %d\n",del_table_count,new_table_count);
 }
 #ifdef Debug_console
-int debug_counter = 0;
-const char * typeface[] = {
-	"{abc.def,fgh.lmk,jkl}",
-	"{abc.def:jon,!ghiartbc.dtrhef:joswtrhn,!ghsrthi}",
-	"{abc,def,ghi}",
-	"{abc}",
-	""};
 
+
+const char * typeface[] = {
+	"{abc.def,{fgh.lmk},jkl}",
+	"{local:SystemEcho}",
+	"{abc,def,ghi}",
+	"{@config}",
+	""};
+#define DLINE 3
+static int debug_counter=DLINE;
 // Here is some console test and debug
 char * G_debug_line(char * line,int n) {
-	if(debug_counter==0)
-	G_strncpy(line,typeface[debug_counter],n);
+	if(debug_counter==DLINE)
+	G_strncpy(line,typeface[DLINE],n);
 	else line[0]=0;
 	debug_counter++;
 	return line;

@@ -1,0 +1,1 @@
+#undef __CYGWIN__
