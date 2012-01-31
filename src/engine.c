@@ -133,13 +133,11 @@ int ghandler(Triple top[],int status,Handler handler) {
 		G_error("ghandle entry",G_ERR_ENTRY);  
 	else if(status == EV_Done && (top->link & LINKMASK) < SystemMax ) 
 		return(status);
-	if(status == EV_Done)
-		set_ready_event(EV_Done);
+	set_ready_event(status);
 	if(handler)
 		status = handler(top);
 	else if(operands[top->link & LINKMASK].handler)
 		status = operands[top->link & LINKMASK].handler(top);
-
 	return status;
 }
 
@@ -266,7 +264,7 @@ Trio engine_trios[] = {
 	{
 		int status; 
 		OP op;
-		Triple test;
+		Triple main_triple;
 		status = open_machine_layer(GBASE,&g_db);
 		if(status != EV_Ok) G_exit();
 		G_printf("%s\n",GBASE);
@@ -278,21 +276,19 @@ Trio engine_trios[] = {
 		status = init_machine();
 		op = operands[GCHAR];
 		print_trios();
-		test=G_null_graph;
-
-		status=0;
+		status= EV_Null;
 		// Main loop. Send nulls until 
 		// an event triggers another
 		// stating triple
 		for(;;){ 
-			status++; 
-			test=G_null_graph;
-			test.link = 
+			main_triple=G_null_graph;
+			if(status == EV_Null)
+			main_triple.link = 
 				(OperatorConsole | OperatorMSB); // console overload
 			op = operands[GCHAR];
 			if(set_ready_event(0) & EV_SystemEvent)
-				test.link = '@';
-			triple(&test,event_handler);}
+				main_triple.link = '@';
+			status = triple(&main_triple,event_handler);}
 		G_exit(0);
 	}
 void print_triple(Triple *t) { 

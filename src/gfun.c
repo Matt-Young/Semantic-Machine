@@ -148,23 +148,23 @@ int init_run_console(FILTER *f) {
 	ready.self.end=4;
 	status = triple(f->initial_triple,event_handler);
 	release_table_context(f->event_table );
-	*/
+	*/ 
 int event_exec(FILTER * f) {
 	int g_event;
 	Triple t;
-	g_event = f->events;
-	g_event |=  set_ready_event(0);
+	g_event = f->events; 
+	g_event |=  ready.events;
 	if(f->event_triple->link == '@')
-		init_run_table(f,f->event_triple->key);
-	else if(g_event & EV_Overload) {
-		if((ready.opid & OperatorMask) == OperatorConsole) {
-			g_event = machine_triple(ready.stmt,&t);
+		g_event |= init_run_table(f,f->event_triple->key);
+	else if(g_event & EV_Ugly) 
 			print_triple(&t);
-			g_event = init_run_console(f);
-		} else 
+	else if(g_event & EV_Overload) {
+		if((ready.opid & OperatorMask) == OperatorConsole) 
+			g_event |= init_run_console(f);
+		else 
 			if ((ready.opid & OperatorMask) == 1) {}
 	}if(g_event & EV_Null) {
-		g_event = machine_triple(ready.stmt,&t);
+		g_event |= machine_triple(ready.stmt,&t);
 		print_triple(&t);
 	}
 	return(g_event);
@@ -174,22 +174,21 @@ int event_exec(FILTER * f) {
  }
  int do_square(int mode,FILTER *f);
  
-// Arrive here when some operaors has produced events
-int event_handler(Triple * t) {
-	FILTER *f;
-	f = ready.filter;
-	f->event_triple = t;
-	f->events = ready.events;
-	if(f->events & EV_Null)
-	  event_exec(f);
-	else if(f->events & EV_Square)  {
-		if(f->g[0]->table->attribute == TABLE_SQUARE)  do_square(0,f);
-		else if(f->g[1]->table->attribute == TABLE_SQUARE) do_square(1,f);
-		} else
-    event_exec(f);
- 
-  return 0;
-    }
+ // Arrive here when some operators has produced events
+ int event_handler(Triple * t) {
+	 FILTER *f;
+	 f = ready.filter;
+	 f->event_triple = t;
+	 f->events = ready.events;
+	 if(f->events & EV_Square)  {
+		 if(f->g[0]->table->attribute == TABLE_SQUARE)  
+			 return do_square(0,f);
+		 else if(f->g[1]->table->attribute == TABLE_SQUARE) 
+			 return do_square(1,f);
+	 } else
+		return event_exec(f);
+	 return(f->events);
+ }
  
 //G function call backs from inside sql
 enum {CallbackSelf,CallbackOther,CallbackResult,CallbackExperiment};
