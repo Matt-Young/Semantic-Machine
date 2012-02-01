@@ -3,6 +3,7 @@
 #include "filter.h"
 // Table stuff, this will change fast and become part of named graphs
 #define NUMBER_TABLES 20
+// Shared memory
 PTABLE triple_tables[NUMBER_TABLES];
 
 extern int del_table_count,new_table_count;
@@ -127,7 +128,7 @@ int init_table(char * name,int options,TABLE **table) {
  }
 void gfunction(Pointer context,int n,Pointer * v);
 
- Trio table_trios[] = {{"TablesInit",0,0},{0,0,0}};
+ const Trio table_trios[] = {{"TablesInit",0,0},{0,0,0}};
 int init_tables() {
 	int status;
 	add_trios(table_trios);

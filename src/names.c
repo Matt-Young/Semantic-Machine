@@ -3,7 +3,7 @@
 #include "console.h"
 // Just a quick utility to store name value pairs
 // All names here should be constant
-
+// This is shared memory
 Trio g_names[LocalSymbolCount];
 int  g_name_count;
 

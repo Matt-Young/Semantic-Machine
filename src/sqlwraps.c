@@ -1,4 +1,4 @@
-#include "../include/sqlite3.h"
+#include "../sqlite/sqlite3.h"
 #include "g_types.h"
 #include "console.h"
 

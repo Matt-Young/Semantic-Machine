@@ -4,11 +4,7 @@
 #define Debug_parser
 #define DISCARD 256
 
-typedef char * CharPointer;
-
-int graph_counter;
-int isin(char ,char *);
-// apply known attributewhen detected in the input stream
+// apply known attribute when detected in the input stream
 int SetAttribute(Triple * current,Triple * next) {
 	Trio * trio;
 	if( G_strcmp(current->key,SystemNameSpace) )

@@ -3,14 +3,13 @@
 #include "all.h"
 #include "filter.h"
 #undef Debug_engine
+// Will be shared Protected
+OP operands[OperatorMaximum];
 Pointer g_db;
 #define NVARS 5
-OP operands[OperatorMaximum];
-#define LINKMASK 0x7f
-// Another cheat to trip up re-entry
-Triple triple_var;
 
 const Triple SCRATCH_Triple = {"Scratch",SystemScratch,0};
+
 //triple bind, unbind
 int newcount=0;
 int oldcount=0;
@@ -38,9 +37,6 @@ int install_sql_script(char * ch,int opid) {
 
 
 // install key at installed operand position pointer
-// these are varable cheats for config state
-int variable;
-
 int  config_handler(Triple t[]) {
 	int status=EV_Ok;
 	Code stmt = operands[t[0].link].stmt;
@@ -131,13 +127,13 @@ int dup_handler(Triple *node){
 int ghandler(Triple top[],int status,Handler handler) { 
 	if( (status != EV_Data) && (status != EV_Done) && (status != EV_Ok)  )
 		G_error("ghandle entry",G_ERR_ENTRY);  
-	else if(status == EV_Done && (top->link & LINKMASK) < SystemMax ) 
+	else if(status == EV_Done && (top->link & OperatorMask) < SystemMax ) 
 		return(status);
 	set_ready_event(status);
 	if(handler)
 		status = handler(top);
-	else if(operands[top->link & LINKMASK].handler)
-		status = operands[top->link & LINKMASK].handler(top);
+	else if(operands[top->link & OperatorMask].handler)
+		status = operands[top->link & OperatorMask].handler(top);
 	return status;
 }
 
@@ -260,13 +256,37 @@ Trio engine_trios[] = {
 	i = install_sql_script("select '_',98,0;",SystemNull);
 		return(i);
 	}
-	void netio() {G_printf("No network\n");}
-	int main(int argc, char * argv[])
+
+	// Three loops that independent processes can run in
+	void netio_loop() {G_printf("No network\n");}
+	void debug_loop() {
+	//Console c;
+	Triple t;
+	int status;
+	debug_loop();
+	for(;;) {
+		t=G_null_graph;
+		if(set_ready_event(0) & EV_SystemEvent)
+			t.link = '@';
+		status = triple(&t,event_handler);
+	}
+}
+void console_loop() {
+	Console c;
+	Triple t;
+	int status;
+	for(;;) {
+		G_console(&c);
+		t.link = 
+			(OperatorConsole | OperatorMSB); // console overload
+		t.key = c.base;
+		status = triple(&t,event_handler);
+	}
+}
+	int main_engine(int argc, char * argv[])
 	{
-		Console c;
 		int status; 
 		OP op;
-		Triple main_triple;
 		status = open_machine_layer(GBASE,&g_db);
 		if(status != EV_Ok) G_exit();
 		G_printf("%s\n",GBASE);
@@ -278,34 +298,20 @@ Trio engine_trios[] = {
 		status = init_machine();
 		op = operands[GCHAR];
 		print_trios();
-		status= EV_Null;
 		// Main loop
-		if(argv[1] && !G_strcmp(argv[1], "-c")) { 
-			for(;;) {
-				G_console(&c);
-				main_triple.link = 
-					(OperatorConsole | OperatorMSB); // console overload
-				main_triple.key = c.base;
-				status = triple(&main_triple,event_handler);
-			}
-		}
-		else if(argv[1] && !G_strcmp(argv[1], "-debug")){ // 
-			for(;;) {
-				main_triple=G_null_graph;
-				op = operands[GCHAR];
-				if(set_ready_event(0) & EV_SystemEvent)
-					main_triple.link = '@';
-				status = triple(&main_triple,event_handler);
-			}
-		} else if(argv[1] && !G_strcmp(argv[1], "-netio"))
-			netio();
-		G_exit(0);
-		}
-		void print_triple(Triple *t) { 
-			G_printf(" %s %d %d\n",t->key,t->link,t->pointer);}
-		// his is a little debgger, and stays ith this file
-		Handler g_debugger(Triple *t) {
-			print_triple(t);
+		if(argv[1] && !G_strcmp(argv[1], "-c")) 
+			console_loop();
+		else if(argv[1] && !G_strcmp(argv[1], "-debug")) // 
+			debug_loop();
+		 else if(argv[1] && !G_strcmp(argv[1], "-netio"))
+			netio_loop();
+		return(0);
+	}
+	void print_triple(Triple *t) { 
+		G_printf(" %s %d %d\n",t->key,t->link,t->pointer);}
+	// his is a little debgger, and stays ith this file
+	Handler g_debugger(Triple *t) {
+		print_triple(t);
 
-			return 0;
-		}
+		return 0;
+	}
