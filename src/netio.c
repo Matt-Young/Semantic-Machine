@@ -1,24 +1,61 @@
 /*
-* engine netio start up
-* puts a process on listen, then sends a process to anage console
-* Engine code
+engine netio start up
+git push git@github.com:Matt-Young/Semantic-Machine
+
+I set up three configurations with defines,
+the lab configuratio, the threads oly and the netio
 
 */
+#ifdef LAB
+#undef THREADS
+#undef NETIO
+#else
+#ifdef NETIO
+#define THREADS
+#endif
+#endif
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
 #include "../src/g_types.h"
 #include "../src/machine.h"
-#undef NETIO
-#ifdef NETIO
+// contexts for each thread
+#define NTHREAD 16 
+struct { int newfd;
+  void * remote_addr; 
+} pendings[NTHREAD];
 
+void engine_init();
+void * console_loop(void * arg);
+void * netio_loop(void * arg);
+static void commands_and_init(int argc, char *argv[]) {
+  int i;
+  for(i = 1; i < argc; i++) {
+    if(strcmp(argv[i], "-V") == 0) {
+      printf("You are using %s.\n", SERVER_NAME);
+      exit(0);
+    } else if((strcmp(argv[i], "--help") == 0) || (strcmp(argv[i], "-h") == 0)) {
+      printf("Usage: graphs [OPTIONS]\n");
+      printf("\n");
+      printf("Please see https://github.com/Matt-Young/Semantic-Machine/wiki .\n");
+      exit(0);
+    } else
+      printf("Option? %s\n",argv[i]);
+  }
+    engine_init();
+    memset(pendings,0,sizeof(pendings));
+    pendings[0].newfd = 1; 
+    pendings[i].remote_addr =0;
+  }
+#ifdef NETIO
 
 #ifdef HAVE_SYS_SENDFILE_H
 #include <sys/sendfile.h>
 #endif
-#include <sys/wait.h>
 #include <unistd.h>
+#include <pthread.h>
+#include <sys/wait.h>
 #include <sys/mman.h>
 #include <dirent.h>
 #include <signal.h>
@@ -29,7 +66,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <errno.h>
-#include <pthread.h>
+
 #define METHOD_GET 0
 #define METHOD_HEAD 1
 #define METHOD_PUT 2
@@ -38,159 +75,91 @@
 
 /* Globals */
 char * default_type = "text/plain";
-int generate_index = 0;
-int verbose = 0;
-int background = 0;
 int sockfd = -1;
-int print_headers = 0; /* Print headers to screen. */
-int loglevel = 0;
-int links = 0;
-
-
-static void help() {
-  printf("Usage: graphs [OPTIONS] [DIRECTORY]\n");
-  printf("\n");
-  printf("Please see https://github.com/Matt-Young/Semantic-Machine/wiki .\n");
-}
-
 char * msg404 = "<html><head><title>404 Not Found</title></head><body>\
                 <h1>404 Not Found</h1><h2>No get allowed.</h2></body></html>\n";
 
-/* SIGHUP handler */
-static void sigcatch(int signal);
-
 /* Prototypes */
-static void handle_request(int fd, struct sockaddr_in * remote);
-static servable * gen_index();
-static void handle_connection(int fd, struct sockaddr_in * remote);
+static void handle_request_headers(int fd, struct sockaddr_in * remote);
 static int get_method(char * req);
-static servable * match_request(char * req);
 static int safesend(int fd, char * out);
 static char * get_mimetype(char * file);
 static void crit(char * message);
 static void warn(char * message);
-static void * smalloc(size_t size);
 
+  static void handle_connection(int fd, struct sockaddr_in * remote) {
+    // everything should be a put, just scoff the data 
+    // just grab the data into a ytiple and call the machine
+    handle_request(fd, remote);
 
-int main(int argc, char *argv[]) {
-
-  int i, fr, rv;
-  char console_string[20];
-
-  /* Parse options */
-  if(argc < 2) { help(); exit(0); }
-
-  for(i = 1; i < argc; i++) {
-    if(strcmp(argv[i], "-V") == 0) {
-      printf("You are using %s.\n", SERVER_NAME);
-      exit(0);
-    } else if((strcmp(argv[i], "--help") == 0) || (strcmp(argv[i], "-h") == 0)) {
-      help();
-      exit(0);
+    /* Shutdown socket */
+    if(shutdown(fd, SHUT_RDWR) == -1) {
+      warn("Error shutting down client socket.");
+      return;
     }
-  }
-  rv = fork();
-  if(rv == -1) {
-    crit("Error forking");
-  } else if(rv > 0) 
-    console_loop();
-  else
-    netio();
-}
 
-
-static void handle_connection(int fd, struct sockaddr_in * remote) {
-  // everything should be a put, just scoff the data 
-  // just grab the data into a ytiple and call the machine
-  handle_request(fd, remote);
-
-  /* Shutdown socket */
-  if(shutdown(fd, SHUT_RDWR) == -1) {
-    warn("Error shutting down client socket.");
-    return;
+    if(close(fd) == -1) warn("Error closing client socket.");
   }
 
-  if(close(fd) == -1) warn("Error closing client socket.");
-}
-
-static void loghit(char * req, char *referrer, char *ua, int code, int size, struct sockaddr_in * remote) {
-  char * t = curtime(); char *i;
-  if( (i = strchr(referrer, ' ')) == NULL) referrer = "-";
-  else referrer = i + 1;
-  if( (i = strchr(ua, ' ')) == NULL) ua = "-";
-  else ua = i + 1;
-  printf("%s - - [%s] - \"%s\" %d %d \"%s\" \"%s\"\n",
-    inet_ntoa(remote->sin_addr), t, req, code, size, referrer, ua);
-  fflush(stdout);
-  if(t[0] != '-') free(t);
-}
-
-static void handle_request(int fd, struct sockaddr_in * remote) {
-  int flength;
-  int method;
-  struct stat curstat;
-  int rv, c, infd, h = 0;
-  char inbuffer[2048];
-  char *out;
-  char *lastmod;
-  char outb[1024];
-  char * referrer = "-"; char * ua = ""; char * request = NULL;
-  char * header; /* newline terminated header. */
-  int content_length = 0;
-  servable * file;
-
-  rv = recv(fd, inbuffer, sizeof(inbuffer), 0);
-  if(rv == -1) {
-    warn("Error receiving request from client.");
-    return;
+  static void loghit(char * req, char *referrer, char *ua, int code, int size, struct sockaddr_in * remote) {
+    char * t = curtime(); char *i;
+    if( (i = strchr(referrer, ' ')) == NULL) referrer = "-";
+    else referrer = i + 1;
+    if( (i = strchr(ua, ' ')) == NULL) ua = "-";
+    else ua = i + 1;
+    printf("%s - - [%s] - \"%s\" %d %d \"%s\" \"%s\"\n",
+      inet_ntoa(remote->sin_addr), t, req, code, size, referrer, ua);
+    fflush(stdout);
+    if(t[0] != '-') free(t);
   }
 
-  /** Read headers and request line. */
-  for(c = 0; c < rv; c++) {
-    if(inbuffer[c] == '\n') {
-      inbuffer[c] = '\0';
-      if((c > 1) && (inbuffer[c - 1] == '\r')) inbuffer[c-1] = '\0';
-      if(h != 0) {
-        header = inbuffer + h;
-        if(print_headers) printf("%s\n", header);
-        if(strncmp(header, "Referer:", 8) == 0) referrer = header;
-        if(strncmp(header, "User-Agent:", 11) == 0) ua = header;
-      } else {
-        request = inbuffer;
-        if(print_headers) printf("%s\n", request);
+  static void handle_request_header(int fd, struct sockaddr_in * remote) {
+    int flength;
+    int method;
+    struct stat curstat;
+    int rv, c, infd, h = 0;
+    char inbuffer[2048];
+    char *out;
+    char *lastmod;
+    char outb[1024];
+    char * referrer = "-"; char * ua = ""; char * request = NULL;
+    char * header; /* newline terminated header. */
+    int content_length = 0;
+    servable * file;
+
+    rv = recv(fd, inbuffer, sizeof(inbuffer), 0);
+    if(rv == -1) {
+      warn("Error receiving request from client.");
+      return;
+    }
+
+    /** Read headers and request line. */
+    for(c = 0; c < rv; c++) {
+      if(inbuffer[c] == '\n') {
+        inbuffer[c] = '\0';
+        if((c > 1) && (inbuffer[c - 1] == '\r')) inbuffer[c-1] = '\0';
+        if(h != 0) {
+          header = inbuffer + h;
+          if(print_headers) printf("%s\n", header);
+          if(strncmp(header, "Referer:", 8) == 0) referrer = header;
+          if(strncmp(header, "User-Agent:", 11) == 0) ua = header;
+        } else {
+          request = inbuffer;
+          if(print_headers) printf("%s\n", request);
+        }
+
+        h = c + 1;
       }
-
-      h = c + 1;
     }
+
+    if(request == NULL) { return; /* TODO: Return error */ }
+    if(verbose) printf("REQ: %s\n", request);
+    method = get_method(request);
   }
 
-  if(request == NULL) { return; /* TODO: Return error */ }
-  if(verbose) printf("REQ: %s\n", request);
-  method = get_method(request);
-
-  /* Find file in linked list */
-  file = match_request(request);
-
-  if(file == NULL) {
-    out = "HTTP/1.0 404 Not Found\r\n";
-    if(safesend(fd, out) == -1) return;
-
-    snprintf(outb, sizeof(outb), "Server: %s/%s\r\n",
-      SERVER_NAME, VERSION);
-    if(safesend(fd, outb) == -1) return;
-
-    if(method = METHOD_GET) {
-      out = "Content-Type: text/html; charset=iso-8859-1\r\n";
-      if(safesend(fd, out) == -1) return;
-
-      snprintf(outb, sizeof(outb), "Content-Length: %d\r\n",
-        strlen(msg404));
-      if(safesend(fd, outb) == -1) return;
-
-      // Send error response
-      c = strlen(msg404);
-      if(safesend(fd, msg404) == -1) return;
-    }
+  netioloop does this{
+    /* Find file in linked list */
+    file = match_request(request);
 
     snprintf(outb, sizeof(outb), "\r\n");
     if(safesend(fd, outb) == -1) return;
@@ -210,24 +179,7 @@ static void handle_request(int fd, struct sockaddr_in * remote) {
     }
 
     /* Response headers */
-    snprintf(outb, sizeof(outb), "Content-Type: %s\r\n", get_mimetype(file->filename));
-    if(safesend(fd, outb) == -1) return;
-
-    lastmod = last_modified((int) &curstat.st_mtime);
-    if(lastmod != NULL) {
-      snprintf(outb, sizeof(outb), "Last-modified: %s\r\n", lastmod);
-      if(safesend(fd, outb) == -1) return;
-      free(lastmod);
-    }
-
-    if(method == METHOD_GET) {
-      snprintf(outb, sizeof(outb), "Content-Length: %d\r\n",
-        (int)curstat.st_size);
-      if(safesend(fd, outb) == -1) return;
-    }
-
-    snprintf(outb, sizeof(outb), "Server: %s/%s\r\n\r\n", 
-      SERVER_NAME, VERSION);
+    snprintf(outb, sizeof(outb), "Content-Type: %s\r\n", "text/bson");
     if(safesend(fd, outb) == -1) return;
 
     /* Response content */
@@ -252,28 +204,16 @@ static void handle_request(int fd, struct sockaddr_in * remote) {
       close(infd);
     }
 
-    if(loglevel) loghit(request, referrer, ua, 200, curstat.st_size, remote);
-  } else {
+
     /* Use our internal file */
     content_length = 0;
     if(method == METHOD_GET) {
       content_length = file->content_length;
     }
 
-    if(file->last_modified != 0) {
-      snprintf(outb, sizeof(outb), "Last-Modified: %s\r\n",
-        file->last_modified);
-      if(safesend(fd, outb) == -1) return;
-    }
-
     snprintf(outb, sizeof(outb), "Content-Type: %s\r\nContent-Length: %d\r\n\r\n",
-      file->content_type, content_length);
+      text/bson, 0);
     if(safesend(fd, outb) == -1) return;
-
-    if(loglevel) loghit(request, referrer, ua, 200, file->content_length, remote);
-    if(method == METHOD_GET) {
-      if(safesend(fd, file->content) == -1) return;
-    }
   }
 }
 
@@ -309,14 +249,14 @@ static servable * gen_index() {
 
   return myi;
 }
-
+// grab the b/j son lead byte count
 static servable * match_request(char * req) {
   servable * rv = NULL;
   char uri[1024]; char * u;
   int c; int in = 0; int ptr = 0;
   if(req->type == json)
   else
-  if(req->type == json)
+  if(req->type == bson)
   else 
   error
   return NULL;
@@ -330,15 +270,7 @@ static int safesend(int fd, char * out) {
 
   return rv;
 }
-
-static void sigcatch(int signal) {
-  if(verbose) printf("Signal caught, exiting.\n");
-  if(sockfd != -1) {
-    close(sockfd);
-    exit(0);
-  }
-}
-
+// Get j/B son byte count 
 static char * check_mimetype(char * file) {
   char * comp;
 
@@ -362,8 +294,7 @@ static void crit(char * message) {
 static void warn(char * message) {
   fprintf(stderr, "%s\n", message);
 }
-struct { int newfd,sockfd, 
-  (struct sockaddr *) remote_addr } pendings[4];  //five pending 
+
 int thread_count=0;
 void netio ()  {
   int port = 8000;
@@ -380,17 +311,6 @@ void netio ()  {
   servable * lastfile = NULL;
   int newfd;
   int i, fr, rv;
-
-  if(setsid() == -1) crit("Couldn't create SID session.");
-  if(signal(SIGCHLD, SIG_IGN) == SIG_ERR) {
-    crit("Couldn't initialize signal handlers.");
-  }
-  if( (close(0) == -1) || (close(1) == -1) || (close(2) == -1)) {
-    crit("Couldn't close streams.");
-  }
-  /* Trap signals */
-  if( (signal(SIGTERM, sigcatch) == SIG_ERR) || (signal(SIGINT, sigcatch) == SIG_ERR)) {
-    crit("Couldn't setup signal traps."); }
 
   sockfd = socket (AF_INET, SOCK_STREAM, 0);
   if(sockfd == -1) crit("Couldn't create socket.");
@@ -410,23 +330,39 @@ void netio ()  {
   while(1) {
     newfd = accept(sockfd, (struct sockaddr *)&remote_addr, &sin_size);
     if(newfd == -1) crit("Couldn't accept connection!");
+    if(handle_request_header(newfd, (struct sockaddr_in *) remote_addr) {
     pthread_t *thread;
     int status;
     printf("Thread\n");
     i=0;
-    while(pendings[i].newfd) i++;
-    if(i==4) exit(1);
+    while(pendings[i].newfd && i < NTHREAD) i++;
+    if(i==NTHREAD) exit(1);
     pendings[i] = newfd; 
     pendings[i].remote_addr =(struct sockaddr_in *)&remote_addr;
-    status = pthread_create(thread,0,netio_loop,newfd, &);
+    status = pthread_create(thread,0,netio_loop,newfd, &pendings[i]);
     printf("Thread %d\n",status)
   }
 }
-#else
-int main_engine(int argc, char *argv[]);
+#endif
 int main(int argc, char *argv[]) {
-  return main_engine(argc, argv);
-}
-#endif NETIO
+commands_and_init(argc,argv);
+#ifdef THREADS
+       pthread_t *thread;
+      int status;
+    status = pthread_create(thread,0,console_loop,&pendings[0]);
+    if(status == -1) {
+      crit("Error threading");
+      exit(1);
+    }
+#ifdef NETIO
+    netio();
+#endif
+#else
+#ifdef DEBUG
+    main_engine(argc, argv);
+#endif
+#endif
+  }
+
 
 

@@ -283,8 +283,7 @@ void console_loop() {
 		status = triple(&t,event_handler);
 	}
 }
-	int main_engine(int argc, char * argv[])
-	{
+void engine_init() {
 		int status; 
 		OP op;
 		status = open_machine_layer(GBASE,&g_db);
@@ -298,6 +297,8 @@ void console_loop() {
 		status = init_machine();
 		op = operands[GCHAR];
 		print_trios();
+  }
+int main_engine(int argc, char * argv[]) {
 		// Main loop
 		if(argv[1] && !G_strcmp(argv[1], "-c")) 
 			console_loop();
