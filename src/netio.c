@@ -5,9 +5,19 @@ git push git@github.com:Matt-Young/Semantic-Machine
 I set up three configurations with defines,
 the lab configuratio, the threads oly and the netio
 */
-#define THREADS
-#include <pthread.h>
-#ifdef LAB
+#include <string.h>
+#include <stdio.h>
+#include <time.h>
+#include <stdlib.h>
+#include "../src/g_types.h"
+#include "../src/machine.h"
+#ifdef SERVER_NAME
+#else
+#define SERVER_NAME "Graph Machine"
+#endif
+#define NETIO 
+
+#ifdef STANDALONE
 #undef THREADS
 #undef NETIO
 #else
@@ -15,14 +25,14 @@ the lab configuratio, the threads oly and the netio
 #define THREADS
 #endif
 #endif
-#include <string.h>
-#include <stdio.h>
-#include <time.h>
-#include <stdlib.h>
-#include "../src/g_types.h"
-#include "../src/machine.h"
+
+#ifdef THREADS
+#include <pthread.h>
+#endif
 // contexts for each thread
+#ifdef NETIO
 #define NTHREAD 16 
+#endif
 typedef struct { 
   int newfd;
   void * remote_addr; 
@@ -30,6 +40,7 @@ typedef struct {
   int type;
 } Pending;
 Pending pendings[NTHREAD];
+int triple(Triple *top,Handler);
 int main_engine(int argc, char *argv[]);
 void engine_init();
 void * console_loop(void * arg);
@@ -54,7 +65,6 @@ static void commands_and_init(int argc, char *argv[]) {
     pendings[i].remote_addr =0;
   }
 #ifdef NETIO
-
 #ifdef HAVE_SYS_SENDFILE_H
 #include <sys/sendfile.h>
 #endif
@@ -72,14 +82,14 @@ static void commands_and_init(int argc, char *argv[]) {
 #include <netinet/in.h>
 #include <errno.h>
 
-#define SERVER_NAME "Graph Machine"
+
 
 /* Globals */
 int sockfd = -1;
 
 
 /* Prototypes */
-static void handle_request(Pending *);
+void * handle_request(void *);
 
 static int get_method(char * req);
 static int safesend(int fd, char * out);
@@ -91,31 +101,33 @@ static void warn(char * message);
 #define JSON_TYPE "POST\r\nContent-Type:text/json\n\rContent-Length:"
 #define BSON_TYPE "POST\r\nContent-Type:text/bson\n\rContent-Length:"
 #define OK_MSG    "HTTP/1.0 200 OK\r\n\r\n"
-#define BAD_MSG "HTTP/1.0 404 Not Found\r\n\r\n";
-#define MAGIC_SIZE sizeof(JSON)
-#define HEADER_SIZE MAGIC_SIZE+10
+#define BAD_MSG "HTTP/1.0 404 Not Found\r\n\r\n"
+#define MAGIC_SIZE sizeof(JSON_TYPE)
+#define HEADER_SIZE (MAGIC_SIZE+10)
 delete_thread(Pending *p) {
    close(p->newfd);
   p->newfd=0;
-  pthread_exit(-1);
+  pthread_exit((void *) 0);
 }
 void message_rejected(Pending *p) {
   int rv;
-  if((rv = send(fd, BAD_MSG, strlen(BAD_MSG), 0)) == -1) 
-		warn("Error sending data to client.");
+  if((rv = send(p->newfd, BAD_MSG, strlen(BAD_MSG), 0)) == -1) 
+    warn("Error sending data to client.");
+  close(p->newfd);
 delete_thread(p);
 	}
 void message_accepted(Pending *p) {
   int rv;
-  if((rv = send(fd, OK_MSG, strlen(OK_MSG), 0)) == -1) 
+  if((rv = send(p->newfd, OK_MSG, strlen(OK_MSG), 0)) == -1) 
 		warn("Error sending data to client.");
-delete_thread(p);
+  close(p->newfd);
 	}
 
-  static void handle_request(Pending * p) {
+ void * handle_request(void * arg) {
     Triple t;
+    Pending *p = (Pending *) arg;
     int fd = p->newfd;
-    struct sockaddr_in * remote = p=->remote_addr;
+    struct sockaddr_in * remote = p->remote_addr;
     char * data_buff;
     int rv;
     char inbuffer[HEADER_SIZE];
@@ -123,16 +135,22 @@ delete_thread(p);
     if(rv == -1 || rv != HEADER_SIZE)
       message_rejected(p);
     /* find the blank line then go on*/
-     if(!strncmp(inbuffer,MAGIC_SIZE,JSON) p->type = 1;
-     else if(!strncmp(inbuffer,MAGIC_SIZE,BSON) p->type = 0;
+     if(!strncmp(inbuffer,JSON_TYPE,MAGIC_SIZE)) p->type = 1;
+     else if(!strncmp(inbuffer,BSON_TYPE,MAGIC_SIZE)) p->type = 0;
      else 
-       message_rejected();
+       message_rejected(p);
      p->count = atoi(&inbuffer[MAGIC_SIZE]); 
-     t.key = calloc(p->count);
-     t.link = p->type |x80;
-     Triple(&t,0);
+     rv = recv(fd, inbuffer, sizeof(inbuffer), HEADER_SIZE);
+     if(rv == -1 || rv != p->count)
+      message_rejected(p);
+     else
+       message_accepted(p);  // let the connection go away
+     t.key = (char *) calloc(p->count,1);
+     t.link = p->type | 0x80;
+     t.pointer = p->count;
+     triple(&t,0);
      free(t.key);
-     message_accepted();
+     delete_thread((void *) 1);
 }
 
 static void crit(char * message) {
@@ -150,7 +168,7 @@ void net_service ()  {
   struct sockaddr_in my_addr;
   struct sockaddr_in remote_addr;
   int newfd;
-  int i, rv;
+  int i, rv,sin_size;
 
   sockfd = socket (AF_INET, SOCK_STREAM, 0);
   if(sockfd == -1) crit("Couldn't create socket.");
@@ -166,21 +184,20 @@ void net_service ()  {
   if(listen(sockfd, 25) == -1) crit("Couldn't listen on specified port.");
   //
 
-  if(verbose) printf("Listening for connections on port %d...\n", port);
+  printf("Listening for connections on port %d...\n", port);
   while(1) {
     newfd = accept(sockfd, (struct sockaddr *)&remote_addr, &sin_size);
     if(newfd == -1) crit("Couldn't accept connection!");
-    if(handle_request(newfd, (struct sockaddr_in *) remote_addr);
     pthread_t *thread;
     int status;
     printf("Thread\n");
     i=0;
     while(pendings[i].newfd && i < NTHREAD) i++;
     if(i==NTHREAD) exit(1);
-    pendings[i] = newfd; 
+    pendings[i].newfd = newfd; 
     pendings[i].remote_addr =(struct sockaddr_in *)&remote_addr;
-    status = pthread_create(thread,0,handle_request,newfd, &pendings[i]);
-    printf("Thread %d\n",status)
+    status = pthread_create(thread,0,handle_request, &pendings[i]);
+    printf("Thread %d\n",status);
   }
 }
 #endif
@@ -195,10 +212,10 @@ commands_and_init(argc,argv);
       exit(1);
     }
 #ifdef NETIO
-    netio();
+    net_service();
 #endif
 #else
-#ifdef LAB
+#ifdef STANDALONE
     return main_engine(argc, argv);
 #endif
 #endif
