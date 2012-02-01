@@ -11,6 +11,7 @@ the lab configuratio, the threads oly and the netio
 #include <stdlib.h>
 #include "../src/g_types.h"
 #include "../src/machine.h"
+#define NTHREAD 16
 #ifdef SERVER_NAME
 #else
 #define SERVER_NAME "Graph Machine"
@@ -220,6 +221,65 @@ commands_and_init(argc,argv);
 #endif
 #endif
   }
-
-
-
+#ifdef NETIO
+int net(Triple * t,char * hostname) 
+{
+    int sockfd, portno, n;
+    struct sockaddr_in serv_addr;
+    struct hostent *server;
+    char buffer[256];
+    portno = NET_PORT
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0) 
+        return(EV_Network);
+    server = gethostbyname(hostname);
+    if (server == NULL)
+      return(EV_Network);
+    bzero((char *) &serv_addr, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    bcopy((char *)server->h_addr, 
+         (char *)&serv_addr.sin_addr.s_addr,
+         server->h_length);
+    serv_addr.sin_port = htons(portno);
+    if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) 
+        return(EV_Network);
+    n = write(sockfd,buffer,strlen(buffer));
+    if (n < 0) 
+         error("ERROR writing to socket");
+    bzero(buffer,256);
+    n = read(sockfd,buffer,255);
+    if (n < 0) 
+         error("ERROR reading from socket");
+    printf("%s\n",buffer);
+    close(sockfd);
+    return 0;
+}
+#endif
+#ifdef 1
+// A utility to translate triples
+typedef struct { int rowid; char * buffer; char * start; Triple t[]; int byte_count} CallBox;
+int add_next_descent(CallBox * parent) {
+  int i; 
+  CallThing child;
+  char * bson_key =parent->t[0]->key
+  int bson_type = parent->t[0]->link >> 8;
+  if(bson_type== BsonString)
+    bson_len = strlen(bson_key);
+  else if( bson_type == BsonInt)
+      bson_len=4
+  else
+  printf("Lazy Programmer\n%);
+   while(parent->rowid < parent->t[0]->pointer) {
+      child = *parent;
+      child->start = parent->buffer;
+      add_next_descent(&child);
+      parent->rowid = child->rowid;
+   }
+   parent->rowid++;
+   strncpy(parent->start,INT(bson_len);
+   parent->start += 4;
+   parent->start++ = bson_type;
+   strncpy(parent->start,bson_key,bson_len);
+  }
+}
+#endif

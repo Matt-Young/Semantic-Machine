@@ -63,4 +63,5 @@ extern const Triple G_null_graph;
 #define EV_Debug 0x8000
 #define EV_Ugly 0x10000
 #define EV_SystemEvent 0x20000
+#define EV_Network 0x40000
 #endif

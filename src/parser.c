@@ -3,7 +3,7 @@
 #include <ctype.h>
 #define Debug_parser
 #define DISCARD 256
-
+int isin(char c,const char *str);
 // apply known attribute when detected in the input stream
 int SetAttribute(Triple * current,Triple * next) {
 	Trio * trio;
@@ -23,7 +23,6 @@ int SetAttribute(Triple * current,Triple * next) {
 // builds a subgraph on inner from user text
 int parser(char * Json, PGRAPH *inner) {
 	Triple prev,current,next;
-	Console console;
 	int nchars;
 	append_graph(inner, G_null_graph);
 	prev.link = DISCARD;

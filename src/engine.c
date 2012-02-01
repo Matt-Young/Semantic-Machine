@@ -300,11 +300,11 @@ void engine_init() {
   }
 int main_engine(int argc, char * argv[]) {
 		// Main loop
-		if(argv[1] && !G_strcmp(argv[1], "-c")) 
+		if(argv[2] && !G_strcmp(argv[2], "-c")) 
 			console_loop();
-		else if(argv[1] && !G_strcmp(argv[1], "-debug")) // 
+		else if(argv[2] && !G_strcmp(argv[2], "-debug")) // 
 			debug_loop();
-		 else if(argv[1] && !G_strcmp(argv[1], "-netio"))
+		 else if(argv[2] && !G_strcmp(argv[2], "-netio"))
 			netio_loop();
 		return(0);
 	}
