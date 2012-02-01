@@ -1,8 +1,8 @@
 CFLAGS=-I /cygwin/usr/local/include
-SRC=binds.c engine.c filters.c gfun.c \
+SRC=netio.c binds.c engine.c filters.c gfun.c \
 tables.c graphs.c names.c console.c \
 parser.c sqlwraps.c square.c \
-../../sqlite/src/sqlite3.c
+../sqlite/sqlite3.c
 
 all: $(SRC)
 	gcc $(SRC)

@@ -131,7 +131,7 @@ int events(FILTER * f) {
 
 int init_run_console(FILTER *f) {
 	int status; TABLE *table;
-	f->g[0] = init_parser();
+	f->g[0] = (PGRAPH ) *init_parser();
 	status= set_ready_graph(f);
 	table =f->g[0]->table;
 	f->event_table = table;
