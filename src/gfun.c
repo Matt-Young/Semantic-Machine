@@ -136,7 +136,7 @@ int init_run_console(FILTER *f) {
 	table =f->g[0]->table;
 	f->event_table = table;
 	f->initial_triple = (Triple *) &G_null_graph;
-	status=parser((PGRAPH *) &table->list);
+	status=parser(f->event_triple->key,(PGRAPH *) &table->list);
 		return status;
 }
 

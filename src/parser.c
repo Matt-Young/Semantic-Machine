@@ -3,7 +3,7 @@
 #include <ctype.h>
 #define Debug_parser
 #define DISCARD 256
-#define Line_size 256
+
 typedef char * CharPointer;
 
 int graph_counter;
@@ -25,20 +25,18 @@ int SetAttribute(Triple * current,Triple * next) {
 		return 0;
 	}
 // builds a subgraph on inner from user text
-
-int process_block(PGRAPH *inner) {
+int parser(char * Json, PGRAPH *inner) {
 	Triple prev,current,next;
 	Console console;
 	int nchars;
-	char line[Line_size]; 
-	G_InitConsole(&console,line,Line_size);
+	append_graph(inner, G_null_graph);
 	prev.link = DISCARD;
 	current.link = DISCARD;
 	nchars=0;
 	new_child_graph(inner); // enclose this work in a subgraph
-	while(nchars >= 0) {
+	while(*Json) {
 			//G_memset(&next,0,sizeof(next));
-		nchars =G_keyop(&console,&next.key,&next.link);
+		nchars = G_keyop(&Json,&next);
 		//look_graph = *(*inner);
 		next.pointer=(*inner)->row+1;
 #ifdef Debug_parser
@@ -83,23 +81,14 @@ int process_block(PGRAPH *inner) {
 #define Debug_parser
 #undef Debug_parser
 
-PGRAPH init_parser() {
+PGRAPH * init_parser() {
   TABLE * t = get_table_name("console");
   new_table_graph(t); 
-  return(t->list);
+  return((PGRAPH *) &(t->list));
 }
-int Graph_test(PGRAPH *pt);
+
 void graph_look(PGRAPH *  list);
-int parser(PGRAPH *pt) {
-	append_graph(pt, G_null_graph);
-#ifdef Debug_parser
-  Graph_test(pt);
-#else
-	process_block(pt);
-#endif
-	G_buff_counts();
-  return(EV_Ok);
-}
+
 //const  Triple G_null_graph 
 #ifdef Debug_parser 
 void graph_look(PGRAPH *  list) {

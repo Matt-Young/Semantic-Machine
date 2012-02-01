@@ -1,4 +1,5 @@
 // Console, set up
+#include "g_types.h"
 #include "console.h"
 #define Debug_console
 int init_console() { return(0);}
@@ -52,83 +53,111 @@ char * G_gets(char * line) { return gets(line);}
 void G_debug(void * format){};
 
 // Below are specific console operations for the parser
-int G_console(Console * console) { 
-	char * ptr;
-	ptr = G_line(console->base,console->size);
-	if(*ptr) return 1; else return -1;
-}
-char * G_InitConsole(Console * console,char * line,int size) {
-	memset(line,0,size);
-	console->size=size;
+// Is it a character known to the syntax? '
+#define Line_size 256
+char line[Line_size]; 
+char * G_InitConsole(Console * console) {
+	memset(line,0,Line_size);
+	console->size=Line_size;
 	console->base=line;
 	console->current=line;
+	console->count=0;
+	printf("Init \n");
 	return console->base;
 }
-// Is it a character known to the syntax? '
-const char  *uglies = "'._,{}$!:@";
+char * G_AddConsole(Console * console,char cin) {
+	console->current[0] = cin; 
+	console->current++; console->count++;
+	return console->current;
+}
+void G_Test() {
+G_printf("%d ",fgetc(stdin));
+}
+const char  *uglies = "\"._,{}$!:@";
 char * null_key = "_";
-enum {QuoteSyntax,DotSyntax,NullSyntax,CommaSyntax};
+enum {QuoteSyntax,DotSyntax,NullSyntax,CommaSyntax,LeftSyntax,RightSyntax};
+#define ESC 33
 int isin(char c,const char *str) {
 	while((*str)  && (*str != c) ) str++;
 	return *str;
 }
+// get line with a bit of input editing
+int G_console(Console * console) { 
+	char * ptr,cin;
+	int left,right;
+	FILE f;
+	left = 0; right = 0;
+	cin = 0;
+	ptr = G_InitConsole(console);
+	f = *stdin;
+	for(;;) {
+		cin = fgetc(stdin);
+		if(cin == '\n')  {
+			cin = fgetc(stdin);
+			if(cin == '\n') return(console->count);  // two in a row terminate
+				else 
+			ptr = G_InitConsole(console);
+		}
+		else if(cin == uglies[LeftSyntax]) {left++;G_AddConsole(console,cin);}
+		else if(cin == uglies[RightSyntax]) {right++;G_AddConsole(console,cin);}
+		else if(left > right)  // if client has an open curly
+				G_AddConsole(console,cin);
+		} 
+}
+
+
+
 int  G_isugly(char ch) { 
 	return isin(ch,uglies);
 }
 
 // Front end key word from text and json operators
-int G_keyop(Console * console,char * *key,int * op) {
+int G_keyop(char * *Json,Triple *t) {
 	enum { quote = 1,numeric =2};
-	int i;
-	char * ptr= console->current;
-	int start= (int) console->current;
-	int events;
-	if(*ptr == 0) {
-		console->current = console->base;
-		ptr = console->current;
-		G_console(console);  // get a line of data
-		if(console->base[0] == 0)
-			return -1;
-	}
-	i = 0; events=0;
+	char * ptr = *Json;
+	char *  start= ptr;
+	int i=0;
+	int events=0;
 	while(isspace(*ptr)) ptr++;
 	if(G_isdigit(*ptr) )
 		events += numeric;
 	if(*ptr == uglies[QuoteSyntax]) {// Quote char?
 		ptr++;
-		*key=ptr;
+		t->key=ptr;
 		if(*ptr  != uglies[QuoteSyntax]) {
 			events += quote;
 			ptr++;
 		}
-	} else *key=ptr;
+	} else t->key=ptr;
 	while(1) {
 		if(G_isugly(*ptr) || (*ptr == 0) ) {
 			if((events & numeric) && *ptr == uglies[DotSyntax])
 				ptr++;
 			else if(!(events & quote) && (*ptr == uglies[QuoteSyntax]) ) {
 				*ptr = 0;ptr++; 
-			} else { char * tmp;
-			console->current = ptr+1;
-			tmp = ptr; while((tmp != console->base) && isspace(*(tmp-1))) tmp--;
-			if(isspace(*tmp)) *tmp = 0;
-			break;
+			} else { 
+				char * tmp;
+				tmp = ptr; 
+				while((tmp != start) && isspace(*(tmp-1))) tmp--;
+				if(isspace(*tmp)) *tmp = 0;
+				break;
 			}	
 		}else {
-			ptr++;
-			if(ptr >= &console->base[console->size])
+			if(*ptr == 0)
 				return -1;
+			ptr++;
 		}
 	}
 	if((*ptr == 0) || !G_isugly(*ptr) )
-		*op = uglies[NullSyntax];
+		t->link = uglies[NullSyntax];
 	else
-		*op = *ptr;
-	i =   (int) console->current;
-	i -= start ; // char count
+		t->link = *ptr;
+	i =   (int) ptr;
+	i -= (int) start ; // char count
 	*ptr = 0;
-	if(!(*key)[0])
-		*key = null_key;  // valid null key
+	*Json = ptr+1;
+	if(!(t->key[0]))
+		t->key = null_key;  // valid null key
 	return i;
 }
 

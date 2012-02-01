@@ -1,8 +1,9 @@
-typedef struct {char * buff; char * base; char * current; int size;} Console;
-char * G_InitConsole(Console * console,char * buff,int size);
+typedef struct {char * buff; char * base; char * current; int size;int count;} Console;
+char * G_InitConsole(Console * console);
 int G_console(Console * console);
 int  G_isugly(char ch);
 void G_exit();
+void G_Test();
 void* G_malloc(int size);
 void* G_calloc(int size);
 void G_free(void* p);
@@ -22,5 +23,5 @@ char *  G_gets(char * line);
 char * G_line(char * line,int n);
 
 void G_debug(void * format);
-int G_keyop(Console * console,char * *key,int * op);
+int G_keyop(char ** ,Triple *);
 void G_buff_counts();

@@ -1,6 +1,7 @@
 #include "../include/sqlite3.h"
-#include "console.h"
 #include "g_types.h"
+#include "console.h"
+
 int msg_id(int sqlite_msg) {
 	if(sqlite_msg == SQLITE_OK) return EV_Ok;
 	else if(sqlite_msg == SQLITE_ERROR) return EV_Error;

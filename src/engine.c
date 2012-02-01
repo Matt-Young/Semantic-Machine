@@ -260,8 +260,10 @@ Trio engine_trios[] = {
 	i = install_sql_script("select '_',98,0;",SystemNull);
 		return(i);
 	}
+	void netio() {G_printf("No network\n");}
 	int main(int argc, char * argv[])
 	{
+		Console c;
 		int status; 
 		OP op;
 		Triple main_triple;
@@ -277,25 +279,33 @@ Trio engine_trios[] = {
 		op = operands[GCHAR];
 		print_trios();
 		status= EV_Null;
-		// Main loop. Send nulls until 
-		// an event triggers another
-		// stating triple
-		for(;;){ 
-			main_triple=G_null_graph;
-			if(status == EV_Null)
-			main_triple.link = 
-				(OperatorConsole | OperatorMSB); // console overload
-			op = operands[GCHAR];
-			if(set_ready_event(0) & EV_SystemEvent)
-				main_triple.link = '@';
-			status = triple(&main_triple,event_handler);}
+		// Main loop
+		if(argv[1] && !G_strcmp(argv[1], "-c")) { 
+			for(;;) {
+				G_console(&c);
+				main_triple.link = 
+					(OperatorConsole | OperatorMSB); // console overload
+				main_triple.key = c.base;
+				status = triple(&main_triple,event_handler);
+			}
+		}
+		else if(argv[1] && !G_strcmp(argv[1], "-debug")){ // 
+			for(;;) {
+				main_triple=G_null_graph;
+				op = operands[GCHAR];
+				if(set_ready_event(0) & EV_SystemEvent)
+					main_triple.link = '@';
+				status = triple(&main_triple,event_handler);
+			}
+		} else if(argv[1] && !G_strcmp(argv[1], "-netio"))
+			netio();
 		G_exit(0);
-	}
-void print_triple(Triple *t) { 
-		G_printf(" %s %d %d\n",t->key,t->link,t->pointer);}
-	// his is a little debgger, and stays ith this file
-	Handler g_debugger(Triple *t) {
-		print_triple(t);
-		
-		return 0;
-	}
+		}
+		void print_triple(Triple *t) { 
+			G_printf(" %s %d %d\n",t->key,t->link,t->pointer);}
+		// his is a little debgger, and stays ith this file
+		Handler g_debugger(Triple *t) {
+			print_triple(t);
+
+			return 0;
+		}
