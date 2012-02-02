@@ -2,8 +2,9 @@
 engine netio start up
 git push git@github.com:Matt-Young/Semantic-Machine
 
-I set up three configurations with defines,
-the lab configuratio, the threads oly and the netio
+In the lab, stand alone configuration runs under windows studio on the cheap
+setting either threads or netio then you need to run under cygwin or under linux.
+the lab configuratio, the threads only and the netio
 */
 #include <string.h>
 #include <stdio.h>
@@ -105,6 +106,24 @@ static void warn(char * message);
 #define BAD_MSG "HTTP/1.0 404 Not Found\r\n\r\n"
 #define MAGIC_SIZE sizeof(JSON_TYPE)
 #define HEADER_SIZE (MAGIC_SIZE+10)
+int header_magic(int newfd,int * count) {
+    char inbuffer[HEADER_SIZE];
+    int rv; int type;int i;
+    type = -1;
+    rv = read(newfd, inbuffer, HEADER_SIZE);
+   fwrite(inbuffer, 1, MAGIC_SIZE, stdout);
+    fwrite("\n", 1, 1, stdout);
+    //printf("%d %d",inbuffer,MAGIC_SIZE);
+    for(i=MAGIC_SIZE;i<HEADER_SIZE;i++) printf("%2x|",(unsigned char) inbuffer[i]);
+      fwrite("\n", 1, 1, stdout);
+    if(rv != -1 && rv == HEADER_SIZE) {
+     if(!strncmp(inbuffer,JSON_TYPE,MAGIC_SIZE)) type = 1;
+     else if(!strncmp(inbuffer,BSON_TYPE,MAGIC_SIZE)) type = 0;
+    }
+    if(type != -1)
+      *count = (int) inbuffer[MAGIC_SIZE];
+    return (type);
+    }
 delete_thread(Pending *p) {
    close(p->newfd);
   p->newfd=0;
@@ -131,22 +150,9 @@ void message_accepted(Pending *p) {
     struct sockaddr_in * remote = p->remote_addr;
     char * data_buff;
     int rv;
-    char inbuffer[HEADER_SIZE];
-    rv = recv(fd, inbuffer, sizeof(inbuffer), HEADER_SIZE);
-    if(rv == -1 || rv != HEADER_SIZE)
-      message_rejected(p);
-    /* find the blank line then go on*/
-     if(!strncmp(inbuffer,JSON_TYPE,MAGIC_SIZE)) p->type = 1;
-     else if(!strncmp(inbuffer,BSON_TYPE,MAGIC_SIZE)) p->type = 0;
-     else 
-       message_rejected(p);
-     p->count = atoi(&inbuffer[MAGIC_SIZE]); 
-     rv = recv(fd, inbuffer, sizeof(inbuffer), HEADER_SIZE);
-     if(rv == -1 || rv != p->count)
-      message_rejected(p);
-     else
-       message_accepted(p);  // let the connection go away
-     t.key = (char *) calloc(p->count,1);
+    t.key = (char *) calloc(p->count,1);
+    rv = recv(p->newfd, t.key, sizeof(p->count), 1);
+     message_accepted(p);  // let the connection go away
      t.link = p->type | 0x80;
      t.pointer = p->count;
      triple(&t,0);
@@ -163,46 +169,75 @@ static void warn(char * message) {
 }
 
 int thread_count=0;
+typedef struct { 
+  int newfd;
+  void * remote_addr; 
+  int count;
+  int type;
+} Pending;
+typedef void * (*SocketHandler)(void *);
+
 void net_service ()  {
+  Pending pendings[NTHREAD];
   int sockfd = -1;
-  int port = 8000;
+  int port = TEST_PORT;
   struct sockaddr_in my_addr;
   struct sockaddr_in remote_addr;
-  int newfd;
+  int newfd,count,type;
   int i, rv,sin_size;
-
+  memset(pendings,0,sizeof(pendings));
   sockfd = socket (AF_INET, SOCK_STREAM, 0);
-  if(sockfd == -1) crit("Couldn't create socket.");
+  if(sockfd == -1) printf("Couldn't create socket.");
   my_addr.sin_family = AF_INET;
   my_addr.sin_port = htons (port);
   my_addr.sin_addr.s_addr = INADDR_ANY;
   bzero (&(my_addr.sin_zero), 8);
 
   if (bind(sockfd, (struct sockaddr *) &my_addr, sizeof (struct sockaddr)) == -1)
-    crit("Couldn't bind to specified port.");
+    printf("Stern: Couldn't bind to specified port.");
 
   sin_size = sizeof(struct sockaddr_in);
-  if(listen(sockfd, 25) == -1) crit("Couldn't listen on specified port.");
+  if(listen(sockfd, 25) == -1) printf("Couldn't listen on specified port.");
   //
 
   printf("Listening for connections on port %d...\n", port);
   while(1) {
     newfd = accept(sockfd, (struct sockaddr *)&remote_addr, &sin_size);
-    if(newfd == -1) crit("Couldn't accept connection!");
+    if(newfd == -1) printf("Couldn't accept connection!");
     pthread_t *thread;
     int status;
-    printf("Thread\n");
+
+    type = header_magic(newfd,&count);
+    printf("Connection %d\n",type);
+    if(type < 0) {
+      if((rv = send(newfd, BAD_MSG, strlen(BAD_MSG), 0)) == -1) 
+          warn("Error sending data to client.");
+    } else if(type == 0){
+            if((rv = send(newfd, BSON_TYPE, strlen(BSON_TYPE), 0)) == -1) 
+          warn("Error sending data to client.");
+  } else if(type == 1){
+            if((rv = send(newfd, JSON_TYPE, strlen(JSON_TYPE), 0)) == -1) 
+          warn("Error sending data to client.");
+    }
     i=0;
     while(pendings[i].newfd && i < NTHREAD) i++;
     if(i==NTHREAD) exit(1);
     pendings[i].newfd = newfd; 
     pendings[i].remote_addr =(struct sockaddr_in *)&remote_addr;
-    status = pthread_create(thread,0,handle_request, &pendings[i]);
-    printf("Thread %d\n",status);
+#ifdef THREAD_TEST
+    //status = pthread_create(thread,0,handler, &pendings[i]);
+#else
+    close(newfd);
+#endif
+    printf("Done %d\n",status);
   }
 }
 #endif
+#ifdef OBJECT
+int call_main(int argc, char *argv[]) {
+#else
 int main(int argc, char *argv[]) {
+#endif
 commands_and_init(argc,argv);
 #ifdef THREADS
        pthread_t *thread;
@@ -221,40 +256,7 @@ commands_and_init(argc,argv);
 #endif
 #endif
   }
-#ifdef NETIO
-int net(Triple * t,char * hostname) 
-{
-    int sockfd, portno, n;
-    struct sockaddr_in serv_addr;
-    struct hostent *server;
-    char buffer[256];
-    portno = NET_PORT
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0) 
-        return(EV_Network);
-    server = gethostbyname(hostname);
-    if (server == NULL)
-      return(EV_Network);
-    bzero((char *) &serv_addr, sizeof(serv_addr));
-    serv_addr.sin_family = AF_INET;
-    bcopy((char *)server->h_addr, 
-         (char *)&serv_addr.sin_addr.s_addr,
-         server->h_length);
-    serv_addr.sin_port = htons(portno);
-    if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) 
-        return(EV_Network);
-    n = write(sockfd,buffer,strlen(buffer));
-    if (n < 0) 
-         error("ERROR writing to socket");
-    bzero(buffer,256);
-    n = read(sockfd,buffer,255);
-    if (n < 0) 
-         error("ERROR reading from socket");
-    printf("%s\n",buffer);
-    close(sockfd);
-    return 0;
-}
-#endif
+
 #ifdef 1
 // A utility to translate triples
 typedef struct { int rowid; char * buffer; char * start; Triple t[]; int byte_count} CallBox;
