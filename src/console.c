@@ -54,7 +54,7 @@ void G_debug(void * format){};
 
 // Below are specific console operations for the parser
 // Is it a character known to the syntax? '
-#define Line_size 256
+//#define Line_size 256
 char line[Line_size]; 
 char * G_InitConsole(Console * console) {
 	memset(line,0,Line_size);
@@ -83,26 +83,26 @@ int isin(char c,const char *str) {
 }
 // get line with a bit of input editing
 int G_console(Console * console) { 
-	char * ptr,cin;
+	char * ptr,cin,cprev;
 	int left,right;
 	FILE f;
 	left = 0; right = 0;
 	cin = 0;
+  cprev = 0;
 	ptr = G_InitConsole(console);
 	f = *stdin;
 	for(;;) {
-		cin = fgetc(stdin);
-		if(cin == '\n')  {
-			cin = fgetc(stdin);
-			if(cin == '\n') return(console->count);  // two in a row terminate
-				else 
-			ptr = G_InitConsole(console);
-		}
-		else if(cin == uglies[LeftSyntax]) {left++;G_AddConsole(console,cin);}
-		else if(cin == uglies[RightSyntax]) {right++;G_AddConsole(console,cin);}
-		else if(left > right)  // if client has an open curly
-				G_AddConsole(console,cin);
-		} 
+    cin = fgetc(stdin);
+    //printf(" %x %x |",cin,cprev);
+    if((cin == '\n') && (cprev == '\n'))  
+      return(console->count);  // two in a row terminate
+    else if(cin == uglies[LeftSyntax]) {left++;G_AddConsole(console,cin);}
+    else if(cin == uglies[RightSyntax]) {right++;G_AddConsole(console,cin);}
+    else if((left > right) && (cin != '\n'))  // if client has an open curly
+      G_AddConsole(console,cin);
+    cprev = cin;
+  } 
+
 }
 
 
