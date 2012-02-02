@@ -12,61 +12,10 @@ the lab configuratio, the threads only and the netio
 #include <stdlib.h>
 #include "../src/g_types.h"
 #include "../src/machine.h"
-#define NTHREAD 16
-#ifdef SERVER_NAME
-#else
-#define SERVER_NAME "Graph Machine"
-#endif
-#define NETIO 
-
-#ifdef STANDALONE
-#undef THREADS
+#define STAND_ALONE
+#ifdef STAND_ALONE
 #undef NETIO
 #else
-#ifdef NETIO
-#define THREADS
-#endif
-#endif
-
-#ifdef THREADS
-#include <pthread.h>
-#endif
-// contexts for each thread
-#ifdef NETIO
-#define NTHREAD 16 
-#endif
-typedef struct { 
-  int newfd;
-  void * remote_addr; 
-  int count;
-  int type;
-} Pending;
-Pending pendings[NTHREAD];
-int triple(Triple *top,Handler);
-int main_engine(int argc, char *argv[]);
-void engine_init();
-void * console_loop(void * arg);
-void * netio_loop(void * arg);
-static void commands_and_init(int argc, char *argv[]) {
-  int i;
-  for(i = 1; i < argc; i++) {
-    if(strcmp(argv[i], "-V") == 0) {
-      printf("You are using %s.\n", SERVER_NAME);
-      exit(0);
-    } else if((strcmp(argv[i], "--help") == 0) || (strcmp(argv[i], "-h") == 0)) {
-      printf("Usage: graphs [OPTIONS]\n");
-      printf("\n");
-      printf("Please see https://github.com/Matt-Young/Semantic-Machine/wiki .\n");
-      exit(0);
-    } else
-      printf("Option? %s\n",argv[i]);
-  }
-    engine_init();
-    memset(pendings,0,sizeof(pendings));
-    pendings[0].newfd = 1; 
-    pendings[i].remote_addr =0;
-  }
-#ifdef NETIO
 #ifdef HAVE_SYS_SENDFILE_H
 #include <sys/sendfile.h>
 #endif
@@ -84,7 +33,8 @@ static void commands_and_init(int argc, char *argv[]) {
 #include <netinet/in.h>
 #include <errno.h>
 
-
+#define SERVER_NAME "Graph Machine"
+#define NTHREAD 16 
 
 /* Globals */
 int sockfd = -1;
@@ -103,9 +53,23 @@ static void warn(char * message);
 #define JSON_TYPE "POST\r\nContent-Type:text/json\n\rContent-Length:"
 #define BSON_TYPE "POST\r\nContent-Type:text/bson\n\rContent-Length:"
 #define OK_MSG    "HTTP/1.0 200 OK\r\n\r\n"
+#define PORT_MSG    "HTTP/1.0 989 No Ports\r\n\r\n"
 #define BAD_MSG "HTTP/1.0 404 Not Found\r\n\r\n"
 #define MAGIC_SIZE sizeof(JSON_TYPE)
 #define HEADER_SIZE (MAGIC_SIZE+10)
+typedef struct { 
+  int newfd;
+  void * remote_addr; 
+  int count;
+  int type;
+} Pending;
+Pending pendings[NTHREAD];
+int triple(Triple *top,Handler);
+int main_engine(int argc, char *argv[]);
+void engine_init();
+void * console_loop(void * arg);
+void * netio_loop(void * arg);
+
 int header_magic(int newfd,int * count) {
     char inbuffer[HEADER_SIZE];
     int rv; int type;int i;
@@ -221,43 +185,23 @@ void net_service ()  {
     }
     i=0;
     while(pendings[i].newfd && i < NTHREAD) i++;
-    if(i==NTHREAD) exit(1);
+    if(i==NTHREAD) {
+      if((rv = send(newfd, PORT_MSG, strlen(PORT_MSGE), 0)) == -1) 
+          warn("Error sending data to client.");
+         close(newfd);
+    } else {
     pendings[i].newfd = newfd; 
     pendings[i].remote_addr =(struct sockaddr_in *)&remote_addr;
 #ifdef THREAD_TEST
     //status = pthread_create(thread,0,handler, &pendings[i]);
-#else
-    close(newfd);
 #endif
     printf("Done %d\n",status);
+    }
   }
 }
-#endif
-#ifdef OBJECT
-int call_main(int argc, char *argv[]) {
-#else
-int main(int argc, char *argv[]) {
-#endif
-commands_and_init(argc,argv);
-#ifdef THREADS
-       pthread_t *thread;
-      int status;
-    status = pthread_create(thread,0,console_loop,&pendings[0]);
-    if(status == -1) {
-      printf("Error threading");
-      exit(1);
-    }
-#ifdef NETIO
-    net_service();
-#endif
-#else
-#ifdef STANDALONE
-    return main_engine(argc, argv);
-#endif
-#endif
-  }
 
-#ifdef 1
+
+
 // A utility to translate triples
 typedef struct { int rowid; char * buffer; char * start; Triple t[]; int byte_count} CallBox;
 int add_next_descent(CallBox * parent) {
@@ -270,7 +214,7 @@ int add_next_descent(CallBox * parent) {
   else if( bson_type == BsonInt)
       bson_len=4
   else
-  printf("Lazy Programmer\n%);
+  printf("Lazy Programmer\n");
    while(parent->rowid < parent->t[0]->pointer) {
       child = *parent;
       child->start = parent->buffer;
@@ -284,4 +228,23 @@ int add_next_descent(CallBox * parent) {
    strncpy(parent->start,bson_key,bson_len);
   }
 }
+int net_start() {
+
+    memset(pendings,0,sizeof(pendings));
+    pendings[0].newfd = 1; 
+    pendings[i].remote_addr =0;
+       pthread_t *thread;
+      int status;
+    status = pthread_create(thread,0,console_loop,&pendings[0]);
+    if(status == -1) {
+      printf("Error threading");
+      exit(1);
+      net_service();
+    }
+
+    net_service();
+  }
+#endif
+#ifdef STAND_ALONE
+int net_start() {return 0;}
 #endif

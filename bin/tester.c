@@ -3,18 +3,24 @@
 
 #include <sys/stat.h>
 #include <sys/types.h>
+
+
+#include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
 #include "tester.h"
-#ifdef NETIO_TEST
+#ifdef STAND_ALONE
+#undef NETIO
+#endif
+#ifdef NETIO
 #include <unistd.h>
 #include <sys/wait.h>
 #include <sys/mman.h>
 #include <dirent.h>
 #include <signal.h>
-#include <fcntl.h>
+
 #include <sys/socket.h>
 #include <netdb.h>
 #include <arpa/inet.h>
@@ -22,12 +28,15 @@
 #include <errno.h>
 #include <pthread.h>
 #include "net_utility.c"
-#endif
-#ifdef SHMEM_TEST
+
 #include <sys/ipc.h>
 #include <sys/shm.h>
+
+#include <semaphore.h>
 #endif
 
+
+#include "../src/g_types.h"
 int net_test(int argc, char *argv[]);
 void * start_routine(void * arg) { 
   printf("Thread %x \n",arg);
@@ -41,7 +50,7 @@ int sequence_size;
 void main(int argc, char *argv[]){
 
   printf("Start%s %s \n",argv[0],argv[1]);
-#ifdef SHMEM_TEST
+#ifdef NETIO
   if(argv[1] && !strcmp(argv[1], "-m")) {
       int segment_id; //Shared Memory ID
       shared_data *mem; //Shared Memory Pointer
@@ -51,8 +60,18 @@ void main(int argc, char *argv[]){
     printf("Seg Id  %d\n",segment_id);
     exit(0);
   } 
-#endif
-#ifdef NETIO_TEST
+
+  if(argv[1] && !strcmp(argv[1], "-sem")) {
+      int segment_id; //Shared Memory ID
+      sem_t * sem; //Shared Memory Pointer
+      sem = sem_open("TestName", O_CREAT,S_IRUSR|S_IWUSR,0);
+        printf("Sem %d %d\n",sem,SEM_FAILED);
+       // int sem_post(sem_t *sem);
+
+    printf("Seg Id  %d\n",segment_id);
+    exit(0);
+  } 
+
   printf("fh\n");
    if(argv[1] && !strcmp(argv[1], "-send")) {
         printf("Send\n");
@@ -66,8 +85,7 @@ void main(int argc, char *argv[]){
     //printf("Addr  %d\n",segment_id);
     exit(0);
   } 
-#endif
-#ifdef THREAD_TEST
+
     if(argv[1] && !strcmp(argv[1], "-t")) {
       pthread_t *thread;
       int status;
@@ -76,8 +94,7 @@ void main(int argc, char *argv[]){
   printf("Thread %d\n",status);
   exit(0);
     }
-#endif
-#ifdef FORJ_TEST
+
       if(argv[1] && !strcmp(argv[1], "-f")) {
     int fr;
     fr = fork();

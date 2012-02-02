@@ -295,6 +295,7 @@ void engine_init() {
 		init_trios();
 		add_trios(engine_trios);
 		status = init_machine();
+    net_start();
 		op = operands[GCHAR];
 		print_trios();
   }

@@ -5,9 +5,10 @@
 #define BSON_TYPE "POST\r\nContent-Type:text/bson\n\rContent-Length:"
 #define OK_MSG    "HTTP/1.0 200 OK\r\n\r\n"
 #define BAD_MSG "HTTP/1.0 404 Not Found\r\n\r\n"
+#define PORT_MSG    "HTTP/1.0 989 No Ports\r\n\r\n"
 #define MAGIC_SIZE sizeof(JSON_TYPE)
 #define HEADER_SIZE (MAGIC_SIZE+10)
-
+ 
 int header_magic(int newfd,int * count) {
     char inbuffer[HEADER_SIZE];
     int rv; int type;int i;
@@ -32,9 +33,25 @@ typedef struct {
   void * remote_addr; 
   int count;
   int type;
+  const sem_t * sem;
 } Pending;
 typedef void * (*SocketHandler)(void *);
-
+void * handle_request(void * arg) {
+    Triple t;
+    Pending *p = (Pending *) arg;
+    int fd = p->newfd;
+    struct sockaddr_in * remote = p->remote_addr;
+    char * data_buff;
+    int rv;
+    t.key = (char *) calloc(p->count,1);
+    rv = recv(p->newfd, t.key, sizeof(p->count), 1);
+     message_accepted(p);  // let the connection go away
+     t.link = p->type | 0x80;
+     t.pointer = p->count;
+     triple(&t,0);
+     free(t.key);
+     delete_thread((void *) 1);
+}
 void recv_test ()  {
   Pending pendings[NTHREAD];
   int sockfd = -1;
@@ -77,13 +94,19 @@ void recv_test ()  {
             if((rv = send(newfd, JSON_TYPE, strlen(JSON_TYPE), 0)) == -1) 
           warn("Error sending data to client.");
     }
-    i=0;
+        i=0;
     while(pendings[i].newfd && i < NTHREAD) i++;
-    if(i==NTHREAD) exit(1);
+    if(i==NTHREAD) {
+      if((rv = send(newfd, PORT_MSG, strlen(PORT_MSG), 0)) == -1) 
+          warn("Error sending data to client.");
+         close(newfd);
+    } else {
     pendings[i].newfd = newfd; 
+    pendings[i].sem =  sem_open("TestName", O_CREAT,S_IRUSR|S_IWUSR,0);
     pendings[i].remote_addr =(struct sockaddr_in *)&remote_addr;
+    }
 #ifdef THREAD_TEST
-    //status = pthread_create(thread,0,handler, &pendings[i]);
+    status = pthread_create(thread,0,handle_request, &pendings[i]);
 #else
     close(newfd);
 #endif
