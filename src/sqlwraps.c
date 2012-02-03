@@ -5,10 +5,10 @@
 int msg_id(int sqlite_msg) {
 	if(sqlite_msg == SQLITE_OK) return EV_Ok;
 	else if(sqlite_msg == SQLITE_ERROR) return EV_Error;
-	else if(sqlite_msg == SQLITE_MISUSE) return EV_Incomplete;
+	else if(sqlite_msg == SQLITE_MISUSE) return EV_Error;
 	else if(sqlite_msg == SQLITE_DONE) return EV_Done;
 	else if(sqlite_msg == SQLITE_ROW) return EV_Data;
-	else return EV_Null;
+	else return EV_Error;
 }
 
 void unbind_triple(Code stmt,Triple *t);

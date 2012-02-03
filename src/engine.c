@@ -123,20 +123,13 @@ int dup_handler(Triple *node){
 		operands[SystemScratch].maps[i] = operands[id].maps[i];
 	return EV_Ok;
 }
-
-int ghandler(Triple top[],int status,Handler handler) { 
-	if( (status != EV_Data) && (status != EV_Done) && (status != EV_Ok)  )
-		G_error("ghandle entry",G_ERR_ENTRY);  
-	else if(status == EV_Done && (top->link & OperatorMask) < SystemMax ) 
-		return(status);
-	set_ready_event(status);
+Handler get_ghandler(Triple top[],int status,Handler handler) { 
 	if(handler)
-		status = handler(top);
+		return handler;
 	else if(operands[top->link & OperatorMask].handler)
-		status = operands[top->link & OperatorMask].handler(top);
+		return operands[top->link & OperatorMask].handler;
   else
-    status = event_handler(top);
-	return status;
+    return event_handler;
 }
 
 // Get the stmt
@@ -171,12 +164,15 @@ int triple(Triple top[],Handler handler) {
 		status = bind_code(top,stmt);
 	if(status != EV_Ok) 
 		G_error("bind \n",G_ERR_BIND);
+   handler = get_ghandler(top,status,handler);
 	if(!stmt) 
-			status = ghandler(top,status,handler);
+			status = handler(top);
 	else {
 		do {
 			status = machine_step(stmt );
-			status = ghandler(top,status,handler);
+      set_ready_event(status);
+      if(status != EV_Error) 
+			  status = handler(top);
 		}  while( status == EV_Data );
 		machine_reset(stmt);
 	}
@@ -267,7 +263,6 @@ Trio engine_trios[] = {
 void console_loop() {
 	Console c;
 	Triple t;
-  char buff[20];
 	int status;
   G_printf("Console loop\n");
 	for(;;) {

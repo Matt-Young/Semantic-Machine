@@ -227,3 +227,64 @@ int init_gfun() {
 	ready.filter= &null_filter;
 	return 0;
 }
+/* Next to develop are two inverse functions
+one from local bson to triple store
+  and the other to go back
+  */
+#if 0
+// A utility to translate triples
+typedef struct { int rowid; char * buffer; char * start; Triple t[]; int byte_count
+} CalBoxBson;
+int add_triple_descent(CallBox * parent) {
+	int i; 
+	CalBoxBson child;
+	char * bson_key =parent->t[0]->key
+		int bson_type = parent->t[0]->link >> 8;
+	if(bson_type== BsonString)
+		bson_len = strlen(bson_key);
+	else if( bson_type == BsonInt)
+		bson_len=4
+	else
+	while(parent->rowid < parent->t[0]->pointer) {
+		child = *parent;
+		child->start = parent->buffer;
+		add_next_descent(&child);
+		parent->rowid = child->rowid;
+	}
+	parent->rowid++;
+	sprintf(parent->start,"%4d",bson_len);
+	parent->start += 4;
+	parent->start++ = bson_type;
+	strncpy(parent->start,bson_key,bson_len);
+}
+}
+typedef struct { int charid; char * buffer; Triple *start; char *bson; int row_count
+} CalBoxBson;
+int add_bson_descent(CallBox * parent) {
+	int i; 
+	CalBoxBson child;
+  Triple t;
+	t.key =parent->bson;
+  t.linktype = parent->bson >> 8;
+	if(bson_type== BsonString)
+		bson_len = strlen(bson_key);
+	else if( bson_type == BsonInt)
+		bson_len=4
+	else
+	while(parent->charid < *parent->bson) {
+		child = *parent;
+    // pop triple here
+		child->start = parent->start;
+		add_next_descent(&child);
+		parent->rowid = child->rowid;
+	}
+	parent->rowid++;
+	parent->t->pointer = row_len;
+	parent->start += 4;
+	parent->t->pointer = triple_type;
+  parent->t->pointer->key =triple_key
+	triple(inrset_triple,
+}
+}
+
+#endif
