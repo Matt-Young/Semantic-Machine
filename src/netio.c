@@ -6,16 +6,15 @@ In the lab, stand alone configuration runs under windows studio on the cheap
 setting either threads or netio then you need to run under cygwin or under linux.
 the lab configuratio, the threads only and the netio
 */
+#define DebugNETIO 1
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
 #include "../src/g_types.h"
 #include "../src/machine.h"
-#define STAND_ALONE
-#ifdef STAND_ALONE
-#undef NETIO
-#else
+#include "../src/http_hdrs.h"
+
 #ifdef HAVE_SYS_SENDFILE_H
 #include <sys/sendfile.h>
 #endif
@@ -32,31 +31,18 @@ the lab configuratio, the threads only and the netio
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <errno.h>
-
-#define SERVER_NAME "Graph Machine"
+#define error printf
+#define warn printf
 #define NTHREAD 16 
 
 /* Globals */
 int sockfd = -1;
-
-
 /* Prototypes */
 void * handle_request(void *);
-
 static int get_method(char * req);
 static int safesend(int fd, char * out);
 static char * get_mimetype(char * file);
 static void crit(char * message);
-static void warn(char * message);
-
-  // Magic header, we reject everything else
-#define JSON_TYPE "POST\r\nContent-Type:text/json\n\rContent-Length:"
-#define BSON_TYPE "POST\r\nContent-Type:text/bson\n\rContent-Length:"
-#define OK_MSG    "HTTP/1.0 200 OK\r\n\r\n"
-#define PORT_MSG    "HTTP/1.0 989 No Ports\r\n\r\n"
-#define BAD_MSG "HTTP/1.0 404 Not Found\r\n\r\n"
-#define MAGIC_SIZE sizeof(JSON_TYPE)
-#define HEADER_SIZE (MAGIC_SIZE+10)
 typedef struct { 
   int newfd;
   void * remote_addr; 
@@ -64,6 +50,7 @@ typedef struct {
   int type;
 } Pending;
 Pending pendings[NTHREAD];
+int thread_count=0;
 int triple(Triple *top,Handler);
 int main_engine(int argc, char *argv[]);
 void engine_init();
@@ -75,17 +62,14 @@ int header_magic(int newfd,int * count) {
     int rv; int type;int i;
     type = -1;
     rv = read(newfd, inbuffer, HEADER_SIZE);
-   fwrite(inbuffer, 1, MAGIC_SIZE, stdout);
-    fwrite("\n", 1, 1, stdout);
-    //printf("%d %d",inbuffer,MAGIC_SIZE);
-    for(i=MAGIC_SIZE;i<HEADER_SIZE;i++) printf("%2x|",(unsigned char) inbuffer[i]);
-      fwrite("\n", 1, 1, stdout);
     if(rv != -1 && rv == HEADER_SIZE) {
      if(!strncmp(inbuffer,JSON_TYPE,MAGIC_SIZE)) type = 1;
      else if(!strncmp(inbuffer,BSON_TYPE,MAGIC_SIZE)) type = 0;
     }
-    if(type != -1)
-      *count = (int) inbuffer[MAGIC_SIZE];
+   if(type != -1)
+     sscanf(inbuffer+ MAGIC_SIZE,"%8d",count);
+   else
+     *count=0;
     return (type);
     }
 delete_thread(Pending *p) {
@@ -119,7 +103,11 @@ void message_accepted(Pending *p) {
      message_accepted(p);  // let the connection go away
      t.link = p->type | 0x80;
      t.pointer = p->count;
+#if DebugNETIO
+     printf("Triple\n");
+#else
      triple(&t,0);
+#endif
      free(t.key);
      delete_thread((void *) 1);
 }
@@ -128,17 +116,7 @@ static void crit(char * message) {
   fprintf(stderr, "%s\n", message);
   exit(1);
 }
-static void warn(char * message) {
-  fprintf(stderr, "%s\n", message);
-}
 
-int thread_count=0;
-typedef struct { 
-  int newfd;
-  void * remote_addr; 
-  int count;
-  int type;
-} Pending;
 typedef void * (*SocketHandler)(void *);
 
 void net_service ()  {
@@ -158,50 +136,58 @@ void net_service ()  {
   bzero (&(my_addr.sin_zero), 8);
 
   if (bind(sockfd, (struct sockaddr *) &my_addr, sizeof (struct sockaddr)) == -1)
-    printf("Stern: Couldn't bind to specified port.");
-
+    error("Stern: Couldn't bind to specified port.");
   sin_size = sizeof(struct sockaddr_in);
   if(listen(sockfd, 25) == -1) printf("Couldn't listen on specified port.");
-  //
-
   printf("Listening for connections on port %d...\n", port);
   while(1) {
     newfd = accept(sockfd, (struct sockaddr *)&remote_addr, &sin_size);
     if(newfd == -1) printf("Couldn't accept connection!");
     pthread_t *thread;
     int status;
-
-    type = header_magic(newfd,&count);
+    type = header_magic(newfd,&count); // Consume header
     printf("Connection %d\n",type);
     if(type < 0) {
       if((rv = send(newfd, BAD_MSG, strlen(BAD_MSG), 0)) == -1) 
+        warn("Error sending data to client.");
+      close(newfd);
+    } else if(type >= 0){
+      printf("Count: %d\n",count);
+      if((rv = send(newfd, OK_MSG, strlen(BSON_TYPE), 0)) == -1) 
+         warn("Error sending data to client.");
+        i=0;
+      while(pendings[i].newfd && i < NTHREAD) i++;
+      if(i==NTHREAD) {
+        if((rv = send(newfd, PORT_MSG, strlen(PORT_MSG), 0)) == -1)  
           warn("Error sending data to client.");
-    } else if(type == 0){
-            if((rv = send(newfd, BSON_TYPE, strlen(BSON_TYPE), 0)) == -1) 
-          warn("Error sending data to client.");
-  } else if(type == 1){
-            if((rv = send(newfd, JSON_TYPE, strlen(JSON_TYPE), 0)) == -1) 
-          warn("Error sending data to client.");
-    }
-    i=0;
-    while(pendings[i].newfd && i < NTHREAD) i++;
-    if(i==NTHREAD) {
-      if((rv = send(newfd, PORT_MSG, strlen(PORT_MSGE), 0)) == -1) 
-          warn("Error sending data to client.");
-         close(newfd);
-    } else {
-    pendings[i].newfd = newfd; 
-    pendings[i].remote_addr =(struct sockaddr_in *)&remote_addr;
+        close(newfd);
+      } 
+      else {
+       pendings[i].newfd = newfd; 
+       pendings[i].remote_addr =(struct sockaddr_in *)&remote_addr;
 #ifdef THREAD_TEST
-    //status = pthread_create(thread,0,handler, &pendings[i]);
+        //status = pthread_create(thread,0,handler, &pendings[i]);
 #endif
-    printf("Done %d\n",status);
+        printf("Done %d\n",status);
+      }
     }
   }
 }
 
+int net_start() {
+  pthread_t *thread;
+  memset(pendings,0,sizeof(pendings));
+  int status=0;
+  //status = pthread_create(thread,0,console_loop,&pendings[0]);
+  if(status == -1) {
+    printf("Error threading");
+    exit(1);
+    net_service();
+  }
+  net_service();
+}
 
-
+#if 0
 // A utility to translate triples
 typedef struct { int rowid; char * buffer; char * start; Triple t[]; int byte_count} CallBox;
 int add_next_descent(CallBox * parent) {
@@ -228,23 +214,4 @@ int add_next_descent(CallBox * parent) {
    strncpy(parent->start,bson_key,bson_len);
   }
 }
-int net_start() {
-
-    memset(pendings,0,sizeof(pendings));
-    pendings[0].newfd = 1; 
-    pendings[i].remote_addr =0;
-       pthread_t *thread;
-      int status;
-    status = pthread_create(thread,0,console_loop,&pendings[0]);
-    if(status == -1) {
-      printf("Error threading");
-      exit(1);
-      net_service();
-    }
-
-    net_service();
-  }
-#endif
-#ifdef STAND_ALONE
-int net_start() {return 0;}
 #endif
