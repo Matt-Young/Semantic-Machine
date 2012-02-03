@@ -140,15 +140,6 @@ int init_run_console(FILTER *f) {
 		return status;
 }
 
-		/*
-	f->event_table =  get_table_context("console");
-	f->g[0] = (PGRAPH) new_table_graph(table);
-	f->initial_triple = &table->operators[pop_triple_operator];
-	set_ready_graph(f); // run from console table
-	ready.self.end=4;
-	status = triple(f->initial_triple,event_handler);
-	release_table_context(f->event_table );
-	*/ 
 int event_exec(FILTER * f) {
 	int g_event;
 	Triple t;
@@ -159,10 +150,12 @@ int event_exec(FILTER * f) {
 	else if(g_event & EV_Ugly) 
 			print_triple(&t);
 	else if(g_event & EV_Overload) {
-		if((ready.opid & OperatorMask) == OperatorConsole) 
+		if(ready.opid  == (OperatorJson & OperatorMask)) 
 			g_event |= init_run_console(f);
 		else 
-			if ((ready.opid & OperatorMask) == 1) {}
+			if (ready.opid  == (OperatorBson & OperatorMask)) {
+      
+      }
 	}if(g_event & EV_Null) {
 		g_event |= machine_triple(ready.stmt,&t);
 		print_triple(&t);

@@ -134,6 +134,8 @@ int ghandler(Triple top[],int status,Handler handler) {
 		status = handler(top);
 	else if(operands[top->link & OperatorMask].handler)
 		status = operands[top->link & OperatorMask].handler(top);
+  else
+    status = event_handler(top);
 	return status;
 }
 
@@ -151,35 +153,26 @@ Code get_stmt(int opid,Triple * top) {
 // this sifts through and finds a handler
 
 int triple(Triple top[],Handler handler) {
-	OP *op;
-	int status;int opid,overload,events;
+	int status;int opid,events;
 	Code stmt; 
 	void * key;
 	key = 0;stmt=0;events=0;
 	status = EV_Ok;
 	opid = top[0].link & OperatorMask;
-	overload = top[0].link & OperatorMSB;
+  events =operands[ opid ].properties; 
+  if(top[0].link & OperatorMSB)
+      events |= EV_Overload;
 	stmt = get_stmt(opid,top);
-	op = &operands[ opid ];
-	
-	if(!handler)
-		handler = op->handler;
-	events = set_ready_event(op->properties);
+  events = set_ready_event(events);
 	if(events & EV_Debug)
 		G_printf("Debug event\n");
 	set_ready_code(stmt,opid);
-	if(!(EV_No_bind & op->properties))
+	if(!(EV_No_bind & events))
 		status = bind_code(top,stmt);
 	if(status != EV_Ok) 
 		G_error("bind \n",G_ERR_BIND);
-	if(!stmt || overload) {
-		if(overload) 
-			set_ready_event(EV_Overload);
-		if(handler)
+	if(!stmt) 
 			status = ghandler(top,status,handler);
-		else
-			status = EV_Incomplete;
-	}
 	else {
 		do {
 			status = machine_step(stmt );
@@ -276,15 +269,13 @@ void console_loop() {
 	Triple t;
   char buff[20];
 	int status;
-  G_printf("Hello\n");
-  G_line(buff,20);
+  G_printf("Console loop\n");
 	for(;;) {
 		G_console(&c);
     G_printf("%s\n",c.base);
-		t.link = 
-			(OperatorConsole | OperatorMSB); // console overload
+		t.link =  OperatorJson; // console overload
 		t.key = c.base;
-//		status = triple(&t,event_handler);
+		status = triple(&t,event_handler);
 	}
 }
 void engine_init() {
@@ -303,6 +294,7 @@ void engine_init() {
 		print_trios();
   }
 int main_engine(int argc, char * argv[]) {
+  G_printf("Overloads %d %d\n",OperatorJson,OperatorBson);
      engine_init();
 		// Main loop
      G_printf("Main engine\n");

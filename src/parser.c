@@ -131,7 +131,7 @@ int parser(char * Json, PGRAPH *inner) {
 		close_update_graph(inner);  
 	return(EV_Ok);
 }
-#define Debug_parser
+//#define Debug_parser
 #undef Debug_parser
 
 PGRAPH * init_parser() {
