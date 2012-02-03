@@ -1,7 +1,7 @@
 // Console, set up
 #include "g_types.h"
 #include "console.h"
-#define Debug_console
+//#define Debug_console
 int init_console() { return(0);}
 // These are here just to keep the std lib includes in one spot
 // and run test sequences
@@ -104,8 +104,6 @@ int G_console(Console * console) {
   } 
 
 }
-
-
 
 int  G_isugly(char ch) { 
 	return isin(ch,uglies);

@@ -274,13 +274,17 @@ Trio engine_trios[] = {
 void console_loop() {
 	Console c;
 	Triple t;
+  char buff[20];
 	int status;
+  G_printf("Hello\n");
+  G_line(buff,20);
 	for(;;) {
 		G_console(&c);
+    G_printf("%s\n",c.base);
 		t.link = 
 			(OperatorConsole | OperatorMSB); // console overload
 		t.key = c.base;
-		status = triple(&t,event_handler);
+//		status = triple(&t,event_handler);
 	}
 }
 void engine_init() {
@@ -295,18 +299,15 @@ void engine_init() {
 		init_trios();
 		add_trios(engine_trios);
 		status = init_machine();
-    net_start();
 		op = operands[GCHAR];
 		print_trios();
   }
 int main_engine(int argc, char * argv[]) {
+     engine_init();
 		// Main loop
-		if(argv[2] && !G_strcmp(argv[2], "-c")) 
-			console_loop();
-		else if(argv[2] && !G_strcmp(argv[2], "-debug")) // 
-			debug_loop();
-		 else if(argv[2] && !G_strcmp(argv[2], "-netio"))
-			netio_loop();
+     G_printf("Main engine\n");
+    net_start();
+	  console_loop();
 		return(0);
 	}
 	void print_triple(Triple *t) { 
