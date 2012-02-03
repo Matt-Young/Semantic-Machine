@@ -11,10 +11,7 @@
 #include <stdio.h>
 #include <time.h>
 #include "tester.h"
-#ifdef STAND_ALONE
-#undef NETIO
-#endif
-#ifdef NETIO
+
 #include <unistd.h>
 #include <sys/wait.h>
 #include <sys/mman.h>
@@ -33,7 +30,6 @@
 #include <sys/shm.h>
 
 #include <semaphore.h>
-#endif
 
 
 #include "../src/g_types.h"
@@ -42,7 +38,7 @@ void * start_routine(void * arg) {
   printf("Thread %x \n",arg);
   return 0;
 }
-void  error(char * er) { printf("%s \n",er);}
+
 typedef struct {
 int data[20];
 int sequence_size;
@@ -50,7 +46,7 @@ int sequence_size;
 void main(int argc, char *argv[]){
 
   printf("Start%s %s \n",argv[0],argv[1]);
-#ifdef NETIO
+
   if(argv[1] && !strcmp(argv[1], "-m")) {
       int segment_id; //Shared Memory ID
       shared_data *mem; //Shared Memory Pointer
@@ -75,13 +71,13 @@ void main(int argc, char *argv[]){
   printf("fh\n");
    if(argv[1] && !strcmp(argv[1], "-send")) {
         printf("Send\n");
-    send_test();
+    //send_test();
     //printf("Addr  %d\n",segment_id);
     exit(0);
   } 
   if(argv[1] && !strcmp(argv[1], "-recv")) {
         printf("Recv\n");
-    recv_test();
+    net_start();
     //printf("Addr  %d\n",segment_id);
     exit(0);
   } 
@@ -102,6 +98,6 @@ void main(int argc, char *argv[]){
     else printf("Child\n");
       exit(0);
   }
-#endif
+
   exit(0);
 }

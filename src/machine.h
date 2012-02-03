@@ -6,4 +6,5 @@
 //#define STANDALONE
 #define SERVER_NAME "Joe"
 #define VERSION "Jane"
-#define NET_PORT 8000
+#define TEST_PORT 8000
+#define TEST_ADDR "127.0.0.1"
