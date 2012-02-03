@@ -3,7 +3,15 @@
 #include <ctype.h>
 #define Debug_parser
 #define DISCARD 256
+const char  *uglies = "\"._,{}$!:@";
+char * null_key = "_";
+enum {QuoteSyntax,DotSyntax,NullSyntax,CommaSyntax,LeftSyntax,RightSyntax};
+#define ESC 33
 int isin(char c,const char *str);
+int  G_isugly(char ch) { 
+	return isin(ch,uglies);
+}
+
 // apply known attribute when detected in the input stream
 int SetAttribute(Triple * current,Triple * next) {
 	Trio * trio;
@@ -20,6 +28,56 @@ int SetAttribute(Triple * current,Triple * next) {
 		} else
 		return 0;
 	}
+// Front end key word from text and json operators
+int G_keyop(char * *Json,Triple *t) {
+	enum { quote = 1,numeric =2};
+	char * ptr = *Json;
+	char *  start= ptr;
+	int i=0;
+	int events=0;
+	while(isspace(*ptr)) ptr++;
+	if(G_isdigit(*ptr) )
+		events += numeric;
+	if(*ptr == uglies[QuoteSyntax]) {// Quote char?
+		ptr++;
+		t->key=ptr;
+		if(*ptr  != uglies[QuoteSyntax]) {
+			events += quote;
+			ptr++;
+		}
+	} else t->key=ptr;
+	while(1) {
+		if(G_isugly(*ptr) || (*ptr == 0) ) {
+			if((events & numeric) && *ptr == uglies[DotSyntax])
+				ptr++;
+			else if(!(events & quote) && (*ptr == uglies[QuoteSyntax]) ) {
+				*ptr = 0;ptr++; 
+			} else { 
+				char * tmp;
+				tmp = ptr; 
+				while((tmp != start) && isspace(*(tmp-1))) tmp--;
+				if(isspace(*tmp)) *tmp = 0;
+				break;
+			}	
+		}else {
+			if(*ptr == 0)
+				return -1;
+			ptr++;
+		}
+	}
+	if((*ptr == 0) || !G_isugly(*ptr) )
+		t->link = uglies[NullSyntax];
+	else
+		t->link = *ptr;
+	i =   (int) ptr;
+	i -= (int) start ; // char count
+	*ptr = 0;
+	*Json = ptr+1;
+	if(!(t->key[0]))
+		t->key = null_key;  // valid null key
+	return i;
+}
+
 // builds a subgraph on inner from user text
 int parser(char * Json, PGRAPH *inner) {
 	Triple prev,current,next;
