@@ -11,13 +11,6 @@ the lab configuratio, the threads only and the netio
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
-#include "../src/g_types.h"
-#include "../src/machine.h"
-#include "../src/http_hdrs.h"
-
-#ifdef HAVE_SYS_SENDFILE_H
-#include <sys/sendfile.h>
-#endif
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/wait.h>
@@ -31,32 +24,25 @@ the lab configuratio, the threads only and the netio
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <errno.h>
+#include "../src/g_types.h"
+#include "../src/machine.h"
+#include "../src/http_hdrs.h"
 #define error printf
 #define warn printf
 #define NTHREAD 16 
 
 /* Globals */
 int sockfd = -1;
-/* Prototypes */
-void * handle_request(void *);
-static int get_method(char * req);
-static int safesend(int fd, char * out);
-static char * get_mimetype(char * file);
 static void crit(char * message);
 typedef struct { 
 	int newfd;
 	void * remote_addr; 
 	int count;
 	int type;
-} Pending;
+} Pending;  // Holds things a thread needs
 Pending pendings[NTHREAD];
 int thread_count=0;
 int triple(Triple *top,Handler);
-int main_engine(int argc, char *argv[]);
-void engine_init();
-void * console_loop(void * arg);
-void * netio_loop(void * arg);
-
 int header_magic(int newfd,int * count) {
 	char inbuffer[HEADER_SIZE];
 	int rv; int type;int i;
@@ -73,7 +59,7 @@ int header_magic(int newfd,int * count) {
 	return (type);
 }
 
-void * handle_request(void * arg) {
+void * handle_data(void * arg) {
 	Triple t;
 	Pending *p = (Pending *) arg;
 	int fd;
@@ -93,7 +79,7 @@ void * handle_request(void * arg) {
 			warn("Error sending data to client.");
 	close(p->newfd);
   //printf("%s\n",t.key);
-	t.link = p->type | 0x80;
+	t.link = OperatorConsole;
 	t.pointer = p->count;
 #if DebugNETIO
 	printf("Triple\n");
@@ -159,7 +145,7 @@ void * net_service (void * arg)  {
 				pendings[i].count = count;
 				pendings[i].remote_addr =(struct sockaddr_in *)&remote_addr;
         printf("Call %d\n",status);
-				status = pthread_create(thread,0,handle_request, &pendings[i]);
+				status = pthread_create(thread,0,handle_data, &pendings[i]);
 				printf("Done %d\n",status);
 			}
 		}
@@ -175,7 +161,7 @@ int net_start() {
 		printf("Error threading");
 		exit(1);
 	}
-	return 0;;
+	return 0;
 }
 
 #if 0

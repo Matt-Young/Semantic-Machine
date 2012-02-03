@@ -19,6 +19,5 @@ int main(int argc, char *argv[]) {
       exit(0);
     } 
   }
-   engine_init();
-   main_engine(argc, argv);
+     main_engine(argc, argv);
   }

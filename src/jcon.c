@@ -2,16 +2,6 @@
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
-#include "g_types.h"
-#include "machine.h"
-#include "console.h"
-#include "http_hdrs.h"
-
-
-#if 1
-#ifdef HAVE_SYS_SENDFILE_H
-#include <sys/sendfile.h>
-#endif
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/wait.h>
@@ -25,6 +15,10 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <errno.h>
+#include "g_types.h"
+#include "machine.h"
+#include "console.h"
+#include "http_hdrs.h"
 #define error printf
 // Little sender
 int send_buff(char *buffer,int count)
@@ -55,11 +49,6 @@ int send_buff(char *buffer,int count)
     close(sockfd);
     return 0;
 }
-#else
-int send_buff(char * buffer,int count){
-      fwrite(buffer, 1, count, stdout);
-}
-#endif
 Console console;
 int main(){
   char buffer[1024];
