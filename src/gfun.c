@@ -70,6 +70,9 @@ int reset_ready_set() {
   G_memset((void *) &ready,0,sizeof(ready));
   return 0;
 }
+Code get_ready_stmt() {
+  return ready.stmt;
+}
 void set_row_sequence(RowSequence * rows,PGRAPH f) {
 	int rowid = offset_row(f);
 	 rows->row += rowid;
@@ -182,7 +185,7 @@ int event_exec(FILTER * f) {
 		return event_exec(f);
 	 return(f->events);
  }
- 
+
 //G function call backs from inside sql
 enum {CallbackSelf,CallbackOther,CallbackResult,CallbackExperiment};
 void gfunction(Pointer context,int n, Pointer v[]) {
@@ -227,64 +230,72 @@ int init_gfun() {
 	ready.filter= &null_filter;
 	return 0;
 }
+
 /* Next to develop are two inverse functions
 one from local bson to triple store
   and the other to go back
   */
-#if 0
-// A utility to translate triples
-typedef struct { int rowid; char * buffer; char * start; Triple t[]; int byte_count
-} CalBoxBson;
-int add_triple_descent(CallBox * parent) {
-	int i; 
-	CalBoxBson child;
-	char * bson_key =parent->t[0]->key
-		int bson_type = parent->t[0]->link >> 8;
-	if(bson_type== BsonString)
-		bson_len = strlen(bson_key);
+int get_next_triple(Triple * t) {
+int status;
+ status = machine_step(ready.stmt);
+ if(status != EV_Error) 
+status = machine_triple(ready.stmt,t);
+ return status;
+ }
+// Bson <-> Triples
+enum {BsonString,BsonInt};
+
+// A utility to translate triples into bson
+typedef struct { Pointer stmt; int rowid; int * buffer; int * start; Triple *t; int byte_count;
+} CallBoxBson;
+int add_triple_descent(CallBoxBson * parent) {
+	int bson_len; 
+	CallBoxBson child;
+	char * bson_key = parent->t->key;
+		int bson_type = parent->t->link >> 8;
+	if(bson_type == BsonString)
+		bson_len = G_strlen(bson_key);
 	else if( bson_type == BsonInt)
-		bson_len=4
-	else
-	while(parent->rowid < parent->t[0]->pointer) {
+		bson_len=sizeof(int);
+  parent->start[0] =bson_len;
+	parent->start[1]=bson_type;
+	G_strncpy((char *) &parent->start[2],bson_key,bson_len);
+	while(parent->rowid < parent->t->pointer) {
 		child = *parent;
-		child->start = parent->buffer;
-		add_next_descent(&child);
-		parent->rowid = child->rowid;
+		child.start = parent->buffer;
+    get_next_triple(child.t);
+		add_triple_descent(&child);
+		parent->rowid = child.rowid;
 	}
-	parent->rowid++;
-	sprintf(parent->start,"%4d",bson_len);
-	parent->start += 4;
-	parent->start++ = bson_type;
-	strncpy(parent->start,bson_key,bson_len);
+  return 0;
 }
-}
-typedef struct { int charid; char * buffer; Triple *start; char *bson; int row_count
-} CalBoxBson;
-int add_bson_descent(CallBox * parent) {
-	int i; 
-	CalBoxBson child;
+// A utility to translate triples into bson
+
+typedef struct { int bsonid; int * buffer; Triple *start; int *bson; int row_count;
+} CalBoxTriple;
+int add_bson_descent(CalBoxTriple * parent) {
+	int bson_len; 
+	CalBoxTriple child;
   Triple t;
-	t.key =parent->bson;
-  t.linktype = parent->bson >> 8;
-	if(bson_type== BsonString)
-		bson_len = strlen(bson_key);
-	else if( bson_type == BsonInt)
-		bson_len=4
-	else
-	while(parent->charid < *parent->bson) {
+  bson_len = *( (int *) parent->bson);
+  t.link = (parent->bson[1]) << 8;
+	t.key = (char *) &parent->bson[2];
+
+	while(parent->bsonid < (parent->bson[0] << 2)) {
 		child = *parent;
-    // pop triple here
-		child->start = parent->start;
-		add_next_descent(&child);
-		parent->rowid = child->rowid;
+   // machine_triple();
+		child.start = parent->start;
+		add_bson_descent(&child);
+		parent->bsonid = child.bsonid;
 	}
-	parent->rowid++;
-	parent->t->pointer = row_len;
+	parent->bsonid += 2 + (bson_len+3)/4;
+	parent->start->pointer = bson_len;
 	parent->start += 4;
-	parent->t->pointer = triple_type;
-  parent->t->pointer->key =triple_key
-	triple(inrset_triple,
-}
+	parent->start->pointer = t.link;
+  parent->start->key =t.key;
+	//update_graph(insert_triple,0);
+  return 0;
 }
 
-#endif
+
+

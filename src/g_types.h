@@ -45,6 +45,7 @@ int machine_triple(Code stmt,Triple * t);
 int machine_bind_int(Code stmt,int index,int value);
 int machine_bind_text(Code stmt,int index,char * ch);
 void unbind_triple(Code stmt,Triple *t);
+
 extern const Triple G_null_graph;
 #define EV_Ok 0x00
 #define EV_Null 0x01  // Do some null operation

@@ -64,7 +64,6 @@ void * handle_data(void * arg) {
 	Pending *p = (Pending *) arg;
 	int fd;
 	struct sockaddr_in * remote = p->remote_addr;
-	char * data_buff;
 	int rv;
   printf("handler count %d\n",p->count);
   fd = p->newfd;
