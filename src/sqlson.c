@@ -1,4 +1,10 @@
 // A utility to translate triples into bson
+//
+// Bson is not native sqlson, but close
+// the effort here is to create the recursive
+// bson byte counts from sqlson row counts
+//
+//
 typedef struct { Code stmt; int rowid; int * buffer; 
 int * start; Triple t; int word_count;
 } CallBoxBson;
