@@ -2,4 +2,4 @@ A collection of files that work with sqlite3, mainly to implement a  nested stor
 
 All data is assumed to be Bson format, except fo the Json console.  All data is assumed capable of bot travel by key word navigation.  The machine wilol delier coplete Bson objhects that match the query.  The query itself is a bson graph.
 
-The cebntral function is the convolution between two graphs, one of which may be the null graph.
+The central function is the convolution between two graphs, one of which may be the null graph.
