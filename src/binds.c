@@ -36,7 +36,7 @@ int bind_code(Triple * top,Code stmt) {
 	int index;
 	Mapper * a;
 	top++;
-	look_stmt(stmt);
+	//look_stmt(stmt);
 	a = operands[opid].maps;
 	index =1;
 	while(*a) {
@@ -52,7 +52,7 @@ int bind_code(Triple * top,Code stmt) {
 			status = machine_bind_text(stmt,index++,top->key);
 			status = machine_bind_int(stmt,index++,top->link);
 			status = machine_bind_int(stmt,index++,top->pointer);
-			look_stmt(stmt);
+			//look_stmt(stmt);
 			break;
 		case G_TYPE_CODE:
 			G_debug(stmt);
