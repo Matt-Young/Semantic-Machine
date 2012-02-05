@@ -26,12 +26,7 @@ PGRAPH dup_graph(PGRAPH l1,PGRAPH l2);
 void pass_parent_graph(PGRAPH );
 PGRAPH new_graph_by_index(int);
 // layout of triplet installed in table contaxts
-enum {
-	pop_triple_operator,pop_triple_data,
-	append_triple_operator,append_triple_data,
-	update_triple_operator,triple_data_1,
-	fetch_triple_operator,
-  installed_triple_operator};
+
 
 
 

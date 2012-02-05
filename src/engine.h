@@ -18,9 +18,32 @@ enum { SystemExit,SystemCall,SystemDup,SystemPop,
 #define OperatorMask 0x7f
 #define OperatorMSB 0x80
 // Overloads in the first byte
-enum { OperatorJson = OperatorMSB,OperatorBson};
+enum { OperatorJson = OperatorMSB,OperatorBsonIn,OperatorBsonOut};
 Code set_ready_code(Code stmt,int opid);
 int get_system_call(char * name);
 int triple(Triple top[],Handler);
 int set_ready_event(int EV_event);
 int bind_code(Triple *,Code );
+enum {
+	pop_triple_operator,pop_triple_data,
+	append_triple_operator,append_triple_data,
+	update_triple_operator,triple_data_1,
+	fetch_triple_operator,
+  installed_triple_operator};
+  // Generics that cover sqlite3
+extern Pointer g_db;
+int open_machine_layer(const char * name,Pointer  mach);
+Pointer machine_column_text(Code stmt,int colid); 
+int machine_column_int(Code stmt,int colid);
+int machine_prepare(Pointer g_db,char * ch,Code * stmt);
+int machine_step(Code stmt );
+int machine_reset(Code stmt);
+int machine_exec(Pointer g_db,char * buff,char ** err);
+int machine_install_callback(Pointer g_db,char * name,int nargs,Pointer gfunction);
+void machine_result_int(Pointer context, int value);
+int machine_value_int(Pointer  v);
+char * machine_script(Pointer stmt);
+int machine_triple(Code stmt,Triple * t);
+int machine_key_len(Code stmt); 
+int machine_bind_int(Code stmt,int index,int value);
+int machine_bind_text(Code stmt,int index,char * ch);

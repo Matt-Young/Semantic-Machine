@@ -88,7 +88,7 @@ int * Sqlson_to_Bson(Triple t[]) {
   return Bson;
 }
 
-int Bson_to_Sqlsone(Triple t[],int * Bson) {
+int Bson_to_Sqlson(Triple t[],int * Bson) {
   CallBoxSqlson call;
   G_memset(&call,0,sizeof(call));
   call.empty = Bson;

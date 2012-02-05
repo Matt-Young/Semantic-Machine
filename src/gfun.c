@@ -132,7 +132,23 @@ int events(FILTER * f) {
 	  return status;
   }
 
-int init_run_console(FILTER *f) {
+ // The main io routines initialize and run here
+int *  Sqlson_to_Bson(Triple t[]);  // uses remalloc when needed, should return bufer
+int Bson_to_Sqlsone(Triple t[]);
+int spew_bson(Triple *t) {
+    TABLE * table;
+  	init_table(t->key,0,&table);
+     Sqlson_to_Bson(table->operators);
+     return EV_Ok;
+}
+int Bson_to_Sqlson(Triple *t,void *);     
+int consume_bson(Triple *t) {
+    TABLE * table;
+  	init_table("scratch",0,&table);
+     Bson_to_Sqlson(table->operators,t->key);
+     return EV_Ok;
+}
+int init_run_json(FILTER *f) {
 	int status; TABLE *table;
 	f->g[0] = (PGRAPH ) *init_parser();
 	status= set_ready_graph(f);
@@ -144,24 +160,25 @@ int init_run_console(FILTER *f) {
 }
 
 int event_exec(FILTER * f) {
-	int g_event;
-	Triple t;
-	g_event = f->events; 
-	g_event |=  ready.events;
-	if(f->event_triple->link == '@')
-		g_event |= init_run_table(f,f->event_triple->key);
-	else if(g_event & EV_Ugly) 
-			print_triple(&t);
-	else if(g_event & EV_Overload) {
-		if(ready.opid  == (OperatorJson & OperatorMask)) 
-			g_event |= init_run_console(f);
-		else 
-			if (ready.opid  == (OperatorBson & OperatorMask)) {
-      
-      }
-	}if(g_event & EV_Null) {
-		g_event |= machine_triple(ready.stmt,&t);
-		print_triple(&t);
+  int g_event;
+  Triple t;
+  g_event = f->events; 
+  g_event |=  ready.events;
+  if(f->event_triple->link == '@')
+    g_event |= init_run_table(f,f->event_triple->key);
+  else if(g_event & EV_Ugly) 
+    print_triple(&t);
+  else if(g_event & EV_Overload) {
+    if(ready.opid  == (OperatorJson & OperatorMask))  
+      g_event |= init_run_json(f);
+    else if (ready.opid  == (OperatorBsonIn & OperatorMask)) 
+      g_event |= consume_bson(f->event_triple);
+    else if (ready.opid  == (OperatorBsonOut & OperatorMask)) 
+      g_event |= spew_bson(f->event_triple);
+  }
+  if(g_event & EV_Null) {
+    g_event |= machine_triple(ready.stmt,&t);
+    print_triple(&t);
 	}
 	return(g_event);
 }

@@ -1,6 +1,6 @@
 // Console, set up
 #include "g_types.h"
-#include "console.h"
+#include "../src/console.h"
 //#define Debug_console
 int init_console() { return(0);}
 // These are here just to keep the std lib includes in one spot

@@ -26,6 +26,7 @@ the lab configuratio, the threads only and the netio
 #include <errno.h>
 #include "../src/g_types.h"
 #include "../src/machine.h"
+#include "../src/engine.h"
 #include "../src/http_hdrs.h"
 #define error printf
 #define warn printf
@@ -78,7 +79,7 @@ void * handle_data(void * arg) {
 			warn("Error sending data to client.");
 	close(p->newfd);
   //printf("%s\n",t.key);
-	t.link = OperatorConsole;
+	t.link = OperatorBsonIn;
 	t.pointer = p->count;
 #if DebugNETIO
 	printf("Triple\n");

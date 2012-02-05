@@ -98,6 +98,10 @@ int append_handler(Triple *node) {
 int unbind_handler(Triple *node) { 
     unbind_triple(operands[node->link].stmt,node+1);
 	return EV_Done;}
+int len_handler(Triple *node) {
+node[1].key = (char * ) machine_key_len(node[0].key);
+return EV_Done;
+}
 int unbind_triples_handler(Triple *node) { 
   int status;int i=1;
   while(node->pointer) {
@@ -305,7 +309,7 @@ void engine_init() {
 		print_trios();
   }
 int main_engine(int argc, char * argv[]) {
-  G_printf("Overloads %d %d\n",OperatorJson,OperatorBson);
+  //G_printf("Overloads %d %d\n",OperatorJson,OperatorBsonOut);
      engine_init();
 		// Main loop
      G_printf("Main engine\n");
