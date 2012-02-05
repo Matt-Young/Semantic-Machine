@@ -59,25 +59,36 @@ int make_sqlson_from_bson(Triple *tr,CallBoxSqlson * parent) {
   Triple new_triple;
   int endpoint;
   int rowid =   parent->rowid;  // save parent row for a pointer update
-    // fill in the part we know
-   if((parent->empty[0] == BSON_ARRAY) || (parent->empty[0] == BSON_OBJECT )) {
-  endpoint = (int) *((int *) parent->empty); 
-  parent->empty += 4;
+  // fill in the part we know
+  if((parent->empty[0] == BSON_ARRAY) || (parent->empty[0] == BSON_OBJECT )) {
+    endpoint = (int) *((int *) parent->empty); 
+    parent->empty += 4;
     while(parent->byteid < endpoint) {
-    child = *parent;
-		child.empty = parent->empty;
-		parent->byteid += make_sqlson_from_bson(tr,&child);
-		parent->rowid = child.rowid;
+      child = *parent;
+      child.empty = parent->empty;
+      parent->byteid += make_sqlson_from_bson(tr,&child);
+      parent->rowid = child.rowid;
+    }
   }
- }
-   else {
-  tr[append_triple_data].link = make_sqlson_type(parent->empty[0]);
-  tr[append_triple_data].key = (char *) parent->empty+1;
-  tr[append_triple_data].pointer =0;
-  triple(tr+append_triple_operator,0);
-  parent->byteid=G_strlen((char *) parent->empty+1);
-  new_triple.pointer = rowid;
-  triple(tr+update_triple_operator,0);
+  else {
+
+    if((char *) parent->empty[1]) { // have a name
+        tr[append_triple_data].key = (char *) parent->empty+1;
+       tr[append_triple_data].pointer = 1;
+       tr[append_triple_data].link = ':';
+           triple(tr+append_triple_operator,0);
+       parent->rowid++;
+       parent->empty += G_strlen(tr[append_triple_data].key);
+    }
+
+   tr[append_triple_data].link = make_sqlson_type(parent->empty[0]);
+    tr[append_triple_data].pointer =1;
+    triple(tr+append_triple_operator,0);
+    parent->byteid=G_strlen((char *) parent->empty+1);
+    new_triple.pointer = rowid;
+    triple(tr+update_triple_operator,0);
+    parent->byteid += G_strlen((char *) parent->empty+1) + 1;
+    parent->rowid++;
   }
   return 0;
 }
