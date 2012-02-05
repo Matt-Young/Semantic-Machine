@@ -4,7 +4,7 @@ typedef struct  g {
   int start;
   int end;
   TABLE * table;
-  struct g * parent;
+  Pstruct parent;
   int rowid;
 } GRAPH;
 typedef GRAPH * PGRAPH; 
@@ -27,10 +27,11 @@ void pass_parent_graph(PGRAPH );
 PGRAPH new_graph_by_index(int);
 // layout of triplet installed in table contaxts
 enum {
-	pop_triple_operator,
-	append_triple_operator,triple_data_0,
+	pop_triple_operator,pop_triple_data,
+	append_triple_operator,append_triple_data,
 	update_triple_operator,triple_data_1,
-	select_triple_operator, installed_triple_operator};
+	fetch_triple_operator,
+  installed_triple_operator};
 
 
 

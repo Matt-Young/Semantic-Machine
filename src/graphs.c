@@ -95,9 +95,9 @@ int release_graph_list(PGRAPH *inner) {
 int append_graph(PGRAPH *list,Triple node) {
 	int status=0;
 	TABLE * t = (*list)->table;
-	t->operators[triple_data_0] = node;
+	t->operators[append_triple_data] = node;
 	status = triple(&t->operators[append_triple_operator],0);
-	(*list)->row++;incr_row(1);
+	(*list)->row++;
 	return(status);
 }
 

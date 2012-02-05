@@ -1,4 +1,4 @@
-#include "sqlite_msgs.h"
+//#include "sqlite_msgs.h"
 #include "all.h"
 #include "filter.h"
 // Table stuff, this will change fast and become part of named graphs
@@ -85,9 +85,10 @@ const struct new_install{
 	char * map_name[4];
 } installs[] = {
 	{pop_triple_operator,SystemMax+1,
-	"select key,link,pointer from %s where (gfun(0,rowid) == rowid);",0,0,0,0},
+	"select key,link,pointer from %s where (gfun(0,rowid) == rowid);",
+  "UnbindTriple",0,0,0},
 	{append_triple_operator,SystemMax+2,"insert into %s values( ?, ?, ?) ;",
-	  "BindTriple",0,0,0},
+	  "BindTriple","AppendHandler",0,0},
 	{update_triple_operator,SystemMax+3,"update %s set pointer = (?-1) where rowid = ?;",
 	"BindSelfRow","BindSelfStart",0,0},
 	{0,0,0,0}
@@ -95,8 +96,8 @@ const struct new_install{
 Mapper null_map(void * p,int * i);
  int make_stmt(TABLE * table,int format,char * table_name) {
   char buff[200];
-  int i,status=SQLITE_OK;
-  Code stmt;
+  int i,status=EV_Ok;
+  Code stmt;Trio  * local_symbol;
   int opid = installs[format].opid;
   int index = installs[format].opindex;
   Triple *p = &table->operators[index]; 
@@ -110,13 +111,19 @@ Mapper null_map(void * p,int * i);
   operands[opid].handler = 0;  // These installs should never need a handler
   operands[opid].properties = EV_Overload;
   for(i=0; installs[format].map_name[i];i++) 
-	  operands[opid].maps[i]= (Mapper) 
-	  find_trio_value(installs[format].map_name[i]);
+
+	  local_symbol= find_trio_value(installs[format].map_name[i]);
+  if(local_symbol->type == G_TYPE_MAPPER)
+  	  operands[opid].maps[i]= (Mapper) local_symbol->value;
+  else if(local_symbol->type == G_TYPE_BIT)
+    operands[opid].properties |= (int) local_symbol->value;
+    else if(local_symbol->type == G_TYPE_HANDLER)
+    operands[opid].handler = (Handler) local_symbol->value;
   return status;
 }
 
 int init_table(char * name,int options,TABLE **table) {
-	 int status = SQLITE_OK;
+	 int status = EV_Ok;
 	 int i;
 	 *table =  get_table_context(name);
 	 if(options)

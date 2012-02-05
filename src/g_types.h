@@ -9,6 +9,7 @@ typedef void * Pointer;
 typedef int (*Handler)(Triple *);
 typedef int (*Mapper)(Pointer *pointer,int *type);
 typedef void * Code;
+typedef struct g * Pstruct;
 int net_start();
 /*
 #define SQLITE_INTEGER  1
@@ -28,22 +29,7 @@ enum {G_TYPE_NONE,G_TYPE_INTEGER,G_TYPE_FLOAT,
 #define GFUN "gfun"
 #define SystemNameSpace "local"
 #define LocalSymbolCount 100
-// Generics that cover sqlite3
-extern Pointer g_db;
-int open_machine_layer(const char * name,Pointer  mach);
-Pointer machine_column_text(Code stmt,int colid); 
-int machine_column_int(Code stmt,int colid);
-int machine_prepare(Pointer g_db,char * ch,Code * stmt);
-int machine_step(Code stmt );
-int machine_reset(Code stmt);
-int machine_exec(Pointer g_db,char * buff,char ** err);
-int machine_install_callback(Pointer g_db,char * name,int nargs,Pointer gfunction);
-void machine_result_int(Pointer context, int value);
-int machine_value_int(Pointer  v);
-char * machine_script(Pointer stmt);
-int machine_triple(Code stmt,Triple * t);
-int machine_bind_int(Code stmt,int index,int value);
-int machine_bind_text(Code stmt,int index,char * ch);
+
 void unbind_triple(Code stmt,Triple *t);
 
 extern const Triple G_null_graph;
@@ -65,4 +51,5 @@ extern const Triple G_null_graph;
 #define EV_Ugly 0x10000
 #define EV_SystemEvent 0x20000
 #define EV_Network 0x40000
+#define EV_UnbindTriple 0x80000
 #endif

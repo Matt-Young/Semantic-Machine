@@ -92,6 +92,21 @@ int exec_handler(Triple *t) {
 int swap_handler(Triple *t) {return EV_Ok;}
 int exit_handler(Triple *node) {  
 	return EV_Done;}
+int append_handler(Triple *node) { 
+  incr_row(1);
+	return EV_Done;}
+int unbind_handler(Triple *node) { 
+    unbind_triple(operands[node->link].stmt,node+1);
+	return EV_Done;}
+int unbind_triples_handler(Triple *node) { 
+  int status;int i=1;
+  while(node->pointer) {
+    status = machine_step(node->key);
+    unbind_triple(operands[node->link].stmt,node+i++);
+    if(status != EV_Error) node->pointer--;
+    else return status;
+  }
+	return EV_Done;}
 int pop_handler(Triple *node) {
 	int status;
 	Triple t;
@@ -123,13 +138,12 @@ int dup_handler(Triple *node){
 		operands[SystemScratch].maps[i] = operands[id].maps[i];
 	return EV_Ok;
 }
-Handler get_ghandler(Triple top[],int status,Handler handler) { 
+Handler get_ghandler(Triple top[],Handler handler) { 
 	if(handler)
 		return handler;
 	else if(operands[top->link & OperatorMask].handler)
 		return operands[top->link & OperatorMask].handler;
-  else
-    return event_handler;
+  else return pop_handler; // Try and execute the thing
 }
 
 // Get the stmt
@@ -146,7 +160,7 @@ Code get_stmt(int opid,Triple * top) {
 // this sifts through and finds a handler
 
 int triple(Triple top[],Handler handler) {
-	int status;int opid,events;
+	int opid,events,status;
 	Code stmt; 
 	void * key;
 	key = 0;stmt=0;events=0;
@@ -164,7 +178,7 @@ int triple(Triple top[],Handler handler) {
 		status = bind_code(top,stmt);
 	if(status != EV_Ok) 
 		G_error("bind \n",G_ERR_BIND);
-   handler = get_ghandler(top,status,handler);
+   handler = get_ghandler(top,handler);
 	if(!stmt) 
 			status = handler(top);
 	else {
@@ -228,6 +242,8 @@ int g_debugger_state;
 Trio engine_trios[] = { 
 	{ "Debug", G_TYPE_HANDLER, g_debugger},
 	{ "Testing", G_TYPE_BIT, (Pointer) EV_SystemEvent},
+  { "UnbindTriple", G_TYPE_HANDLER, (Handler) unbind_handler},
+  { "AppendHandler", G_TYPE_HANDLER, (Handler) append_handler},
 	{0,0,0}};
 
 	// defult operands
