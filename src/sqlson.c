@@ -12,15 +12,13 @@
 //Make Bson from triple
 
 #define BSON_ARRAY 4
+#define BSON_OBJECT 3
 int make_sqlson_type(int bson_type){
   int sqlson_type ='.';  // default type
   if(bson_type == BSON_ARRAY) sqlson_type =',';
    return sqlson_type | bson_type << 8;}
 
-int make_bson_type(int sqlson_type){
-  int bson_type = 0;
-  if(sqlson_type == ',') return(BSON_ARRAY);
-  else return  sqlson_type >> 8;}
+int make_bson_type(int sqlson_type){ return  sqlson_type >> 8;}
 typedef struct {  int rowid; 
 char * start; Triple t; int byte_count;
 } CallBoxBson;
@@ -37,6 +35,7 @@ int make_bson_from_sqlson(Triple *tr,CallBoxBson * parent) {
 	G_memcpy(parent->start, parent->t.key,bson_key_len);
   parent->byte_count = bson_key_len;
   parent->start += bson_key_len;
+  parent->rowid++;
 	while(parent->rowid < parent->t.pointer) {
 		child = *parent;
 		child.start = parent->start;
@@ -58,22 +57,28 @@ int * empty; Bson b; int rowid;
 int make_sqlson_from_bson(Triple *tr,CallBoxSqlson * parent) {
   CallBoxSqlson child;
   Triple new_triple;
+  int endpoint;
   int rowid =   parent->rowid;  // save parent row for a pointer update
     // fill in the part we know
+   if((parent->empty[0] == BSON_ARRAY) || (parent->empty[0] == BSON_OBJECT )) {
+  endpoint = (int) *((int *) parent->empty); 
+  parent->empty += 4;
+    while(parent->byteid < endpoint) {
+    child = *parent;
+		child.empty = parent->empty;
+		parent->byteid += make_sqlson_from_bson(tr,&child);
+		parent->rowid = child.rowid;
+  }
+ }
+   else {
   tr[append_triple_data].link = make_sqlson_type(parent->empty[0]);
   tr[append_triple_data].key = (char *) parent->empty+1;
   tr[append_triple_data].pointer =0;
- triple(tr+append_triple_operator,0);
- parent->byteid=0;
-  while(parent->byteid < SerialInt(parent->b)) {
-    child = *parent;
-		child.empty = parent->empty;
-		make_sqlson_from_bson(tr,&child);
-		parent->rowid = child.rowid;
-    parent->byteid += SerialInt(parent->b);
-  }
+  triple(tr+append_triple_operator,0);
+  parent->byteid=G_strlen((char *) parent->empty+1);
   new_triple.pointer = rowid;
   triple(tr+update_triple_operator,0);
+  }
   return 0;
 }
 #define BSIZE 256
