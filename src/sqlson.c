@@ -22,11 +22,11 @@ int make_bson_type(int sqlson_type){
   if(sqlson_type == ',') return(BSON_ARRAY);
   else return  sqlson_type >> 8;}
 typedef struct {  int rowid; 
-int * start; Triple t; int word_count;
+char * start; Triple t; int byte_count;
 } CallBoxBson;
 int make_bson_from_sqlson(Triple *tr,CallBoxBson * parent) {
   	CallBoxBson child;
-	int *bson_count_ptr;
+	char *bson_count_ptr;
   int bson_key_len;
   // Save a pointer to the parent byte count location
   // Convert and fill n the element type right away
@@ -35,7 +35,7 @@ int make_bson_from_sqlson(Triple *tr,CallBoxBson * parent) {
   parent->start[0] = make_bson_type(parent->t.link); parent->start++;
   bson_key_len = machine_key_len((Code) tr->key);
 	G_memcpy(parent->start, parent->t.key,bson_key_len);
-  parent->word_count = 0;
+  parent->byte_count = bson_key_len;
   parent->start += bson_key_len;
 	while(parent->rowid < parent->t.pointer) {
 		child = *parent;
@@ -43,15 +43,16 @@ int make_bson_from_sqlson(Triple *tr,CallBoxBson * parent) {
     triple(tr+pop_triple_operator,0);
     child.t = tr[pop_triple_data];
 		make_bson_from_sqlson(tr,&child);
-		parent->rowid = child.rowid;
-    parent->word_count += child.word_count;
+		parent->rowid = child.t.pointer;
+    parent->byte_count += child.byte_count;
 	}
-  *bson_count_ptr=parent->word_count;
+  *bson_count_ptr=parent->byte_count;
   return 0;
 }
+#define SerialInt(a) ((a[0] << 8) + a[1])
 //Make triple from Bson
-typedef int Bson;
-typedef struct {  int wordid; 
+typedef char * Bson;
+typedef struct {  int byteid; 
 int * empty; Bson b; int rowid;
 } CallBoxSqlson;
 int make_sqlson_from_bson(Triple *tr,CallBoxSqlson * parent) {
@@ -63,27 +64,27 @@ int make_sqlson_from_bson(Triple *tr,CallBoxSqlson * parent) {
   tr[append_triple_data].key = (char *) parent->empty+1;
   tr[append_triple_data].pointer =0;
  triple(tr+append_triple_operator,0);
-
-  while(parent->wordid < parent->b) {
+ parent->byteid=0;
+  while(parent->byteid < SerialInt(parent->b)) {
     child = *parent;
 		child.empty = parent->empty;
 		make_sqlson_from_bson(tr,&child);
 		parent->rowid = child.rowid;
-    parent->wordid += child.wordid;
+    parent->byteid += SerialInt(parent->b);
   }
   new_triple.pointer = rowid;
   triple(tr+update_triple_operator,0);
   return 0;
 }
 #define BSIZE 256
-int * Sqlson_to_Bson(Triple t[]) {
+char * Sqlson_to_Bson(Triple t[]) {
   CallBoxBson call;
-  int * Bson;
+  char * Bson;
   G_memset(&call,0,sizeof(call));
-  Bson= (int *) G_malloc(BSIZE);
+  Bson = (char *) G_malloc(BSIZE);
    triple(t+pop_triple_operator,0);
    call.t = t[pop_triple_data];
-  call.start =Bson;
+  call.start = Bson;
   make_bson_from_sqlson(t,&call);
   return Bson;
 }

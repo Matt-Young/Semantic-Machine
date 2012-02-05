@@ -1,6 +1,7 @@
 
 #include "all.h"
 #include "filter.h"
+#include "sqlson.h"
 const Triple NULL_Triple={"_",'_',0};
 
 Mapper filter_map(Pointer * pointer,int * type) {
@@ -133,12 +134,13 @@ int events(FILTER * f) {
   }
 
  // The main io routines initialize and run here
-int *  Sqlson_to_Bson(Triple t[]);  // uses remalloc when needed, should return bufer
-int Bson_to_Sqlsone(Triple t[]);
+
 int spew_bson(Triple *t) {
-    TABLE * table;
+    TABLE * table; char * buff;
   	init_table(t->key,0,&table);
-     Sqlson_to_Bson(table->operators);
+     buff = Sqlson_to_Bson(table->operators);
+     //sendto(buff);
+     G_free(buff);
      return EV_Ok;
 }
 int Bson_to_Sqlson(Triple *t,void *);     
