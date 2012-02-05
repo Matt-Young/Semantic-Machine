@@ -1,4 +1,7 @@
-#include "../src/all.h"
+#include "../src/g_types.h"
+#include "../src/machine.h"
+#include "../src/engine.h"
+#include "../src/console.h"
 #include "../src/sqlson.h"
 // A utility to translate triples into bson
 //
@@ -7,8 +10,17 @@
 // bson byte counts from sqlson row counts
 //
 //Make Bson from triple
-int make_bson_type(int link);
-int make_sqlson_type(int link);
+
+#define BSON_ARRAY 4
+int make_sqlson_type(int bson_type){
+  int sqlson_type ='.';  // default type
+  if(bson_type == BSON_ARRAY) sqlson_type =',';
+   return sqlson_type | bson_type << 8;}
+
+int make_bson_type(int sqlson_type){
+  int bson_type = 0;
+  if(sqlson_type == ',') return(BSON_ARRAY);
+  else return  sqlson_type >> 8;}
 typedef struct {  int rowid; 
 int * start; Triple t; int word_count;
 } CallBoxBson;
@@ -47,7 +59,7 @@ int make_sqlson_from_bson(Triple *tr,CallBoxSqlson * parent) {
   Triple new_triple;
   int rowid =   parent->rowid;  // save parent row for a pointer update
     // fill in the part we know
-  tr[append_triple_data].link = parent->empty[0];
+  tr[append_triple_data].link = make_sqlson_type(parent->empty[0]);
   tr[append_triple_data].key = (char *) parent->empty+1;
   tr[append_triple_data].pointer =0;
  triple(tr+append_triple_operator,0);
@@ -69,7 +81,8 @@ int * Sqlson_to_Bson(Triple t[]) {
   int * Bson;
   G_memset(&call,0,sizeof(call));
   Bson= (int *) G_malloc(BSIZE);
-  call.t = t[0];
+   triple(t+pop_triple_operator,0);
+   call.t = t[pop_triple_data];
   call.start =Bson;
   make_bson_from_sqlson(t,&call);
   return Bson;
