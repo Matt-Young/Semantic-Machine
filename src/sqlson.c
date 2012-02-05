@@ -27,25 +27,34 @@ char * start; Triple t; int byte_count;
 int make_bson_from_sqlson(Triple *tr,CallBoxBson * parent) {
   CallBoxBson child;
   char *bson_count_ptr;
-  int bson_key_len;
-  bson_count_ptr = parent->start; parent->start++;
-  parent->start[0] = make_bson_type(parent->t.link); parent->start++;
+  int bson_key_len; int bson_type;
+  bson_type = make_bson_type(parent->t.link);
+   if((bson_type == BSON_OBJECT) || (bson_type == BSON_ARRAY)) {
+    bson_count_ptr = parent->start; 
+    parent->start +=4;
+  }
+  parent->start[0] = bson_type; parent->start++;
   bson_key_len = machine_key_len((Code) tr->key);
   G_memcpy(parent->start, parent->t.key,bson_key_len);
-  parent->byte_count = bson_key_len;
-  parent->start += bson_key_len;
+  parent->start[bson_key_len]=0;
+  parent->byte_count = bson_key_len+2;  //type, zero terminator, and optional text
+  parent->start += parent->byte_count;
   parent->rowid++;
   while(parent->rowid < parent->t.pointer) {
     child = *parent;
     child.start = parent->start;
     triple(tr+pop_triple_operator,0);
     child.t = tr[pop_triple_data];
-    make_bson_from_sqlson(tr,&child);
+    parent->byte_count += make_bson_from_sqlson(tr,&child);
     parent->rowid = child.t.pointer;
-    parent->byte_count += child.byte_count;
   }
-  *bson_count_ptr=parent->byte_count;
-  return 0;
+  if((bson_type == BSON_OBJECT) || (bson_type == BSON_ARRAY)){
+    *bson_count_ptr++ = parent->byte_count >> 24;
+    *bson_count_ptr++ = (parent->byte_count >> 16) & 0xff;
+    *bson_count_ptr++ = (parent->byte_count >> 8) & 0xff;
+    *bson_count_ptr++ = parent->byte_count & 0xff;
+  }
+  return parent->byte_count;
 }
 #define SerialInt(a) ((a[0] << 8) + a[1])
 //Make triple from Bson
@@ -56,7 +65,7 @@ char  * empty; Bson b; int rowid;
 int make_sqlson_from_bson(Triple *tr,CallBoxSqlson * parent) {
   CallBoxSqlson child;
   Triple new_triple;
-  char * end; int bson_type;int block_count;char * start;
+  int bson_type;int block_count;char * start;
   int rowid =   parent->rowid;  // save parent row for a pointer update
 
   // fill in the part we know
@@ -94,22 +103,20 @@ int make_sqlson_from_bson(Triple *tr,CallBoxSqlson * parent) {
   return block_count;
 }
 #define BSIZE 256
-char * Sqlson_to_Bson(Triple t[]) {
+int Sqlson_to_Bson(Triple t[],char ** buff) {
   CallBoxBson call;
-  char * Bson;
   G_memset(&call,0,sizeof(call));
-  Bson = (char *) G_malloc(BSIZE);
+  *buff = (char *) G_calloc(BSIZE,1);
   triple(t+pop_triple_operator,0);
   call.t = t[pop_triple_data];
-  call.start = Bson;
-  make_bson_from_sqlson(t,&call);
-  return Bson;
+  call.start = *buff;
+  return make_bson_from_sqlson(t,&call);
+
 }
 
 int Bson_to_Sqlson(Triple t[],char * Bson) {
   CallBoxSqlson call;
   G_memset(&call,0,sizeof(call));
   call.empty = Bson;
-  make_sqlson_from_bson(t,&call);  //use the null table on input
-  return 0;
+  return make_sqlson_from_bson(t,&call);  //use the null table on input
 }
