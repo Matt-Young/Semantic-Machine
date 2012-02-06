@@ -313,11 +313,11 @@ int main_engine(int argc, char * argv[]) {
      engine_init();
 		// Main loop
      G_printf("Main engine\n");
-#if 0
+#if 2
     net_start();
-#else
-	  console_loop();
 #endif
+	  console_loop();
+
 		return(0);
 	}
 	void print_triple(Triple *t) { 
