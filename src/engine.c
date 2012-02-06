@@ -6,7 +6,6 @@
 // Will be shared Protected
 OP operands[OperatorMaximum];
 Pointer g_db;
-#define NVARS 5
 
 const Triple SCRATCH_Triple = {"Scratch",SystemScratch,0};
 
@@ -226,16 +225,7 @@ int init_handlers() {
 	}
 	return 0;
 }
-int init_machine() {
-	int status;
-	status = init_handlers(); if(status != EV_Ok) return status;
-	status = init_binder(); if(status != EV_Ok) return status;
-	status = init_gfun(); if(status != EV_Ok) return status;
-	status = init_tables(); if(status != EV_Ok) return status;
-	status = init_filters(); if(status != EV_Ok) return status;
-	init_console();
-	return status;
-}
+
 
 Mapper map_debugger(Pointer * p,int *type) {
 	*type = G_TYPE_CODE;
@@ -290,8 +280,19 @@ void console_loop() {
     G_printf("%s\n",c.base);
 		t.link =  OperatorJson; // console overload
 		t.key = c.base;
+    t.pointer=1;
 		status = triple(&t,event_handler);
 	}
+}
+int init_machine() {
+	int status;
+	status = init_handlers(); if(status != EV_Ok) return status;
+	status = init_binder(); if(status != EV_Ok) return status;
+	status = init_gfun(); if(status != EV_Ok) return status;
+	status = init_tables(); if(status != EV_Ok) return status;
+	status = init_filters(); if(status != EV_Ok) return status;
+	init_console();
+	return status;
 }
 void engine_init() {
 		int status; 
@@ -308,12 +309,24 @@ void engine_init() {
 		op = operands[GCHAR];
 		print_trios();
   }
-int main_engine(int argc, char * argv[]) {
-  //G_printf("Overloads %d %d\n",OperatorJson,OperatorBsonOut);
+int main(int argc, char * argv[]) {
+  while(argc) {
+     argc--;
+    if(!G_strcmp(argv[argc], "-V")) {
+      G_printf("You are using %s.\n",VERSION);
+      G_exit(0);
+    } else if( !G_strcmp(argv[argc], "--help")  || !G_strcmp(argv[argc], "-h") ) {
+      G_printf("Usage: graphs\n");
+      G_printf("\n");
+      G_printf("Please see https://github.com/Matt-Young/Semantic-Machine/wiki .\n");
+    } else if(!G_strcmp(argv[argc], "-addr") )
+  {  G_printf("Address\n"); }
+ 
+    }
      engine_init();
 		// Main loop
      G_printf("Main engine\n");
-#if 2
+#ifdef NETIO 
     net_start();
 #endif
 	  console_loop();
@@ -328,3 +341,4 @@ int main_engine(int argc, char * argv[]) {
 
 		return 0;
 	}
+  

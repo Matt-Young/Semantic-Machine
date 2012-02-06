@@ -12,13 +12,7 @@ int init_console() { return(0);}
 #include <stdarg.h>
 char * G_debug_line(char *,int);
 
-char * G_line(char * line,int n) {
-#ifdef Debug_console
-	return (G_debug_line(line,n));
-#else
-	return(fgets(line, n, stdin));
-#endif
-}
+char * G_line(char * line,int n) {return(fgets(line, n, stdin));}
 
 void G_printf( const char *fmt, ...) 
 {    
@@ -116,20 +110,5 @@ void G_buff_counts(){
 #define Debug_console
 
 #ifdef Debug_console
-const char * typeface[] = {
-	"{abc.def,{fgh.lmk},jkl}",
-	"{local:SystemEcho}",
-	"{abc,def,ghi}",
-	"{@config}",
-	""};
-#define DLINE 3
-static int debug_counter=DLINE;
-// Here is some console test and debug
-char * G_debug_line(char * line,int n) {
-	if(debug_counter==DLINE)
-	G_strncpy(line,typeface[DLINE],n);
-	else line[0]=0;
-	debug_counter++;
-	return line;
-	}
+
 #endif

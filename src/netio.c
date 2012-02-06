@@ -66,27 +66,28 @@ void * handle_data(void * arg) {
 	Pending *p = (Pending *) arg;
 	int fd;
 	struct sockaddr_in * remote = p->remote_addr;
-	int rv;
+	int rv,rm;
   printf("handler count%x\n",p->count);
   fd = p->newfd;
 	t.key = (char *) calloc(p->count,1);
 	rv = read(p->newfd, t.key, p->count);
 	if(rv < p->count) {
-		if((rv = send(p->newfd, BAD_MSG, strlen(OK_MSG), 0)) == -1) 
+		if((rm = send(p->newfd, BAD_MSG, strlen(OK_MSG), 0)) == -1) 
 			warn("Error sending data to client.");
 	}
 	else {
-		if((rv = send(p->newfd, OK_MSG, strlen(OK_MSG), 0)) == -1) 
+		if((rm = send(p->newfd, OK_MSG, strlen(OK_MSG), 0)) == -1) 
 			warn("Error sending data to client.");
+  t.key[rv]=0;
 	close(p->newfd);
-  //printf("%s\n",t.key);
-	t.link = OperatorBsonIn;
+
+  if(p->type = 0)
+	  t.link = OperatorBsonIn;
+  else if(p->type = 1) 
+  	  t.link = OperatorJson;
 	t.pointer = p->count;
-#if 1
-	printf("Triple\n");
-#else
-	triple(&t,0);
-#endif
+  print_triple(&t);
+	//triple(&t,0);
   }
   free(t.key);
   p->newfd = 0;
@@ -145,11 +146,11 @@ void * net_service (void * arg)  {
 				close(newfd);
 			} 
 			else {
-          printf("Doing %d\n",status);
+        printf("Doing %d\n",status);
+        pendings[i].type = type; 
 				pendings[i].newfd = newfd; 
 				pendings[i].count = count;
 				pendings[i].remote_addr =(struct sockaddr_in *)&remote_addr;
-        printf("Call %d %x %d %d\n",status,newfd,i,pendings[i].remote_addr);
 				status = pthread_create(&thread,0,handle_data, &pendings[i]);//&pendings[i]);
 				printf("Done %d\n",status);
 			}

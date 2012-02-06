@@ -110,15 +110,15 @@ Mapper null_map(void * p,int * i);
   operands[opid].stmt = stmt;  // Look in the table context for stmt
   operands[opid].handler = 0;  // These installs should never need a handler
   operands[opid].properties = EV_Overload;
-  for(i=0; installs[format].map_name[i];i++) 
-
-	  local_symbol= find_trio_value(installs[format].map_name[i]);
+  for(i=0; installs[format].map_name[i];i++) {
+	  local_symbol = find_trio(installs[format].map_name[i]);
   if(local_symbol->type == G_TYPE_MAPPER)
   	  operands[opid].maps[i]= (Mapper) local_symbol->value;
   else if(local_symbol->type == G_TYPE_BIT)
     operands[opid].properties |= (int) local_symbol->value;
     else if(local_symbol->type == G_TYPE_HANDLER)
     operands[opid].handler = (Handler) local_symbol->value;
+  }
   return status;
 }
 
