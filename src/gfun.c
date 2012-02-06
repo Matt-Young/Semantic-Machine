@@ -138,12 +138,12 @@ int events(FILTER * f) {
 int spew_bson(Triple *t) {
     TABLE * table; char * buff;
   	init_table(t->key,0,&table);
-     buff = Sqlson_to_Bson(table->operators);
+     Sqlson_to_Bson(table->operators,&buff);
      //sendto(buff);
      G_free(buff);
      return EV_Ok;
 }
-int Bson_to_Sqlson(Triple *t,void *);     
+  
 int consume_bson(Triple *t) {
     TABLE * table;
   	init_table("scratch",0,&table);

@@ -3,15 +3,9 @@
 #include "../src/engine.h"
 #include "../src/console.h"
 #include "../src/sqlson.h"
-// A utility to translate triples into bson
+// A utility to translate triples into bson and back
 //
-// Bson is not native sqlson, but close
-// the effort here is to create the recursive
-// bson byte counts from sqlson row counts
-//
-//Make Bson from triple
-#define BSON_ARRAY 4
-#define BSON_OBJECT 3
+
 int make_sqlson_type(int bson_type){
   int sqlson_type ='.';  // default type
   if(bson_type == BSON_ARRAY) sqlson_type =',';
@@ -20,20 +14,18 @@ int make_sqlson_type(int bson_type){
 int  make_word_from_bytes(char * b) {
   int i;
      i =  *b++;
-    i = *b++ + (i<< 8);
-    i = *b++ + (i<< 16);
-    i = *b++ + (i<< 24); 
+    i += *b++  << 8;
+    i += *b++  << 16;
+    i += *b++  << 24; 
     return i;}
 
 char *  make_bytes_from_word(char * b,int i) {
-    *b++ = i >> 24;
-    *b++ = (i >> 16) & 0xff;
-    *b++ = (i >> 8) & 0xff;
     *b++ = i & 0xff;
+    *b++ = (i >> 8) & 0xff;
+    *b++ = (i >> 16) & 0xff;
+    *b++ = i >> 24;
   return b;}
-// Save a pointer to the parent byte count location
-// Convert and fill n the element type right away
-// and the parent key is valid, fill it in.
+
 int make_bson_type(int sqlson_type){
   if(sqlson_type & 0xff00)
     return  sqlson_type >> 8;
@@ -41,13 +33,18 @@ int make_bson_type(int sqlson_type){
 typedef struct {  int rowcount; 
 char * start; Triple t; int byte_count;
 } CallBoxBson;
+// Save a pointer to the parent byte count location
+// Convert and fill n the element type right away
+// and the parent key is valid, fill it in.
 int make_bson_from_sqlson(Triple *tr,CallBoxBson * parent) {
   CallBoxBson child;
   char *bson_count_ptr;
   int bson_key_len; int bson_type;
   parent->byte_count=0;
+  bson_count_ptr=0;
   bson_type = make_bson_type(parent->t.link);
-  if((bson_type == BSON_OBJECT) || (bson_type == BSON_ARRAY)) {
+  if((bson_type == BSON_OBJECT) ||(bson_type==BSON_BINARY)
+    || (bson_type == BSON_ARRAY) ||(bson_type==BSON_STRING)) {
     bson_count_ptr = parent->start; 
     parent->start +=4;
     parent->byte_count+=4;
@@ -75,7 +72,7 @@ int make_bson_from_sqlson(Triple *tr,CallBoxBson * parent) {
     parent->rowcount +=  child.rowcount;
     parent->start = child.start;
   }
-  if((bson_type == BSON_OBJECT) || (bson_type == BSON_ARRAY)){
+  if(bson_count_ptr){
     bson_count_ptr =make_bytes_from_word(bson_count_ptr,parent->byte_count);
   }
   return parent->byte_count;
