@@ -91,7 +91,7 @@ int G_console(Console * console) {
 	for(;;) {
     cin = fgetc(stdin);
     //printf(" %x %x |",cin,cprev);
-    if((cin == '\n') && (cprev == '\n'))  
+    if( ((cin == '\n') && (cprev == '\n')) || ((cin == '\n') && (left == right)))
       return(console->count);  // two in a row terminate
     else if(cin == '{') {left++;G_AddConsole(console,cin);}
     else if(cin == '}') {right++;G_AddConsole(console,cin);}
@@ -113,9 +113,9 @@ void G_buff_counts(){
 	printf("G: %d %d\n",del_graph_count,new_graph_count);
 	printf("T: %d %d\n",del_table_count,new_table_count);
 }
+#define Debug_console
+
 #ifdef Debug_console
-
-
 const char * typeface[] = {
 	"{abc.def,{fgh.lmk},jkl}",
 	"{local:SystemEcho}",
