@@ -79,20 +79,19 @@ int G_keyop(char * *Json,Triple *t) {
 int new_jump(char cin, PGRAPH *inner);
 // builds a subgraph on inner from user text
 Triple prev,current,next;
-char cprev,ccurr,cnext;
+unsigned char cprev,ccurr,cnext;
 int start_parser(char * Json, PGRAPH *inner) {
 	int nchars;
 	append_graph(inner, G_null_graph);
 	prev.link = DISCARD;
 	current.link = DISCARD;
-	nchars=0;cprev=0,ccurr=0,cnext=0;
+	nchars=0;cprev=-1,ccurr=1,cnext=1;
 	new_child_graph(inner); // enclose this work in a subgraph
 	while(*Json) {
-		nchars = G_keyop(&Json,&next);
+
+    nchars = G_keyop(&Json,&next);
 		next.pointer=(*inner)->row+1;
     new_jump(next.link,inner);
-		G_printf("|%10s| |%c| |%4d|\n", next.key,next.link,next.pointer);
-
 	}  
 	// finish up
 	while((*inner) && count_graph(*inner))
@@ -125,7 +124,10 @@ u  = uglies[0];
 
  G_memset(buff,0,sizeof(buff));
  G_strcpy(buff,typeface[DLINE]);
-  return start_parser(buff,inner); }
+ start_parser(buff,inner);
+ G_buff_counts();
+  return EV_Ok;
+}
 #else
 int   parser(char * x,PGRAPH *inner) {
   return start_parser(x,inner);
@@ -133,50 +135,45 @@ int   parser(char * x,PGRAPH *inner) {
 #endif
 
 char  pt[16*4] = 
-"____" // no match
+"____"    // no match
 "\0.\0\0" // 1 Dot always append
-"____" // 2 spare
-".{\0\0"  //3  brackets open on dot (dot gives up pointer)
-":{\0\0" // 4 bracket skips, colon opens
+"____"    // 2 spare
+"\0{\0\0"  // 3 bracket opens default
+":{\0\0"  // 4 bracket skips, colon opens
 ",{\0\0" // 5 comma close update and  append, bracket skips 
-"{,\0\0" //6 comma append, close and update, new child graph
-"{,.\0" //  7 comma append, close and update. dot append only
-".,\0\0" //8 dot always appends omma append then close update
-"},}\0" //9 first bracket bracket skips, comma close update, no append
-"\0:\0\0" //10
-"\0}\0\0" // 11 close update
+".{\0\0"  //6  brackets open on dot (dot gives up pointer)
+"\0,\0\0" //7 comma default append then close update
+"},}\0" //8 first bracket bracket skips, comma close update, no append
+"{,.\0" //  9 comma append, close and update. dot append only
+"{,\0\0" //10 comma append, close and update, new child graph
+
+"\0:\0\0" //11
+"\0}\0\0" // 12 close update
  "\0\0\0\0";
 #define ndx(a) a+i*4
 int new_jump(char cin, PGRAPH *inner) {
  // prev point to a three element set, all characters in the ublgy set
-  int hindex;
+  int hindex,i;
   char *p; 
-  int i;
   cnext = cin;
   hindex = 0; p = pt;
-  if(ccurr) {
-  for(i=0;i < 16;i++)  { 
-      if( ccurr == p[1]) 
-        break;
+    for(i=hindex;i < 16;i++){
+      if( ccurr == p[1]) {hindex = i; break;};
       p+=4;
     } 
-  if(ccurr == p[1] && cprev) { 
-        hindex = i;
-        for(i= hindex; i < 16;i++,p+=4,cprev){
-          if(cprev != p[0]  && ccurr == p[1])
-          continue;
+  if(ccurr == p[1]) { 
+            for(i=hindex;i < 16;i++){
+          if(cprev == p[0]  && ccurr == p[1]){hindex = i; break;};
+          if(ccurr != p[1]) break;
+          p+=4;
         } 
-        if(cprev == p[0] && ccurr == p[1] ) {
-            hindex = i;
-            if(cnext)
-            for(i= hindex; i < 16;i++,p+=4,cnext) { 
-            if(cprev == p[0] && ccurr == p[1] && cnext != p[2]) 
-              continue;
-            if(cprev == p[0] && ccurr == p[1] && cnext == p[2]) 
-            hindex = i;
+        if(cprev == p[0] && ccurr == p[1]) {
+                 for(i=hindex;i < 16;i++){
+            if(cprev == p[0] && ccurr == p[1] && cnext == p[2]) {hindex = i; break;};
+            if(cprev != p[0] || ccurr != p[1]) break; 
+              p+=4;
             }
        }
-    }
   }
 
   G_printf("Current %c %d ",ccurr,hindex);
@@ -189,25 +186,37 @@ int new_jump(char cin, PGRAPH *inner) {
     append_graph(inner,current);
     break;
     // Brackets
-  case 3:case 4:case 5: 
+  case 4:case 5:
     G_printf("   discard\n ");
     current.link = DISCARD;
     break;
+  case 6: case 3:
+    G_printf("   open bracket\n ");
+    new_child_graph(inner);
+    current.link = DISCARD;
+    break;
     //Comma   if(prev.link != '{'
-  case 6:case 7: case 8:
+  case 8:case 9: 
     G_printf("   Close update\n ");
     close_update_graph(inner);
- case 9: 
-    G_printf("   New and  append\n ");
+    break;
+ case 10: 
+      G_printf("   Append continue \n ");
+       append_graph(inner,current);
+       close_update_graph(inner);
     new_child_graph(inner);
-    append_graph(inner,current);
- case 10:
-       G_printf("   Named\n ");
+    break;
+ case 7:
+      G_printf("   Append close \n ");
+       append_graph(inner,current);
+       close_update_graph(inner);
+       break;
+ case 11:
+    G_printf("   Named\n ");
     SetAttribute(&current,&next); 
     current.link = DISCARD;
     break;
-    case 11:
-   //closing bracket
+ case 12:
     G_printf("Closing bracket\n");
     close_update_graph(inner);
     break;
