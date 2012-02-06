@@ -34,6 +34,7 @@ the lab configuratio, the threads only and the netio
 
 /* Globals */
 int sockfd = -1;
+
 static void crit(char * message);
 typedef struct { 
 	int newfd;
@@ -66,7 +67,7 @@ void * handle_data(void * arg) {
 	int fd;
 	struct sockaddr_in * remote = p->remote_addr;
 	int rv;
-  printf("handler count %d\n",p->count);
+  printf("handler count%x\n",p->count);
   fd = p->newfd;
 	t.key = (char *) calloc(p->count,1);
 	rv = read(p->newfd, t.key, p->count);
@@ -81,7 +82,7 @@ void * handle_data(void * arg) {
   //printf("%s\n",t.key);
 	t.link = OperatorBsonIn;
 	t.pointer = p->count;
-#if DebugNETIO
+#if 1
 	printf("Triple\n");
 #else
 	triple(&t,0);
@@ -100,11 +101,13 @@ static void crit(char * message) {
 void * net_service (void * arg)  {
 	Pending pendings[NTHREAD];
 	int sockfd = -1;
+  int status;
 	int port = TEST_PORT;
 	struct sockaddr_in my_addr;
 	struct sockaddr_in remote_addr;
 	int newfd,count,type;
 	int i, rv,sin_size;
+  pthread_t thread;
 	memset(pendings,0,sizeof(pendings));
 	sockfd = socket (AF_INET, SOCK_STREAM, 0);
 	if(sockfd == -1) printf("Couldn't create socket.");
@@ -119,11 +122,13 @@ void * net_service (void * arg)  {
 	if(listen(sockfd, 25) == -1) printf("Couldn't listen on specified port.");
   	memset(pendings,0,sizeof(pendings));
 	printf("Listening for connections on port %d...\n", port);
+  //status = pthread_create(thread,0,handle_data, 0);
+
 	while(1) {
 		newfd = accept(sockfd, (struct sockaddr *)&remote_addr, &sin_size);
 		if(newfd == -1) printf("Couldn't accept connection!");
-		pthread_t *thread;
-		int status;
+		
+		
 		type = header_magic(newfd,&count); // Consume header
 		printf("Connection %d\n",type);
 		if(type < 0) {
@@ -144,8 +149,8 @@ void * net_service (void * arg)  {
 				pendings[i].newfd = newfd; 
 				pendings[i].count = count;
 				pendings[i].remote_addr =(struct sockaddr_in *)&remote_addr;
-        printf("Call %d\n",status);
-				status = pthread_create(thread,0,handle_data, &pendings[i]);
+        printf("Call %d %x %d %d\n",status,newfd,i,pendings[i].remote_addr);
+				status = pthread_create(&thread,0,handle_data, &pendings[i]);//&pendings[i]);
 				printf("Done %d\n",status);
 			}
 		}
@@ -156,6 +161,7 @@ void * net_service (void * arg)  {
 int net_start() {
 	pthread_t *thread;
   int status;
+  G_printf("Start netio \n");
   status = pthread_create(thread,0,net_service,0);
 	if(status == -1) {
 		printf("Error threading");
@@ -163,32 +169,3 @@ int net_start() {
 	}
 	return 0;
 }
-
-#if 0
-// A utility to translate triples
-typedef struct { int rowid; char * buffer; char * start; Triple t[]; int byte_count} CallBox;
-int add_next_descent(CallBox * parent) {
-	int i; 
-	CallThing child;
-	char * bson_key =parent->t[0]->key
-		int bson_type = parent->t[0]->link >> 8;
-	if(bson_type== BsonString)
-		bson_len = strlen(bson_key);
-	else if( bson_type == BsonInt)
-		bson_len=4
-	else
-	printf("Lazy Programmer\n");
-	while(parent->rowid < parent->t[0]->pointer) {
-		child = *parent;
-		child->start = parent->buffer;
-		add_next_descent(&child);
-		parent->rowid = child->rowid;
-	}
-	parent->rowid++;
-	strncpy(parent->start,INT(bson_len);
-	parent->start += 4;
-	parent->start++ = bson_type;
-	strncpy(parent->start,bson_key,bson_len);
-}
-}
-#endif
