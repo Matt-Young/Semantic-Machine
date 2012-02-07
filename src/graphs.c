@@ -96,7 +96,9 @@ int append_graph(PGRAPH *list,Triple node) {
 	int status=0;
 	TABLE * t = (*list)->table;
 	t->operators[append_triple_data] = node;
+  //print_triple(&t->operators[append_triple_data]);
 	status = triple(&t->operators[append_triple_operator],0);
+  //G_printf("S:  %d ",status);
 	(*list)->row++;
 	return(status);
 }

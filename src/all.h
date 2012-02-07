@@ -7,7 +7,7 @@
 #include "../src/engine.h"
 #include "../src/console.h"
 #include "../src/g.h"
-// init list
+
 int pop_handler(Triple *node);
   int init_binder();
   int init_handlers();

@@ -98,24 +98,23 @@ int start_parser(char * Json, PGRAPH *inner) {
 		close_update_graph(inner);  
 	return(EV_Ok);
 }
-//#define Debug_parser
-#define Debug_parser
 
 PGRAPH * init_parser() {
   TABLE * t = get_table_name("console");
   new_table_graph(t); 
+  G_printf("P init ");
   return((PGRAPH *) &(t->list));
 }
-
-
+#undef Debug_parser
 #ifdef Debug_parser
 char * typeface[] = {
   "{{abc.def.jjj.kkk.lll},rdf,you.klf,{{named,kkk}.{fgh.lmk}},jkl}",
+  "{fjff,h,hhyn.ju,g.j}",
 	"{local:SystemEcho}",
 	"{abc,def,ghi}",
 	"{@config}",
 	""};
-#define DLINE 0
+#define DLINE 1
 static int debug_counter=DLINE;
 int   parser(char * x,PGRAPH *inner) {
  char buff[200]; 
@@ -127,6 +126,7 @@ int   parser(char * x,PGRAPH *inner) {
  G_strcpy(buff,typeface[DLINE]);
  G_printf("%s\n",buff);
  start_parser(buff,inner);
+ G_buff_counts();
   return EV_Ok;
 }
 #else
@@ -177,62 +177,65 @@ int new_jump(char cin, PGRAPH *inner) {
        }
   }
 
-  G_printf("\nP: %c %c %c ",pt[4*hindex],pt[4*hindex+1],pt[4*hindex+2]);
+ // G_printf(" |%c|%c|%c| ",pt[4*hindex],pt[4*hindex+1],pt[4*hindex+2]);
   switch(hindex) {
     //dot
   case 0:case 2:
   break;
   case 1: case 13:// dot always appends
-    G_printf("   append\n");
-    print_triple(&current);
+    //G_printf("   append ");
+    //print_triple(&current);
     append_graph(inner,current);
     break;
     // Brackets
   case 4:case 5:
-    G_printf("   discard\n ");
+   // G_printf("   discard  ");
     current.link = DISCARD;
     break;
   case 6: case 3:
-    G_printf("   open bracket\n ");
+   // G_printf("   open bracket  ");
     new_child_graph(inner);
     current.link = DISCARD;
     break;
     //Comma   if(prev.link != '{'
   case 8:case 9: 
-    G_printf("   close update\n ");
+   // G_printf("   close update  ");
     close_update_graph(inner);
     break;
  case 10: 
-      G_printf("   append continue  ");
-       print_triple(&current);
+     // G_printf("   append continue  ");
+      // print_triple(&current);
        append_graph(inner,current);
        close_update_graph(inner);
     new_child_graph(inner);
     break;
  case 7:
-      G_printf("   append close\n ");
-       print_triple(&current);
+    //  G_printf("   append close  ");
+     //  print_triple(&current);
        append_graph(inner,current);
        close_update_graph(inner);
+           new_child_graph(inner);
        break;
  case 11:
-    G_printf("   named\n ");
+   // G_printf("   named  ");
     SetAttribute(&current,&next); 
     current.link = DISCARD;
     break;
  case 12:
-    G_printf("closing bracket\n");
+  //  G_printf("  closing bracket ");
     //close_update_graph(inner);
     break;
   default:
-    G_printf("append default\n");
-       print_triple(&current);
+   G_printf("  append default ");
+   //    print_triple(&current);
        append_graph(inner,current);
     break;
   }
+
   cprev = ccurr; ccurr = cnext;
   prev = current;
 	current = next; 
-   G_buff_counts();
+   //G_buff_counts();
+     G_printf("\n");
   return 0;
-}
+ }

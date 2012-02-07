@@ -1,5 +1,6 @@
 #ifndef G_TYPEDEFS
 #define G_TYPEDEFS
+#define NETIO
 typedef struct {
   char  * key; 
   int link;
@@ -52,4 +53,7 @@ extern const Triple G_null_graph;
 #define EV_SystemEvent 0x20000
 #define EV_Network 0x40000
 #define EV_UnbindTriple 0x80000
+
 #endif
+
+

@@ -5,11 +5,20 @@
 int init_console() { return(0);}
 // These are here just to keep the std lib includes in one spot
 // and run test sequences
+#undef WINDOWS
+#ifdef WINDOWS
+    #include <direct.h>
+    #define GetCurrentDir _getcwd
+#else
+    #include <unistd.h>
+    #define GetCurrentDir getcwd
+ #endif
 #include <ctype.h>
 #include <stdio.h> 
 #include <stdlib.h> 
 #include <string.h> 
 #include <stdarg.h>
+#include <sys/stat.h>
 char * G_debug_line(char *,int);
 
 char * G_line(char * line,int n) {return(fgets(line, n, stdin));}
@@ -72,6 +81,34 @@ int isin(char c,const char *str) {
 	while((*str)  && (*str != c) ) str++;
 	return *str;
 }
+int console_command(Console * console,char command ) {
+  char  dir[200],line[200],*name,ptr;
+  struct stat buf;
+  FILE * f;int i,dirlen;
+   fgets(line, 100, stdin);
+   if(line[0] == 'q')
+     exit(0);
+
+  name = strtok(line, " ");
+  GetCurrentDir(dir,1024);
+  dirlen = strlen(dir);
+  dir[dirlen]='/';
+  strcpy(dir+dirlen+1,name);
+  printf("\n%s\n",dir);
+  f =  fopen(dir, "r");
+
+  if(f){
+    fstat(fileno(f), &buf);
+     console->count = fread(console->base,1, 100, f);
+      printf("Read: %s  %d ",console->base,i);
+   }
+   else {
+     printf("f %s\n",name);
+     perror("Open error ");
+   }
+  return 0;
+  
+}
 // get line with a bit of input editing
 int G_console(Console * console) { 
 	char * ptr,cin,cprev;
@@ -85,8 +122,10 @@ int G_console(Console * console) {
 	for(;;) {
     cin = fgetc(stdin);
     //printf(" %x %x |",cin,cprev);
-    if( ((cin == '\n') && (cprev == '\n')) || ((cin == '\n') && (left == right)))
-      return(console->count);  // two in a row terminate
+    if(  (cin == '\n') && ( (cprev == '\n') ||  (left == right)) )
+        return(console->count);  // two in a row terminate
+    else if( (cin == '.') && (left==0))
+          return(console_command(console,cin));
     else if(cin == '{') {left++;G_AddConsole(console,cin);}
     else if(cin == '}') {right++;G_AddConsole(console,cin);}
     else if((left > right) && (cin != '\n'))  // if client has an open curly
@@ -96,16 +135,18 @@ int G_console(Console * console) {
 
 }
 
-
 // Track memory here, this is not c++
-int old_filter_count;
-int new_filter_count;
+int old_filter_count,new_filter_count;
 int del_graph_count,new_graph_count;
 int del_table_count,new_table_count;
+int del_data_count,new_data_count;
+int del_thread_count,new_thread_count;
 void G_buff_counts(){
-	printf("F: %d %d\n",old_filter_count,new_filter_count);
-	printf("G: %d %d\n",del_graph_count,new_graph_count);
-	printf("T: %d %d\n",del_table_count,new_table_count);
+	printf("Fl: %d %d ",old_filter_count,new_filter_count);
+	printf("Gr: %d %d ",del_graph_count,new_graph_count);
+	printf("Tb: %d %d ",del_table_count,new_table_count);
+  printf("Th: %d %d ",del_thread_count,new_thread_count);
+  printf("D: %d %d\n",del_data_count,new_data_count);
 }
 #define Debug_console
 

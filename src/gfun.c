@@ -83,6 +83,9 @@ void set_row_sequence(RowSequence * rows,PGRAPH f) {
 int set_ready_event(int EV_event) {
 	ready.events |= EV_event;
 	return ready.events; }
+int reset_ready_event(int EV_event) {
+	ready.events &= ~EV_event;
+	return ready.events; }
 Code set_ready_code(Code code,int opid) {
 	ready.stmt = code;
 	ready.opid = opid;
@@ -152,11 +155,14 @@ int consume_bson(Triple *t) {
 }
 int init_run_json(FILTER *f) {
 	int status; TABLE *table;
+  G_printf("Json  \n");
 	f->g[0] = (PGRAPH ) *init_parser();
+  //print_triple(f->event_triple);
 	status= set_ready_graph(f);
 	table =f->g[0]->table;
 	f->event_table = table;
 	f->initial_triple = (Triple *) &G_null_graph;
+  //G_printf("J2 \n");print_triple(f->event_triple);
 	status=parser(f->event_triple->key,(PGRAPH *) &table->list);
 		return status;
 }
@@ -166,6 +172,7 @@ int event_exec(FILTER * f) {
   Triple t;
   g_event = f->events; 
   g_event |=  ready.events;
+
   if(f->event_triple->link == '@')
     g_event |= init_run_table(f,f->event_triple->key);
   else if(g_event & EV_Ugly) 
@@ -195,6 +202,7 @@ int event_exec(FILTER * f) {
 	 f = ready.filter;
 	 f->event_triple = t;
 	 f->events = ready.events;
+    // G_printf("EX %x \n",f->events);
 	 if(f->events & EV_Square)  {
 		 if(f->g[0]->table->attribute == TABLE_SQUARE)  
 			 return do_square(0,f);

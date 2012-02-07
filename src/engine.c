@@ -171,27 +171,32 @@ int triple(Triple top[],Handler handler) {
 	opid = top[0].link & OperatorMask;
   events = reset_ready_event(EV_No_bind | EV_Overload);
   events =operands[ opid ].properties; 
-  if(top[0].link & OperatorMSB)
+  if(top[0].link & OperatorMSB) {
       events |= EV_Overload;
+      //G_printf("Overload &d "); print_triple(top);
+  }
 	stmt = get_stmt(opid,top);
   events = set_ready_event(events);
 	if(events & EV_Debug)
-		G_printf("Debug event\n");
+		G_printf("Debug event ");
 	set_ready_code(stmt,opid);
-  G_printf(" E: %6x ",events);
+  //G_printf(" E: %6x %x %x ",events,stmt,handler);
 	if(!(EV_No_bind & events))
 		status = bind_code(top,stmt);
 	if(status != EV_Ok) 
-		G_error("bind \n",G_ERR_BIND);
+		G_printf("bind %x ",status);
    handler = get_ghandler(top,handler);
 	if(!stmt) 
 			status = handler(top);
 	else {
 		do {
+     // G_printf("mach  ");
 			status = machine_step(stmt );
       set_ready_event(status);
       if(status != EV_Error) 
 			  status = handler(top);
+      else
+        G_printf("err: %6x ",status);
 		}  while( status == EV_Data );
 		machine_reset(stmt);
 	}
@@ -279,7 +284,7 @@ void console_loop() {
   G_printf("Console loop\n");
 	for(;;) {
 		G_console(&c);
-    G_printf("%s\n",c.base);
+    //G_printf("%s\n",c.base);
 		t.link =  OperatorJson; // console overload
 		t.key = c.base;
     t.pointer=1;
@@ -336,7 +341,7 @@ int main(int argc, char * argv[]) {
 		return(0);
 	}
 	void print_triple(Triple *t) { 
-		G_printf(" %s %d %d\n",t->key,t->link,t->pointer);}
+		G_printf(" %s %d %d  ",t->key,t->link,t->pointer);}
 	// his is a little debgger, and stays ith this file
 	Handler g_debugger(Triple *t) {
 		print_triple(t);

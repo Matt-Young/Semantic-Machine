@@ -34,7 +34,8 @@ the lab configuratio, the threads only and the netio
 
 /* Globals */
 int sockfd = -1;
-
+extern int del_data_count,new_data_count;
+extern int del_thread_count,new_thread_count;
 static void crit(char * message);
 typedef struct { 
 	int newfd;
@@ -60,16 +61,18 @@ int header_magic(int newfd,int * count) {
 		*count=0;
 	return (type);
 }
-
+int event_handler(Triple *t);
 void * handle_data(void * arg) {
-	Triple t;
+	Triple t;int status;
 	Pending *p = (Pending *) arg;
 	int fd;
+  new_thread_count++;
 	struct sockaddr_in * remote = p->remote_addr;
 	int rv,rm;
-  printf("handler count%x\n",p->count);
+  printf("handler count %d\n",p->count);
   fd = p->newfd;
 	t.key = (char *) calloc(p->count,1);
+  new_data_count++;
 	rv = read(p->newfd, t.key, p->count);
 	if(rv < p->count) {
 		if((rm = send(p->newfd, BAD_MSG, strlen(OK_MSG), 0)) == -1) 
@@ -86,10 +89,14 @@ void * handle_data(void * arg) {
   else if(p->type = 1) 
   	  t.link = OperatorJson;
 	t.pointer = p->count;
+  
+	status = triple(&t,event_handler);
+  printf(" Action %d ",status);
   print_triple(&t);
-	//triple(&t,0);
   }
   free(t.key);
+  del_data_count++;
+  del_thread_count++;
   p->newfd = 0;
  
 }
