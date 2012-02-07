@@ -169,6 +169,7 @@ int triple(Triple top[],Handler handler) {
 	key = 0;stmt=0;events=0;
 	status = EV_Ok;
 	opid = top[0].link & OperatorMask;
+  events = reset_ready_event(EV_No_bind | EV_Overload);
   events =operands[ opid ].properties; 
   if(top[0].link & OperatorMSB)
       events |= EV_Overload;
@@ -177,6 +178,7 @@ int triple(Triple top[],Handler handler) {
 	if(events & EV_Debug)
 		G_printf("Debug event\n");
 	set_ready_code(stmt,opid);
+  G_printf(" E: %6x ",events);
 	if(!(EV_No_bind & events))
 		status = bind_code(top,stmt);
 	if(status != EV_Ok) 
