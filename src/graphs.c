@@ -2,8 +2,7 @@
 #include "all.h"
 void list_graphs(PGRAPH  *list,char*);
 // every graph is an open subraph of its parent. 
-// the table holds a permanent pointer the the 
-// current innermost graph on a descending sequence.
+// graph map sqlson sub graphs in the database
 
 extern int del_graph_count,new_graph_count;
 PGRAPH new_graph_context() {

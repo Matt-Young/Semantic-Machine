@@ -125,7 +125,7 @@ int init_table(char * name,int options,TABLE **table) {
  }
 void gfunction(Pointer context,int n,Pointer * v);
 
- const Trio table_trios[] = {{"TablesInit",0,0},{0,0,0}};
+ Trio table_trios[] = {{"TablesInit",0,0},{0,0,0}};
 int init_tables() {
 	int status;
 	add_trios(table_trios);

@@ -169,7 +169,7 @@ int triple(Triple top[],Handler handler) {
 	key = 0;stmt=0;events=0;
 	status = EV_Ok;
 	opid = top[0].link & OperatorMask;
-  events = reset_ready_event(EV_No_bind | EV_Overload);
+  events = reset_ready_event(EV_No_bind | EV_Overload | EV_Done);
   events =operands[ opid ].properties; 
   if(top[0].link & OperatorMSB) {
       events |= EV_Overload;
@@ -255,11 +255,11 @@ Trio engine_trios[] = {
 		for(i=SystemUser;i < OperatorMaximum;i++) {
 			operands[i].handler = event_handler;
 			if(G_isugly(i) )
-				operands[i].properties = EV_Ugly;
+				operands[i].properties = EV_Ugly |EV_No_bind;
 			else
 				operands[i].properties= 0; 
 		}
-	i = install_sql_script("select '_',98,0;",SystemNull);
+	//i = install_sql_script("select '_',98,0;",SystemNull);
 		return(i);
 	}
 

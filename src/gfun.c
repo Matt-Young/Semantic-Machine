@@ -154,12 +154,21 @@ int consume_bson(Triple *t) {
      return EV_Ok;
 }
 int init_run_json(FILTER *f) {
-	int status; 
+	int status; RowSequence r;Triple t;
   G_printf("Json  \n");
   f->event_table = get_table_name("console");
 	status= set_ready_graph(f);
 	f->initial_triple = (Triple *) &G_null_graph;
 	status=parser(f->event_triple->key,f->event_table);
+  G_memset(&r,0,sizeof(r));
+  r.rowoffset=1;
+  set_row_sequence(&r);
+  f->initial_triple  = &f->event_table->operators[pop_triple_operator];
+
+  status=triple(f->initial_triple,0); // This gets first triple
+  t = f->event_table->operators[pop_triple_data];
+  f->initial_triple  = &f->event_table->operators[pop_triple_data];
+  triple(f->initial_triple,0);
 		return status;
 }
 
@@ -168,8 +177,10 @@ int event_exec(FILTER * f) {
   Triple t;
   g_event = f->events; 
   g_event |=  ready.events;
-
-  if(f->event_triple->link == '@')
+  if(g_event & EV_Done) { // Nothing here but missing code
+    reset_ready_event(EV_Done);
+    return g_event;
+  }else if(f->event_triple->link == '@')
     g_event |= init_run_table(f,f->event_triple->key);
   else if(g_event & EV_Ugly) 
     print_triple(&t);
@@ -184,27 +195,27 @@ int event_exec(FILTER * f) {
   if(g_event & EV_Null) {
     g_event |= machine_triple(ready.stmt,&t);
     print_triple(&t);
-	}
-	return(g_event);
+  }
+  return(g_event);
 }
- void reset_G_columns(TABLE *t) { 
-   t->info.col_count = 0;
- }
- int do_square(int mode,FILTER *f);
- 
- // Arrive here when some operators has produced events
- int event_handler(Triple * t) {
-	 FILTER *f;
-	 f = ready.filter;
-	 f->event_triple = t;
-	 f->events = ready.events;
-    // G_printf("EX %x \n",f->events);
-	 if(f->events & EV_Square)  {
-		 if(f->g[0]->table->attribute == TABLE_SQUARE)  
-			 return do_square(0,f);
-		 else if(f->g[1]->table->attribute == TABLE_SQUARE) 
-			 return do_square(1,f);
-	 } else
+void reset_G_columns(TABLE *t) { 
+  t->info.col_count = 0;
+}
+int do_square(int mode,FILTER *f);
+
+// Arrive here when some operators has produced events
+int event_handler(Triple * t) {
+  FILTER *f;
+  f = ready.filter;
+  f->event_triple = t;
+  f->events = ready.events;
+  // G_printf("EX %x \n",f->events);
+  if(f->events & EV_Square)  {
+    if(f->g[0]->table->attribute == TABLE_SQUARE)  
+      return do_square(0,f);
+    else if(f->g[1]->table->attribute == TABLE_SQUARE) 
+      return do_square(1,f);
+  } else
 		return event_exec(f);
 	 return(f->events);
  }
@@ -218,14 +229,14 @@ void gfunction(Pointer context,int n, Pointer v[]) {
   //printf("gfun: %d %d\n",x,m.self_row);
   switch(op) {
   case CallbackSelf:
-	 machine_result_int(context, ready.self->row);
+	 machine_result_int(context, ready.self->row + ready.self->rowoffset);
     if(x == ready.self->row + ready.self->rowoffset) 
       if(ready.self->row != ready.self->end)
         ready.self->row++;
     break;
   case CallbackOther:
-    machine_result_int(context, ready.other->row);
-    if(x == ready.other->row + ready.self->rowoffset) 
+    machine_result_int(context, ready.other->row + ready.other->rowoffset);
+    if(x == ready.other->row + ready.other->rowoffset) 
       if(ready.other->row != ready.other->end)
         ready.other->row++;
     break;

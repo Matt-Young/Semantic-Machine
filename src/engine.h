@@ -29,7 +29,7 @@ int bind_code(Triple *,Code );
 enum {
 	pop_triple_operator,pop_triple_data,
 	append_triple_operator,append_triple_data,
-	update_triple_operator,triple_data_1,
+	update_triple_operator,update_triple_data,
 	fetch_triple_operator,
   installed_triple_operator};
   // Generics that cover sqlite3

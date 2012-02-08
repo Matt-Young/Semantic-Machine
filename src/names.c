@@ -7,14 +7,14 @@
 Trio g_names[LocalSymbolCount];
 int  g_name_count;
 
-int add_trio(const char * name,int type,Pointer value) {
+int add_trio( char * name,int type,Pointer value) {
 g_names[g_name_count].name = name;
 g_names[g_name_count].type = type;
 g_names[g_name_count].value = value;
 g_name_count++;
 return g_name_count;
 }
-int add_trios(const Trio trios[]) {
+int add_trios( Trio trios[]) {
 	int i=0;
 	while(trios[i].name != 0) {
 		add_trio(trios[i].name,trios[i].type,trios[i].value);

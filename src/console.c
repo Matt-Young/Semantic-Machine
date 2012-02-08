@@ -84,7 +84,7 @@ int isin(char c,const char *str) {
 int console_command(Console * console,char command ) {
   char  dir[200],line[200],*name;
   struct stat buf;
-  FILE * f;int i,dirlen;
+  FILE * f;int dirlen;
    fgets(line, 100, stdin);
    if(line[0] == 'q')
      exit(0);
