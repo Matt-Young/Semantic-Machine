@@ -7,19 +7,7 @@ Code  Statement;
 // square table adapter
 
 int bind_schema(Code stmt,Triple top);
-/*
-int new_filter_graph(Triple t) {
-	PGRAPH schema;
-  schema_graph->match_state = G_SCHEMA;
-  schema_graph = dup_graph(schema_graph,ready.self);
-  schema_graph->end = t.pointer;
-  schema_graph->start = ready.self->row;
-  pass_parent_graph(schema_graph);
-  //if(ATTRIBUTE(current_graph->table->atrribute) == G_SQUARE) 
-  //  bind_schema(operands[t.link].stmt,t);
-  return SQLITE_OK;
-}
-*/
+
 void sql_column_info(sqlite3_stmt * stmt, COLINFO *cinfo) {
   int i;
   cinfo->col_count = sqlite3_column_count(stmt);

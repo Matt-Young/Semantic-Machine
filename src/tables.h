@@ -25,7 +25,6 @@ TABLE * TABLE_POINTER(int i);
 int DELETE_TABLE(TABLE *);
 int init_table(char * name,int options,TABLE **table);
 PTABLE get_table_context(char *);
-void set_table_name(char * name,int index);
 PTABLE get_table_name(const char * name);
 void release_table_context(PTABLE pt);
 Pointer new_table_graph(PTABLE table);

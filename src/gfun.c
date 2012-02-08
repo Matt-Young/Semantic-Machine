@@ -9,14 +9,12 @@ Mapper filter_map(Pointer * pointer,int * type) {
 *type = 6;
 return 0;
 }
-
 //  **  READY FOR RUNNING ******
-typedef struct {int start;int row;int end;} RowSequence;
 typedef struct {
   int count;
-  RowSequence self;
-  RowSequence other;
-  RowSequence result;
+  RowSequence *self;
+  RowSequence *other;
+  RowSequence *result;
   char * table_name;
   FILTER *filter;
   int  events;
@@ -26,22 +24,27 @@ typedef struct {
 
 READYSET ready;
 Mapper map_self_row(Pointer * p,int *type) {
-	*p = (Pointer) ready.self.row;
+	*p = (Pointer) (ready.self->row + ready.self->rowoffset);
+	*type = G_TYPE_INTEGER;
+	return 0;
+	}
+Mapper map_relative_self_row(Pointer * p,int *type) {
+	*p = (Pointer) (ready.self->row);
 	*type = G_TYPE_INTEGER;
 	return 0;
 	}
 Mapper map_self_start(Pointer * p,int *type) {
-	*p = (Pointer) ready.self.start;
+	*p = (Pointer) (ready.self->start+ ready.self->rowoffset);
 	*type = G_TYPE_INTEGER;
 	return 0;
 	}
 Mapper map_other_row(Pointer * p,int *type) {
-	*p = (Pointer) ready.other.row;
+	*p = (Pointer) (ready.other->row+ ready.other->rowoffset);
 	*type = G_TYPE_INTEGER;
 	return 0;
 	}
 Mapper map_other_start(Pointer * p,int *type) {
-	*p = (Pointer) ready.other.start;
+	*p = (Pointer) (ready.other->start+ ready.other->rowoffset);
 	*type = G_TYPE_INTEGER;
 	return 0;
 	}
@@ -54,17 +57,17 @@ FILTER * ready_filter() { return ready.filter;}
 
 // msthods on graph pointers
 int stopped_row() {
-if(ready.self.row == ready.self.end)
+if(ready.self->row == ready.self->end)
   return 1;
 return 0;
 }
 int incr_row(int delta) {
-  ready.self.row+= delta;return(ready.self.row);
+  ready.self->row+= delta;return(ready.self->row);
 }
-int _row() {return(ready.self.row);}
-int set_row(int ivar) {
-  ready.self.row = ivar;
-  return(ready.self.row);
+int _row() {return(ready.self->row);}
+int set_row_sequence(RowSequence *r) {
+  ready.self = r;
+  return(ready.self->row);
 }
 
 int reset_ready_set() {
@@ -74,12 +77,7 @@ int reset_ready_set() {
 Code get_ready_stmt() {
   return ready.stmt;
 }
-void set_row_sequence(RowSequence * rows,PGRAPH f) {
-	int rowid = offset_row(f);
-	 rows->row += rowid;
-	 rows->end += rowid;
-	 rows->start += rowid;
-}
+
 int set_ready_event(int EV_event) {
 	ready.events |= EV_event;
 	return ready.events; }
@@ -96,8 +94,10 @@ int  set_ready_graph(FILTER *f) {
 	ready.filter = f;
 	active = f->g[1];
 	if(f->g[0]) active = f->g[0];
-	ready.table_name = active->table->name;
-	 set_row_sequence(&ready.self,active);  
+  if(active) {
+	  ready.table_name = active->table->name;
+    ready.self = &active->rdx;
+    } else ready.self=0;
   return  EV_Ok;
 }
 
@@ -112,9 +112,9 @@ int key_match(const char * k,const char * g) {
 int events(FILTER * f) {
 	if(!f->g[0])
 		f->events |= EV_Null;
-	else  if(f->g[0]->end > f->g[0]->row) 
+	else  if(f->g[0]->rdx.end > f->g[0]->rdx.row) 
 		f->events |= EV_Incomplete;
-	else if(f->g[1] && (f->g[1]->end  > f->g[1]->row)) 
+	else if(f->g[1] && (f->g[1]->rdx.end  > f->g[1]->rdx.row)) 
 			f->events |= EV_Incomplete;
 	//if(isnull_filter(f))
 	//	f->events |= EV_Null;
@@ -154,16 +154,12 @@ int consume_bson(Triple *t) {
      return EV_Ok;
 }
 int init_run_json(FILTER *f) {
-	int status; TABLE *table;
+	int status; 
   G_printf("Json  \n");
-	f->g[0] = (PGRAPH ) *init_parser();
-  //print_triple(f->event_triple);
+  f->event_table = get_table_name("console");
 	status= set_ready_graph(f);
-	table =f->g[0]->table;
-	f->event_table = table;
 	f->initial_triple = (Triple *) &G_null_graph;
-  //G_printf("J2 \n");print_triple(f->event_triple);
-	status=parser(f->event_triple->key,(PGRAPH *) &table->list);
+	status=parser(f->event_triple->key,f->event_table);
 		return status;
 }
 
@@ -222,26 +218,26 @@ void gfunction(Pointer context,int n, Pointer v[]) {
   //printf("gfun: %d %d\n",x,m.self_row);
   switch(op) {
   case CallbackSelf:
-	 machine_result_int(context, ready.self.row);
-    if(x == ready.self.row) 
-      if(ready.self.row != ready.self.end)
-        ready.self.row++;
+	 machine_result_int(context, ready.self->row);
+    if(x == ready.self->row + ready.self->rowoffset) 
+      if(ready.self->row != ready.self->end)
+        ready.self->row++;
     break;
   case CallbackOther:
-    machine_result_int(context, ready.other.row);
-    if(x == ready.other.row) 
-      if(ready.other.row != ready.other.end)
-        ready.other.row++;
+    machine_result_int(context, ready.other->row);
+    if(x == ready.other->row + ready.self->rowoffset) 
+      if(ready.other->row != ready.other->end)
+        ready.other->row++;
     break;
   case CallbackResult:
-    machine_result_int(context, ready.result.row);
+    machine_result_int(context, ready.result->row);
     break;
   case CallbackExperiment:
-    ready.self.row++;
+    ready.self->row++;
     machine_result_int(context, 1);
     break;
   default:
-    G_printf("gfun: %d %d\n",x,ready.self.row);
+    G_printf("gfun: %d %d\n",x,ready.self->row);
     machine_result_int(context, 0);
   }
 }
@@ -250,7 +246,8 @@ Trio gfun_accessor_list[] = {
 	{"BindSelfRow",G_TYPE_MAPPER,(Mapper) map_self_row},
 	{"BindSelfStart",G_TYPE_MAPPER,(Mapper) map_self_start}, 
 	{"BindOtherRow",G_TYPE_MAPPER,(Mapper) map_other_row},
-	{"BindOtherStart",G_TYPE_MAPPER,(Mapper) map_other_start}, 	
+	{"BindOtherStart",G_TYPE_MAPPER,(Mapper) map_other_start},
+  {"BindRelativeSelfRow",G_TYPE_MAPPER,(Mapper)  map_relative_self_row},
 	{0,00,} };
 int init_gfun() {
 	add_trios(gfun_accessor_list);

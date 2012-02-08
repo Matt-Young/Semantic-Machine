@@ -77,8 +77,8 @@ int sql_handler(Triple *node) {
 int call_handler(Triple *node) {
 	int pointer;
 	pointer  =  incr_row(0);
-	set_row(G_atoi(node->key));
-	set_row(pointer);
+	//set_row(G_atoi(node->key));
+	//set_row(pointer);
 	return EV_Ok;
 }
 int exec_handler(Triple *t) {

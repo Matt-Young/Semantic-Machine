@@ -39,13 +39,6 @@ void release_table_context(PTABLE pt) {
 	G_free((void *) pt);
 	del_table_count++;
 }
-Pointer new_table_graph(PTABLE table) {
-	PGRAPH gr =  new_graph_context();
-	table->list =  (Pointer) gr;
-	gr->table = table;
-	gr->rowid=1; // SQL offset
-	return table->list;
-}
 
 // direct sql utilities
 #define Sql_create "drop table if exists %s; create table %s (key text,link integer, pointer integer);" 
@@ -65,9 +58,6 @@ int del_table_rows(TABLE *table) {
 }
 
 TABLE * TABLE_POINTER(int i) { return triple_tables[i];}
-void set_table_name(char * name,int index) { triple_tables[index]->name =  name;}
-PGRAPH get_table_graph(int i){return triple_tables[i]->list;}
-
 TABLE * get_table_name(const char * name) { 
 	int i=0;
 	while(triple_tables[i]) {
@@ -87,11 +77,11 @@ const struct new_install{
 	{pop_triple_operator,SystemMax+1,
 	"select key,link,pointer from %s where (gfun(0,rowid) == rowid);",
   "UnbindTriple",0,0,0},
-	{append_triple_operator,SystemMax+2,"insert into %s values( ?, ?, ?) ;",
+	{append_triple_operator,SystemMax+2,"insert into %s values( ?, ?, ?);",
 	  "BindTriple","AppendHandler",0,0},
-	{update_triple_operator,SystemMax+3,"update %s set pointer = (?-1) where rowid = ?;",
-	"BindSelfRow","BindSelfStart",0,0},
-	{0,0,0,0}
+	{update_triple_operator,SystemMax+3,"update %s set pointer = (?) where rowid = ?;",
+	"BindRelativeSelfRow","BindSelfStart",0,0},
+	{0,0,0,0,0,0,0}
 };
 Mapper null_map(void * p,int * i);
  int make_stmt(TABLE * table,int format,char * table_name) {
@@ -108,7 +98,7 @@ Mapper null_map(void * p,int * i);
   p->key = (char *) stmt; 
   p->link = opid;  p->pointer = 0;
   operands[opid].stmt = stmt;  // Look in the table context for stmt
-  operands[opid].handler = 0;  // These installs should never need a handler
+  operands[opid].handler = 0;  // May be over ridden
   operands[opid].properties = EV_Overload;
   for(i=0; installs[format].map_name[i];i++) {
 	  local_symbol = find_trio(installs[format].map_name[i]);

@@ -5,7 +5,7 @@
 int init_console() { return(0);}
 // These are here just to keep the std lib includes in one spot
 // and run test sequences
-#undef WINDOWS
+
 #ifdef WINDOWS
     #include <direct.h>
     #define GetCurrentDir _getcwd
@@ -82,7 +82,7 @@ int isin(char c,const char *str) {
 	return *str;
 }
 int console_command(Console * console,char command ) {
-  char  dir[200],line[200],*name,ptr;
+  char  dir[200],line[200],*name;
   struct stat buf;
   FILE * f;int i,dirlen;
    fgets(line, 100, stdin);
@@ -100,7 +100,7 @@ int console_command(Console * console,char command ) {
   if(f){
     fstat(fileno(f), &buf);
      console->count = fread(console->base,1, 100, f);
-      printf("Read: %s  %d ",console->base,i);
+      printf("Read: %s  %d ",console->base,console->count);
    }
    else {
      printf("f %s\n",name);

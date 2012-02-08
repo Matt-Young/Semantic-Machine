@@ -23,6 +23,7 @@ Code set_ready_code(Code stmt,int opid);
 int get_system_call(char * name);
 int triple(Triple top[],Handler);
 int set_ready_event(int EV_event);
+
 int reset_ready_event(int EV_event);
 int bind_code(Triple *,Code );
 enum {

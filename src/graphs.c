@@ -1,6 +1,6 @@
 
 #include "all.h"
-
+void list_graphs(PGRAPH  *list,char*);
 // every graph is an open subraph of its parent. 
 // the table holds a permanent pointer the the 
 // current innermost graph on a descending sequence.
@@ -18,71 +18,68 @@ PGRAPH free_graph_context(PGRAPH  child) {
 	del_graph_count++;
 	return parent;
 }	
-void restart_graph(PGRAPH graph) {
-	graph->row = graph->start;
-}
-int offset_row(PGRAPH g) {
-	return (g->rowid);
+
+int count_graph(PGRAPH graph) {
+	return(graph->rdx.row - graph->rdx.start);
 }
 
-void pass_parent_graph(PGRAPH graph) {
-	PGRAPH parent = graph->parent;
-	if(!parent)
-		return;
-	parent->start = graph->end;
-	parent->row = graph->end;
-}
-int count_graph(PGRAPH graph) {
-	return(graph->row - graph->start);
-}
-int reset_graph(PGRAPH graph) {
-	graph->row=0;
-	graph->start=0;
-	return 0;
-}
 PGRAPH dup_graph(PGRAPH l1,PGRAPH l2) {
-	l1->row = l2->row;
-	l1->start = l2->row;
+  G_memset(&l1->rdx,0,sizeof(RowSequence));
 	l1->table = l2->table;
-	l1->end = l2->end;
-	l1->rowid = l2->rowid+l1->start;
+  l1->rdx.end = l2->rdx.end- l2->rdx.row;
+  l1->rdx.rowoffset = l2->rdx.rowoffset + l2->rdx.row;
 	l1->parent = l2;
+  l1->rdx.row=0;
 	return l1;
 }
-void reset_graphs(PGRAPH inner) {  
-	while(inner) {
-		reset_graph(inner);
-		inner = inner->parent;
-	}
+PGRAPH new_child_graph(PGRAPH *list) {
+	PGRAPH child,parent;
+   parent = *list;
+	child = new_graph_context();
+  if(!parent) {
+     G_printf("First Parent \n");
+    child->rdx.rowoffset=1;
+    *list = child;
+    }
+  else
+	  dup_graph(child,parent);
+  *list=child;
+  set_row_sequence(&child->rdx);  // First on the list control row sequencers
+    list_graphs(list,"new ");
+	return child;
 }
-
-PGRAPH new_child_graph(PGRAPH *outer) {
-	PGRAPH inner;
-	if(!(*outer)) return(0);  // call new_table_graph first
-	inner = new_graph_context();
-	dup_graph(inner,(*outer));
-	*outer = inner;
-	return inner;
-}
-
 PGRAPH delete_graph(PGRAPH *list) {
-	PGRAPH child;
+	PGRAPH child,parent;
 	child = *list;
-	if(!child)
+	if(!child) {
+    G_printf("eel no child\n");
 		return 0;
+  }
+  parent = child->parent;
 	(*list) = child->parent;
-	if(child->parent)
-		child->parent->row = child->row;
+	if(child->parent) {
+		child->parent->rdx.row += child->rdx.row;
+   set_row_sequence(&parent->rdx);  // parent becomes child
+   } else G_printf("No parent\n");
+ 
 	free_graph_context(child);
+    list_graphs(list,"del ");
 	return *list;
+
 }
 void close_update_graph(PGRAPH *list) { 
-	int status; 
-	TABLE * table = (*list)->table;
-	Triple * data = &table->operators[triple_data_1];
-	data->key= "Not needed";
-	status = triple(&table->operators[update_triple_operator],0);
-	delete_graph(list);
+	int status;
+  PGRAPH parent;
+  TABLE * table;
+  parent = (*list);
+	if(!parent) {
+    G_printf("cuo no parent\n");
+		return;
+  }
+	 table = parent->table;
+	 status = triple(&table->operators[update_triple_operator],0);
+  delete_graph(list);
+    list_graphs(list,"cu");
 }
 int release_graph_list(PGRAPH *inner) {
 	if(*inner) {
@@ -94,14 +91,36 @@ int release_graph_list(PGRAPH *inner) {
 
 int append_graph(PGRAPH *list,Triple node) {
 	int status=0;
-	TABLE * t = (*list)->table;
+  PGRAPH parent; 
+  TABLE * t;
+  parent = (*list);
+  if(!parent) {
+    G_printf("No parent\n");
+      return 0;
+  }
+  t = parent->table;
 	t->operators[append_triple_data] = node;
-  //print_triple(&t->operators[append_triple_data]);
 	status = triple(&t->operators[append_triple_operator],0);
-  //G_printf("S:  %d ",status);
-	(*list)->row++;
+  list_graphs(list,"app");
 	return(status);
 }
+Pointer new_table_graph(PTABLE table) {
+	PGRAPH gr =  new_graph_context();
+	table->list =  (Pointer) gr;
+	gr->table = table;
+	gr->rdx.rowoffset=1; // SQL offset
+	return table->list;
+}
 
+void list_graphs(PGRAPH  *list,char * arg){
+  PGRAPH g;
+  int i=0;
+  g = *list;
+  while(g) {
+     //G_printf("%s %d %x %x ",arg,i,g->parent); 
+     //G_printf(" %d %d %d\n",g->rdx.row,g->rdx.end,g->rdx.rowoffset); 
+     g=g->parent;i++;
+  }
+}
 
 
