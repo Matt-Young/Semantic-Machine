@@ -153,6 +153,7 @@ int consume_bson(Triple *t) {
      Bson_to_Sqlson(table->operators,t->key);
      return EV_Ok;
 }
+int echo_handler(Triple *node);
 int init_run_json(FILTER *f) {
 	int status; RowSequence r;Triple t;
   G_printf("Json  \n");
@@ -162,19 +163,19 @@ int init_run_json(FILTER *f) {
 	status=parser(f->event_triple->key,f->event_table);
   G_memset(&r,0,sizeof(r));
   r.rowoffset=1;
+  r.end=-1;
   set_row_sequence(&r);
   f->initial_triple  = &f->event_table->operators[pop_triple_operator];
 
-  status=triple(f->initial_triple,0); // This gets first triple
-  t = f->event_table->operators[pop_triple_data];
-  f->initial_triple  = &f->event_table->operators[pop_triple_data];
-  triple(f->initial_triple,0);
+  status=triple(f->initial_triple,echo_handler); 
+ // t = f->event_table->operators[pop_triple_data];
+ // f->initial_triple  = &f->event_table->operators[pop_triple_data];
+ // triple(f->initial_triple,echo_handler);
 		return status;
 }
 
 int event_exec(FILTER * f) {
   int g_event;
-  Triple t;
   g_event = f->events; 
   g_event |=  ready.events;
   if(g_event & EV_Done) { // Nothing here but missing code
@@ -182,8 +183,10 @@ int event_exec(FILTER * f) {
     return g_event;
   }else if(f->event_triple->link == '@')
     g_event |= init_run_table(f,f->event_triple->key);
-  else if(g_event & EV_Ugly) 
-    print_triple(&t);
+  else if(g_event & EV_Ugly) {
+    print_triple(f->event_triple);
+    reset_ready_event(EV_Ugly);
+  }
   else if(g_event & EV_Overload) {
     if(ready.opid  == (OperatorJson & OperatorMask))  
       g_event |= init_run_json(f);
@@ -193,8 +196,7 @@ int event_exec(FILTER * f) {
       g_event |= spew_bson(f->event_triple);
   }
   if(g_event & EV_Null) {
-    g_event |= machine_triple(ready.stmt,&t);
-    print_triple(&t);
+    reset_ready_event(EV_Null);
   }
   return(g_event);
 }

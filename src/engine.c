@@ -93,10 +93,11 @@ int exit_handler(Triple *node) {
 	return EV_Done;}
 int append_handler(Triple *node) { 
   incr_row(1);
-	return EV_Done;}
+	return set_ready_event(0);}
 int unbind_handler(Triple *node) { 
     unbind_triple(operands[node->link].stmt,node+1);
-	return EV_Done;}
+	return EV_Done;
+}
 int len_handler(Triple *node) {
 node[1].key = (char * ) machine_key_len(node[0].key);
 return EV_Done;
@@ -126,8 +127,10 @@ int script_handler(Triple *node) {
 	return EV_Ok;
 }
 int echo_handler(Triple *node) {  
-	G_printf("Echo: \n%s %d \n",node->key,node->link);
-	return EV_Ok;
+	unbind_triple(get_ready_stmt(),node+1);
+  G_printf("\nEcho  ");
+  print_triple(node+1);
+	return set_ready_event(0);
 }
 int dup_handler(Triple *node){
 	int id,i;
@@ -169,7 +172,7 @@ int triple(Triple top[],Handler handler) {
 	key = 0;stmt=0;events=0;
 	status = EV_Ok;
 	opid = top[0].link & OperatorMask;
-  events = reset_ready_event(EV_No_bind | EV_Overload | EV_Done);
+  events = reset_ready_event(EV_No_bind | EV_Overload | EV_Done| EV_Data);
   events =operands[ opid ].properties; 
   if(top[0].link & OperatorMSB) {
       events |= EV_Overload;
@@ -193,11 +196,11 @@ int triple(Triple top[],Handler handler) {
      // G_printf("mach  ");
 			status = machine_step(stmt );
       set_ready_event(status);
-      if(status != EV_Error) 
-			  status = handler(top);
+      if(status & EV_Error) 
+			  G_printf("err: %6x ",status);
       else
-        G_printf("err: %6x ",status);
-		}  while( status == EV_Data );
+        status = handler(top);
+		}  while( !(status & EV_Done) );
 		machine_reset(stmt);
 	}
 	return status;
@@ -341,7 +344,7 @@ int main(int argc, char * argv[]) {
 		return(0);
 	}
 	void print_triple(Triple *t) { 
-		G_printf(" %s %d %d  ",t->key,t->link,t->pointer);}
+		G_printf(" %10s %c %4d  ",t->key,t->link,t->pointer);}
 	// his is a little debgger, and stays ith this file
 	Handler g_debugger(Triple *t) {
 		print_triple(t);

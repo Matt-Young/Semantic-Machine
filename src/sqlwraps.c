@@ -51,15 +51,15 @@ int machine_bind_text(Code stmt,int index,char * ch) {
 	return msg_id(sqlite3_bind_text((sqlite3_stmt*)stmt,index,
 		ch,G_strlen( ch),0));}
 
-int machine_triple(Code stmt,Triple * t) {
-	unbind_triple(stmt,t);
-	return(EV_Ok);
-}
+
 void unbind_triple(Code stmt,Triple *t) {
-	t->key = (char  *) machine_column_text(stmt,0); 
+  t->key =(char *) sqlite3_column_text( (sqlite3_stmt*) stmt, 0);
 	t->link= machine_column_int(stmt, 1);
 	t->pointer= machine_column_int(stmt, 2);
 }
 
-
+int machine_triple(Code stmt,Triple * t) {
+	unbind_triple(stmt,t);
+	return(EV_Ok);
+}
 

@@ -109,7 +109,7 @@ int start_parser(char * Json, TABLE *table) {
 
 
 void list_graphs(PGRAPH  *list);
-#undef Debug_parser
+#define Debug_parser
 #ifdef Debug_parser
 char * typeface[] = {
   "{ {abc.def.jjj.kkk.lll},rdf,you.klf,{ {named,kkk}.{fgh.lmk} }, jkl }",
@@ -118,14 +118,11 @@ char * typeface[] = {
 	"{abc,def,ghi}",
 	"{@config}",
 	""};
-#define DLINE 1
+#define DLINE 0
 static int debug_counter=DLINE;
 int   parser(char * x,TABLE *table) {
  char buff[200]; 
- //int i;
- //i=0;while(uglies[i]) { G_printf(" %2x  %c ",uglies[i],uglies[i]);i++;}
-
-
+ 
  G_memset(buff,0,sizeof(buff));
  G_strcpy(buff,typeface[DLINE]);
  G_printf("%s\n",buff);
@@ -159,13 +156,11 @@ int new_jump(char cin, PGRAPH *inner) {
   cnext = cin;
   hindex = index_of(pt);
   //G_printf("Case %d \n",hindex);
- // G_printf(" |%c|%c|%c| ",pt[4*hindex],pt[4*hindex+1],pt[4*hindex+2]);
   switch(hindex) {
     //dot
   case 0:
   break;
   case 1: // dot always appends
-    //G_printf("   append ");
     append_graph(inner,current);
     break;
     // Brackets
@@ -175,15 +170,11 @@ int new_jump(char cin, PGRAPH *inner) {
     new_child_graph(inner);
     break;
  case 4:
-    //  G_printf("   append close  ");
-     //  print_triple(&current);
        append_graph(inner,current);
         close_update_graph(inner);
     new_child_graph(inner);
     break;
   case 6:
-     // G_printf("   append continue  ");
-      // print_triple(&current);
    new_child_graph(inner);
        append_graph(inner,current);
        close_update_graph(inner);
@@ -199,8 +190,6 @@ case 7:
   case 8:
 
   case 9:
-    //  G_printf("   append close  ");
-     //  print_triple(&current);
     current.link  = '_';
        append_graph(inner,current);
         close_update_graph(inner);
@@ -212,8 +201,7 @@ case 7:
         close_update_graph(inner);
          break;
   default:
-   G_printf("  append default ");
-   //    print_triple(&current);
+   G_printf("  append default \n");
        append_graph(inner,current);
     break;
   }

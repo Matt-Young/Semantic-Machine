@@ -51,7 +51,7 @@ PGRAPH delete_graph(PGRAPH *list) {
 	PGRAPH child,parent;
 	child = *list;
 	if(!child) {
-    G_printf("eel no child\n");
+    G_printf("del no child\n");
 		return 0;
   }
   parent = child->parent;
@@ -76,8 +76,11 @@ void close_update_graph(PGRAPH *list) {
 		return;
   }
 	 table = parent->table;
+   if(!table) status = EV_Error;
+   else {
 	 status = triple(&table->operators[update_triple_operator],0);
   delete_graph(list);
+   }
     list_graphs(list,"cu");
 }
 int release_graph_list(PGRAPH *inner) {
@@ -93,13 +96,14 @@ int append_graph(PGRAPH *list,Triple node) {
   PGRAPH parent; 
   TABLE * t;
   parent = (*list);
-  if(!parent) {
-    G_printf("No parent\n");
-      return 0;
-  }
+  if(!parent) 
+    status = EV_Error; 
   t = parent->table;
-	t->operators[append_triple_data] = node;
-	status = triple(&t->operators[append_triple_operator],0);
+  if(!t)status= EV_Error;
+   else {
+	  t->operators[append_triple_data] = node;
+	  status = triple(&t->operators[append_triple_operator],0);
+  }
   list_graphs(list,"app");
 	return(status);
 }
