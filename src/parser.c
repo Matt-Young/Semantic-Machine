@@ -15,20 +15,18 @@ int  G_isugly(char ch) {
 int SetAttribute(Triple * current,Triple * next) {
 	Trio * trio;
 	if( G_strcmp(current->key,SystemNameSpace) )
-		return 0;
+		return next->link;
 		trio= find_trio(next->key);
 	if(trio) { 
 		if( (int) trio->type == G_TYPE_SYSTEM) {
-			next->link =  (int) trio->value | OperatorMSB;
+			next->link =  (int) trio->value;
       *current = *next;
-      next->link = DISCARD;
+      return DISCARD;
     }
-		else if( (int) trio->type == G_TYPE_BIT)
+		else if( (int) trio->type == G_TYPE_BIT) 
 			set_ready_event(EV_SystemEvent);
-		else return 0;
-		return 1;
-		} else
-		return 0;
+  }
+		return next->link;
 	}
 
 // Front end key word from text and json operators
@@ -93,15 +91,13 @@ int start_parser(char * Json, TABLE *table) {
 	inner = (PGRAPH *) &table->list;
 	nchars=0;cprev=1,ccurr=1,cnext=1;
   del_create_table(table);
-	new_child_graph(inner); // Header block
+  new_child_graph(inner); // Header block
   (*inner)->table=table;
   prev = G_null_graph;
   prev.key = ParserHeader;
-  append_graph(inner,prev);
 	current.link = DISCARD;
   prev.link = DISCARD;
 	while(nchars >= 0) {
-
     nchars = G_keyop(&Json,&next);
 		next.pointer=1;
     new_jump(next.link,inner);
@@ -119,11 +115,11 @@ void list_graphs(PGRAPH  *list);
 char * typeface[] = {
   "{ {abc.def.jjj.kkk.lll},rdf,you.klf,{ {named,kkk}.{fgh.lmk} }, jkl }",
   "{a,b,c}",
-	"{local:SystemEcho}",
+  "{local:SystemScript{\"select * from console;\"}}",
 	"{abc,def,ghi}",
 	"{@config}",
 	""};
-#define DLINE 0
+#define DLINE 2
 static int debug_counter=DLINE;
 int   parser(char * x,TABLE *table) {
  char buff[200]; 
@@ -141,7 +137,7 @@ int   parser(char * x,TABLE *table) {
 }
 #endif
 int index_of(pt);
-char  pt[16*4] = 
+unsigned char  pt[16*4] = 
 "xxxx"    // 0 no match
 "\0.\0\0" // 1 Dot always append, then discard
 "\0{\0\0"  // 2 new graph
@@ -152,6 +148,7 @@ char  pt[16*4] =
 "\0:\0\0" //7 named
 "\0}\0\0" //8 append closeupdate change op
 ".}\0\0" // 9 append closeupdate change op
+"\0_\0\0" // 10 OPAQUE CARRIER   
 "\0\xff\0\0" // 11 discard
  "\0\0\0\0";
 #define ndx(a) a+i*4
@@ -186,7 +183,7 @@ int new_jump(char cin, PGRAPH *inner) {
     new_child_graph(inner);
     break;
 case 7: 
-    SetAttribute(&current,&next);
+    cnext = SetAttribute(&current,&next);
      new_child_graph(inner);
       append_graph(inner,current);
     break;
@@ -215,15 +212,17 @@ case 7:
   prev = current;
 	current = next; 
    //G_buff_counts();
-     G_printf("\n");
+     //G_printf("\n");
   return 0;
  }
 
-int index_of(char * p) {
+int index_of(unsigned char * p) {
   int hindex,i;
   hindex = 0; 
   for(i=hindex;i < 16;i++){
-    if( ccurr == p[1]) {hindex = i; break;};
+    if( ccurr == p[1]) {
+      hindex = i; break;
+    }
     p+=4;
   } 
   if(ccurr == p[1]) { 
