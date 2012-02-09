@@ -1,7 +1,7 @@
 
 #include "all.h"
 #include <ctype.h>
-#define DISCARD 256
+#define DISCARD 0xff
 const char  *uglies = "\"._,{}$!:@";
 char * null_key = "_";
 enum {QuoteSyntax,DotSyntax,NullSyntax,CommaSyntax,LeftSyntax,RightSyntax};
@@ -16,10 +16,13 @@ int SetAttribute(Triple * current,Triple * next) {
 	Trio * trio;
 	if( G_strcmp(current->key,SystemNameSpace) )
 		return 0;
-	trio= find_trio(next->key);
+		trio= find_trio(next->key);
 	if(trio) { 
-		if( (int) trio->type == G_TYPE_BIT) 
+		if( (int) trio->type == G_TYPE_SYSTEM) {
 			next->link =  (int) trio->value | OperatorMSB;
+      *current = *next;
+      next->link = DISCARD;
+    }
 		else if( (int) trio->type == G_TYPE_BIT)
 			set_ready_event(EV_SystemEvent);
 		else return 0;
@@ -27,6 +30,7 @@ int SetAttribute(Triple * current,Triple * next) {
 		} else
 		return 0;
 	}
+
 // Front end key word from text and json operators
 int G_keyop(char * *Json,Triple *t) {
 	enum { quote = 1,numeric =2};
@@ -88,6 +92,7 @@ int start_parser(char * Json, TABLE *table) {
 	PGRAPH *inner; // points to first child
 	inner = (PGRAPH *) &table->list;
 	nchars=0;cprev=1,ccurr=1,cnext=1;
+  del_create_table(table);
 	new_child_graph(inner); // Header block
   (*inner)->table=table;
   prev = G_null_graph;
@@ -147,7 +152,7 @@ char  pt[16*4] =
 "\0:\0\0" //7 named
 "\0}\0\0" //8 append closeupdate change op
 ".}\0\0" // 9 append closeupdate change op
-",}\0\0" // 10 append closeupdate(twice)change op
+"\0\xff\0\0" // 11 discard
  "\0\0\0\0";
 #define ndx(a) a+i*4
 int new_jump(char cin, PGRAPH *inner) {
@@ -181,12 +186,10 @@ int new_jump(char cin, PGRAPH *inner) {
     new_child_graph(inner);
     break;
 case 7: 
-    if(SetAttribute(&current,&next)) 
-        current.link = DISCARD;
-    else {
+    SetAttribute(&current,&next);
+     new_child_graph(inner);
       append_graph(inner,current);
-      new_child_graph(inner);
-    }
+    break;
   case 8:
 
   case 9:
@@ -199,6 +202,8 @@ case 7:
        append_graph(inner,current);
         close_update_graph(inner);
         close_update_graph(inner);
+         break;
+ case 11:
          break;
   default:
    G_printf("  append default \n");
