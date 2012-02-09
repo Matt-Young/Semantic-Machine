@@ -1,4 +1,4 @@
-typedef struct {int start;int row;int end;int rowoffset;} RowSequence;
+typedef struct {int row;int end;int rowoffset;} RowSequence;
 typedef struct  g {
   RowSequence rdx;
   TABLE * table;

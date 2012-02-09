@@ -126,11 +126,14 @@ int script_handler(Triple *node) {
 	G_printf("Script: \n%s\n",machine_script(operands[id].stmt));
 	return EV_Ok;
 }
-int echo_handler(Triple *node) {  
+int echo_handler(Triple *node) {
+  int status = set_ready_event(0);
+  if(EV_Data & status) {
 	unbind_triple(get_ready_stmt(),node+1);
   G_printf("\nEcho  ");
   print_triple(node+1);
-	return set_ready_event(0);
+  }
+	return status;
 }
 int dup_handler(Triple *node){
 	int id,i;
@@ -172,7 +175,7 @@ int triple(Triple top[],Handler handler) {
 	key = 0;stmt=0;events=0;
 	status = EV_Ok;
 	opid = top[0].link & OperatorMask;
-  events = reset_ready_event(EV_No_bind | EV_Overload | EV_Done| EV_Data);
+  events = reset_ready_event(EV_No_bind | EV_Overload );
   events =operands[ opid ].properties; 
   if(top[0].link & OperatorMSB) {
       events |= EV_Overload;
@@ -195,14 +198,12 @@ int triple(Triple top[],Handler handler) {
 		do {
      // G_printf("mach  ");
 			status = machine_step(stmt );
-      set_ready_event(status);
       if(status & EV_Error) 
 			  G_printf("err: %6x ",status);
       else
         status = handler(top);
 		}  while( !(status & EV_Done) );
-		machine_reset(stmt);
-	}
+	}   machine_reset(stmt);
 	return status;
 }
 
@@ -221,7 +222,7 @@ const struct {
 	{"SystemScript",SystemScript,EV_No_bind,sql_handler},
 	{"SystemDecode",SystemDecode,EV_No_bind,script_handler},
 	{"SystemConfig",SystemConfig,EV_No_bind,config_handler},
-	{"SystemEcho",SystemEcho,EV_No_bind,0}
+	{"SystemEcho",SystemEcho,EV_No_bind,echo_handler}
 };
 int init_handlers() {
 	int i;
@@ -287,7 +288,7 @@ void console_loop() {
   G_printf("Console loop\n");
 	for(;;) {
 		G_console(&c);
-    //G_printf("%s\n",c.base);
+    G_printf("%s\n",c.base);
 		t.link =  OperatorJson; // console overload
 		t.key = c.base;
     t.pointer=1;

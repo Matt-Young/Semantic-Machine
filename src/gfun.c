@@ -34,7 +34,7 @@ Mapper map_relative_self_row(Pointer * p,int *type) {
 	return 0;
 	}
 Mapper map_self_start(Pointer * p,int *type) {
-	*p = (Pointer) (ready.self->start+ ready.self->rowoffset);
+	*p = (Pointer) (ready.self->rowoffset);
 	*type = G_TYPE_INTEGER;
 	return 0;
 	}
@@ -44,7 +44,7 @@ Mapper map_other_row(Pointer * p,int *type) {
 	return 0;
 	}
 Mapper map_other_start(Pointer * p,int *type) {
-	*p = (Pointer) (ready.other->start+ ready.other->rowoffset);
+	*p = (Pointer) (ready.other->rowoffset);
 	*type = G_TYPE_INTEGER;
 	return 0;
 	}
@@ -155,7 +155,7 @@ int consume_bson(Triple *t) {
 }
 int echo_handler(Triple *node);
 int init_run_json(FILTER *f) {
-	int status; RowSequence r;Triple t;
+	int status; RowSequence r; Triple t;
   G_printf("Json  \n");
   f->event_table = get_table_name("console");
 	status= set_ready_graph(f);
@@ -165,12 +165,8 @@ int init_run_json(FILTER *f) {
   r.rowoffset=1;
   r.end=-1;
   set_row_sequence(&r);
-  f->initial_triple  = &f->event_table->operators[pop_triple_operator];
-
-  status=triple(f->initial_triple,echo_handler); 
- // t = f->event_table->operators[pop_triple_data];
- // f->initial_triple  = &f->event_table->operators[pop_triple_data];
- // triple(f->initial_triple,echo_handler);
+ f->initial_triple  = &f->event_table->operators[pop_triple_operator];
+ triple(f->initial_triple,pop_handler);
 		return status;
 }
 

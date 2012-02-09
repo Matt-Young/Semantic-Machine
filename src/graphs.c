@@ -19,7 +19,7 @@ PGRAPH free_graph_context(PGRAPH  child) {
 }	
 
 int count_graph(PGRAPH graph) {
-	return(graph->rdx.row - graph->rdx.start);
+	return(graph->rdx.row );
 }
 
 PGRAPH dup_graph(PGRAPH l1,PGRAPH l2) {
@@ -97,13 +97,16 @@ int append_graph(PGRAPH *list,Triple node) {
   TABLE * t;
   parent = (*list);
   if(!parent) 
-    status = EV_Error; 
-  t = parent->table;
-  if(!t)status= EV_Error;
-   else {
-	  t->operators[append_triple_data] = node;
-	  status = triple(&t->operators[append_triple_operator],0);
+    status = EV_Error;
+  else {
+    t = parent->table;
+    if(!t) status= EV_Error;
+    else {
+	    t->operators[append_triple_data] = node;
+	    status = triple(&t->operators[append_triple_operator],0);
+    }
   }
+
   list_graphs(list,"app");
 	return(status);
 }

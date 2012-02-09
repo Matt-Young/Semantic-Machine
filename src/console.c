@@ -113,16 +113,15 @@ int console_command(Console * console,char command ) {
 int G_console(Console * console) { 
 	char * ptr,cin,cprev;
 	int left,right;
-	FILE f;
 	left = 0; right = 0;
 	cin = 0;
-  cprev = 0;
+  
 	ptr = G_InitConsole(console);
-	f = *stdin;
+  cprev = 0;
 	for(;;) {
     cin = fgetc(stdin);
-    //printf(" %x %x |",cin,cprev);
-    if(  (cin == '\n') && ( (cprev == '\n') ||  (left == right)) )
+    printf("%x\n",cin);
+    if(  (cin == '\n') &&  ( (cprev == '\n') ||  (left == right)) )
         return(console->count);  // two in a row terminate
     else if( (cin == '.') && (left==0))
           return(console_command(console,cin));

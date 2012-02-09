@@ -9,7 +9,7 @@ extern OP operands[];
 #define GCHAR '_'
 // Operator space on the predicate
 enum { SystemExit,SystemCall,SystemDup,SystemPop,
-		SystemExec,SystemScript,SystemDecode,SystemConfig,SystemEcho};
+		SystemExec,SystemScript,SystemDecode,SystemConfig,SystemTable,SystemEcho};
 #define SystemMax SystemEcho
 #define SystemUser SystemMax + 6
 #define SystemScratch SystemUser +1
@@ -26,12 +26,7 @@ int set_ready_event(int EV_event);
 Code get_ready_stmt();
 int reset_ready_event(int EV_event);
 int bind_code(Triple *,Code );
-enum {
-	pop_triple_operator,pop_triple_data,
-	append_triple_operator,append_triple_data,
-	update_triple_operator,update_triple_data,
-	fetch_triple_operator,
-  installed_triple_operator};
+
   // Generics that cover sqlite3
 extern Pointer g_db;
 int open_machine_layer(const char * name,Pointer  mach);

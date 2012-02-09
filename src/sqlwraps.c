@@ -1,6 +1,8 @@
 #include "../sqlite/sqlite3.h"
 #include "g_types.h"
+#include "engine.h"
 #include "console.h"
+
 
 int msg_id(int sqlite_msg) {
 	if(sqlite_msg == SQLITE_OK) return EV_Ok;
@@ -26,8 +28,14 @@ int machine_column_int(Code stmt,int colid) {
 int machine_prepare(Pointer g_db,char * ch,Code * stmt) {
 	return msg_id(sqlite3_prepare_v2(
 		(sqlite3 *)g_db,ch,G_strlen(ch)+1,(sqlite3_stmt **) stmt,0));}
+
+
 int machine_step(Code stmt ) { 
-	return msg_id(sqlite3_step((sqlite3_stmt*) stmt ));}
+	return set_ready_event(msg_id(sqlite3_step((sqlite3_stmt*) stmt )));}
+int machine_reset(Pointer stmt) {
+  reset_ready_event( EV_Done| EV_Data | EV_Error);
+	return msg_id(sqlite3_reset((sqlite3_stmt*)stmt));}
+
 int machine_exec(Pointer g_db,char * buff,char ** err) {
 	return msg_id(sqlite3_exec((sqlite3 *)g_db,buff,0,0,err));}
 int machine_install_callback(Pointer g_db,char * name,int nargs,Pointer gfunction) {
@@ -35,6 +43,7 @@ int machine_install_callback(Pointer g_db,char * name,int nargs,Pointer gfunctio
 		name,nargs,SQLITE_UTF8 ,0,
 		(xFunc) gfunction,0,0,0));
 }
+
 void machine_result_int(Pointer context, int value) {
 	sqlite3_result_int( (sqlite3_context*) context, value);}
 int machine_key_len(Code stmt) {return sqlite3_column_bytes((sqlite3_stmt*) stmt,0 );}
@@ -42,8 +51,7 @@ int machine_value_int(Pointer v) {
 	return sqlite3_value_int((sqlite3_value*)v);}
 char * machine_script(Pointer stmt) {
 	return (char *) sqlite3_sql((sqlite3_stmt*) stmt); }
-int machine_reset(Pointer stmt) {
-	return msg_id(sqlite3_reset((sqlite3_stmt*)stmt));}
+
 int machine_bind_int(Code stmt,int index,int value) {
 	return msg_id(sqlite3_bind_int((sqlite3_stmt*) stmt,index++,value));}
 

@@ -118,7 +118,7 @@ char * typeface[] = {
 	"{abc,def,ghi}",
 	"{@config}",
 	""};
-#define DLINE 1
+#define DLINE 3
 static int debug_counter=DLINE;
 int   parser(char * x,TABLE *table) {
  char buff[200]; 
