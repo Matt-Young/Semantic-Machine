@@ -65,7 +65,7 @@ char * G_InitConsole(Console * console) {
 	console->base=line;
 	console->current=line;
 	console->count=0;
-	printf("Init \n");
+	printf("\nInit:");
 	return console->base;
 }
 char * G_AddConsole(Console * console,char cin) {
@@ -98,7 +98,7 @@ int console_command(Console * console,char command ) {
   f =  fopen(dir, "r");
 
   if(f){
-    fstat(fileno(f), &buf);
+    fstat(_fileno(f), &buf);
      console->count = fread(console->base,1, 100, f);
       printf("Read: %s  %d ",console->base,console->count);
    }
