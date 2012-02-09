@@ -28,11 +28,13 @@ int SetAttribute(Triple * current,Triple * next) {
   }
 		return next->link;
 	}
-
 // Front end key word from text and json operators
+#define trim(tmp) while((tmp != start) && isspace(*(tmp-1))) tmp--;
+#define white(v)while(isspace(*v)) v++;
 int G_keyop(char * *Json,Triple *t) {
 	enum { quote = 1,numeric =2};
 	char * ptr = *Json;
+  char * tmp;
 	char *  start= ptr;
 	int i=0;
 	int events=0;
@@ -40,41 +42,35 @@ int G_keyop(char * *Json,Triple *t) {
     *t = G_null_graph;
 				return -1;
   }
-	while(isspace(*ptr)) ptr++;
-	if(G_isdigit(*ptr) )
-		events += numeric;
+  // Key
+	white(ptr);
+
+	if(G_isdigit(*ptr) ) {
+    t->key=ptr;
+  while(G_isdigit(*ptr) || *ptr == '.') ptr++; 
+  tmp = ptr;
+  }
 	else if(*ptr == uglies[QuoteSyntax]) {// Quote char?
 		ptr++;
 		t->key=ptr;
-		if(*ptr  != uglies[QuoteSyntax]) {
-			events += quote;
-			ptr++;
-		}
-	} else t->key=ptr;
+		while(*ptr  != uglies[QuoteSyntax])  ptr++;
+    tmp = ptr;ptr++;    
+	} else {
+    	t->key=ptr;
+    while(!G_isugly(*ptr) && (*ptr != 0) ) ptr++;
+    trim(ptr);tmp = ptr;
+}
 
-	while(1) {
-		if(G_isugly(*ptr) || (*ptr == 0) ) {
-			if((events & numeric) && *ptr == uglies[DotSyntax])
-				ptr++;
-			else if(!(events & quote) && (*ptr == uglies[QuoteSyntax]) ) {
-				*ptr = 0;ptr++; 
-			} else { 
-				char * tmp;
-				tmp = ptr; 
-				while((tmp != start) && isspace(*(tmp-1))) tmp--;
-				if(isspace(*tmp)) *tmp = 0;
-				break;
-			}	
-		} else 
-			ptr++;
-	}
-	if((*ptr == 0) || !G_isugly(*ptr) )
-		t->link = uglies[NullSyntax];
-	else
-		t->link = *ptr;
+white(ptr);
+
+// operator
+	if(G_isugly(*ptr)) 
+      t->link = *ptr;
+  else
+    t->link = uglies[NullSyntax];
+  *tmp = 0;
 	i =   (int) ptr;
 	i -= (int) start ; // char count
-	*ptr = 0;
 	*Json = ptr+1;
 	if(!(t->key[0]))
 		t->key = null_key;  // valid null key
@@ -100,6 +96,8 @@ int start_parser(char * Json, TABLE *table) {
 	while(nchars >= 0) {
     nchars = G_keyop(&Json,&next);
 		next.pointer=1;
+    
+    print_triple(&next);G_printf("\n");
     new_jump(next.link,inner);
 	}  
 	// finish up
@@ -113,13 +111,14 @@ void list_graphs(PGRAPH  *list);
 #define Debug_parser
 #ifdef Debug_parser
 char * typeface[] = {
-  "{ {abc.def.jjj.kkk.lll},rdf,you.klf,{ {named,kkk}.{fgh.lmk} }, jkl }",
+  "{\"hello everyone\"}",
+  "{ {abc.\"def\".jjj.\"kkk\".lll},rdf,'you'.klf,{ {named,kkk}.{fgh.lmk} }, jkl }",
   "{a,b,c}",
   "{local:SystemScript{\"select * from console;\"}}",
 	"{abc,def,ghi}",
 	"{@config}",
 	""};
-#define DLINE 2
+#define DLINE 1
 static int debug_counter=DLINE;
 int   parser(char * x,TABLE *table) {
  char buff[200]; 
@@ -143,7 +142,7 @@ unsigned char  pt[16*4] =
 "\0{\0\0"  // 2 new graph
 ",{\0\0" // 3 closeupdate, new graph
 "\0,\0\0" //4  append, close update new_graph
-"},}\0" //5 closeupdate, new_graph 
+"},\0\0" //5 closeupdate, new_graph 
 "{,\0\0" //6 new graph append, close and update, new child graph
 "\0:\0\0" //7 named
 "\0}\0\0" //8 append closeupdate change op
@@ -190,7 +189,7 @@ case 7:
   case 8:
 
   case 9:
-    current.link  = '_';
+   // current.link  = '_';
        append_graph(inner,current);
         close_update_graph(inner);
     break;
