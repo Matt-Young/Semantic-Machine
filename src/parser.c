@@ -2,7 +2,7 @@
 #include "all.h"
 #include <ctype.h>
 #define DISCARD 0xff
-const char  *uglies = "\"._,{}$!:@";
+const char  *uglies = "\"._,{}$!:@=";
 char * null_key = "_";
 enum {QuoteSyntax,DotSyntax,NullSyntax,CommaSyntax,LeftSyntax,RightSyntax};
 #define ESC 33
@@ -88,7 +88,7 @@ int start_parser(char * Json, TABLE *table) {
 	inner = (PGRAPH *) &table->list;
 	nchars=0;cprev=1,ccurr=1,cnext=1;ctest=0;
   del_create_table(table);
-  new_child_graph(inner); // Header block
+  new_child_graph(inner,(void *) '@'); // Header block
   (*inner)->table=table;
   prev = G_null_graph;
   prev.key = ParserHeader;
@@ -98,7 +98,7 @@ int start_parser(char * Json, TABLE *table) {
     nchars = G_keyop(&Json,&next);
 		next.pointer=1;
     
-    print_triple(&next);G_printf("\n");
+    //print_triple(&next);G_printf("\n");
     new_jump(next.link,inner);
 	}  
 	// finish up
@@ -112,6 +112,8 @@ void list_graphs(PGRAPH  *list);
 #define Debug_parser
 #ifdef Debug_parser
 char * typeface[] = {
+  "{def,hhh,ggg}",
+  "{a=b.c=9. . c.f,d=ef}}",
   "{\"hello everyone\"}",
   "{ {abc.\"def\".jjj.\"kkk\".lll},rdf,'you'.klf,{ {named,kkk}.{fgh.lmk} }, jkl }",
   "{a,b,c}",
@@ -137,10 +139,10 @@ int   parser(char * x,TABLE *table) {
 }
 #endif
 
-int index_of(pt);
+int index_of(unsigned char *,PGRAPH * inner);
 unsigned char  pt[16*4] = 
 "xxxx"    // 0 no match
-"\0.\0\0" // 1 Dot always append, then discard
+"\0.\0\0" // 1 Dot default append
 "\0{\0\0"  // 2 new graph
 ",{\0\0" // 3 closeupdate, new graph
 "\0,\0\0" //4  append, close update new_graph
@@ -152,50 +154,57 @@ unsigned char  pt[16*4] =
 "}}\0\0" // 10 close update
 "\0_\0\0" // 11 OPAQUE CARRIER   
 "\0\xff\0\0" // 12 discard
+"\0=\0\0" // 13 new graph append
  "\0\0\0\0";
 #define ndx(a) a+i*4
 int new_jump(char cin, PGRAPH *inner) {
  // prev point to a three element set, all characters in the ublgy set
   int hindex;
   cnext = cin;
-  hindex = index_of(pt);
+  hindex = index_of(pt,inner);
   //G_printf("Case %d \n",hindex);
   switch(hindex) {
     //dot
   case 0:  case 12:
   break;
-  case 1: // dot always appends
+   case 1: // dot always appends
     append_graph(inner,current);
     break;
     // Brackets
   case 3: case 5:
+    G_printf("35PC %c| ",parent_graph_context(inner));
      close_update_graph(inner); //follow through
   case 2:
-    new_child_graph(inner);
+    new_child_graph(inner,(void *) ccurr);
     break;
  case 4:
        append_graph(inner,current);
+       G_printf("4P C %c|",parent_graph_context(inner));
         close_update_graph(inner);
-    new_child_graph(inner);
+    new_child_graph(inner,(void *) ccurr);
     break;
+    case 13:
+      new_child_graph(inner,(void *) ccurr);
+      append_graph(inner,current);
+      break;
   case 6:
-   new_child_graph(inner);
+   new_child_graph(inner,(void *) ccurr);
        append_graph(inner,current);
+       G_printf("6 PC %c|",parent_graph_context(inner));
        close_update_graph(inner);
-    new_child_graph(inner);
+    new_child_graph(inner,(void *) ccurr);
     break;
 case 7: 
     cnext = SetAttribute(&current,&next);
-     new_child_graph(inner);
-      append_graph(inner,current);
-    break;
   case 8:case 9:
-
     current.link  = '_';
+  case 20:
        append_graph(inner,current);
+       G_printf("89 PC %c|",parent_graph_context(inner)); 
         close_update_graph(inner);
     break;
  case 10:
+   G_printf("10 PC %c|",parent_graph_context(inner));
 close_update_graph(inner);
   break;
   default:
@@ -205,17 +214,17 @@ close_update_graph(inner);
   }
   ctest = (ctest << 8) | cnext;
   cprev = ccurr; ccurr = cnext;
-  G_printf("%x %x %x %x\n",cprev,ccurr,cnext,ctest);
+ // G_printf("%x %x %x %x\n",cprev,ccurr,cnext,ctest);
   prev = current;
 	current = next; 
-   //G_buff_counts();
-     //G_printf("\n");
   return 0;
  }
 
-int index_of(unsigned char * p) {
+int index_of(unsigned char * p,PGRAPH * inner) {
   int hindex,i;
   hindex = 0; 
+  if((char )parent_graph_context(inner) == '=')
+    return 20;
   for(i=hindex;i < 16;i++){
     if( ccurr == p[1]) {
       hindex = i; break;

@@ -19,7 +19,8 @@ enum { SystemExit,SystemCall,SystemDup,SystemPop,
 #define OperatorMSB 0x80
 // Overloads in the first byte
 enum { OperatorJson = OperatorMSB,OperatorBsonIn,OperatorBsonOut};
-Code set_ready_code(Code stmt,int opid);
+Code set_ready_stmt(Code stmt);
+int set_ready_code(int opid);
 int get_system_call(char * name);
 int triple(Triple top[],Handler);
 int set_ready_event(int EV_event);

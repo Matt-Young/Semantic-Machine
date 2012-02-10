@@ -84,9 +84,11 @@ int set_ready_event(int EV_event) {
 int reset_ready_event(int EV_event) {
 	ready.events &= ~EV_event;
 	return ready.events; }
-Code set_ready_code(Code code,int opid) {
-	ready.stmt = code;
+int set_ready_code(int opid) {
 	ready.opid = opid;
+	return ready.opid; }
+Code set_ready_stmt(Code stmt) {
+	ready.stmt = stmt;
 	return ready.stmt; }
 int  set_ready_graph(FILTER *f) {
 	PGRAPH active;
@@ -166,7 +168,7 @@ int init_run_json(FILTER *f) {
   r.end=-1;
   set_row_sequence(&r);
  f->initial_triple  = &f->event_table->operators[pop_triple_operator];
- //triple(f->initial_triple,pop_handler);
+ triple(f->initial_triple,pop_handler);
 		return status;
 }
  void ugly_handler(int id,Triple *f);

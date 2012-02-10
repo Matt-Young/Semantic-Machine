@@ -31,10 +31,11 @@ PGRAPH dup_graph(PGRAPH l1,PGRAPH l2) {
   l1->rdx.row=0;
 	return l1;
 }
-PGRAPH new_child_graph(PGRAPH *list) {
+PGRAPH new_child_graph(PGRAPH *list,void * context) {
 	PGRAPH child,parent;
    parent = *list;
 	child = new_graph_context();
+  child->context = context;
   if(!parent) {
      G_printf("First Parent \n");
     child->rdx.rowoffset=1;
@@ -129,4 +130,6 @@ void list_graphs(PGRAPH  *list,char * arg){
   }
 }
 
-
+void * parent_graph_context(PGRAPH * inner) { 
+  if(*inner) return(*inner)->context; else return 0;}
+     

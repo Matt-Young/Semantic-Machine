@@ -80,7 +80,7 @@ const struct new_install{
 	{append_triple_operator,SystemMax+2,"insert into %s values( ?, ?, ?);",
 	  "BindTriple","AppendHandler",0,0},
 	{update_triple_operator,SystemMax+3,"update %s set pointer = (?) where rowid = ?;",
-	"BindRelativeSelfRow","BindSelfStart",0,0},
+	"BindRelativeSelfRow","BindSelfStart","ExitHandler",0},
 	{0,0,0,0,0,0,0}
 };
 Mapper null_map(void * p,int * i);

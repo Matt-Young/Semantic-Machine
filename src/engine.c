@@ -99,13 +99,16 @@ int unbind_triples_handler(Triple *node) {
   }
 	return EV_Done;}
 int pop_handler(Triple *node) {
-	int status;
+	int status; Code stmt;
 	Triple t;
-	unbind_triple(operands[node->link].stmt,&t);
-	status = triple(&t,0);
-	if(stopped_row() )
-		status = EV_Done;
-	return status;
+  stmt = get_ready_stmt();
+  status = set_ready_event(0);
+  while( status != EV_Done) {
+    status = machine_step(stmt );
+	  unbind_triple(stmt,&t);
+	  status = triple(&t,0);
+  }
+	  return status;
 }
 int script_handler(Triple *node) {  
 	int id;
@@ -164,15 +167,13 @@ int triple(Triple top[],Handler handler) {
 	opid = top[0].link & OperatorMask;
   events = reset_ready_event(EV_No_bind | EV_Overload );
   events =operands[ opid ].properties; 
-  if(top[0].link & OperatorMSB) {
+  if(top[0].link & OperatorMSB) 
       events |= EV_Overload;
-      //G_printf("Overload &d "); print_triple(top);
-  }
 	stmt = get_stmt(opid,top);
   events = set_ready_event(events);
 	if(events & EV_Debug)
 		G_printf("Debug event ");
-	set_ready_code(stmt,opid);
+	set_ready_code(opid);
   //G_printf(" E: %6x %x %x ",events,stmt,handler);
 	if(!(EV_No_bind & events))
 		status = bind_code(top,stmt);
@@ -182,6 +183,7 @@ int triple(Triple top[],Handler handler) {
 	if(!stmt) 
 			status = handler(top);
 	else {
+    set_ready_stmt(stmt);
 		do {
      // G_printf("mach  ");
 			status = machine_step(stmt );
@@ -236,6 +238,7 @@ Trio engine_trios[] = {
 	{ "Testing", G_TYPE_BIT, (Pointer) EV_SystemEvent},
   { "UnbindTriple", G_TYPE_HANDLER, (Handler) unbind_handler},
   { "AppendHandler", G_TYPE_HANDLER, (Handler) append_handler},
+  { "ExitHandler", G_TYPE_HANDLER, (Handler) exit_handler},
 	{0,0,0}};
 
 	// defult operands
