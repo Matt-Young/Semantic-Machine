@@ -155,7 +155,7 @@ int consume_bson(Triple *t) {
 }
 int echo_handler(Triple *node);
 int init_run_json(FILTER *f) {
-	int status; RowSequence r; Triple t;
+	int status; RowSequence r; 
   G_printf("Json  \n");
   f->event_table = get_table_name("console");
 	status= set_ready_graph(f);
@@ -166,30 +166,34 @@ int init_run_json(FILTER *f) {
   r.end=-1;
   set_row_sequence(&r);
  f->initial_triple  = &f->event_table->operators[pop_triple_operator];
- triple(f->initial_triple,pop_handler);
+ //triple(f->initial_triple,pop_handler);
 		return status;
 }
 
 int event_exec(FILTER * f) {
   int g_event;
+  int linkid = f->event_triple->link;
   g_event = f->events; 
   g_event |=  ready.events;
   if(g_event & EV_Done) { // Nothing here but missing code
     reset_ready_event(EV_Done);
     return g_event;
-  }else if(f->event_triple->link == '@')
-    g_event |= init_run_table(f,f->event_triple->key);
-  else if(g_event & EV_Ugly) {
+  }else if (g_event & EV_Ugly) {  
+        if(linkid == '@')
+          g_event |= init_run_table(f,f->event_triple->key);
+        else if(linkid == '=') {}
+        else {
     print_triple(f->event_triple);
+        }
     reset_ready_event(EV_Ugly);
-  }
-  else if(g_event & EV_Overload) {
+  } else if(g_event & EV_Overload) {
     if(ready.opid  == (OperatorJson & OperatorMask))  
       g_event |= init_run_json(f);
     else if (ready.opid  == (OperatorBsonIn & OperatorMask)) 
       g_event |= consume_bson(f->event_triple);
     else if (ready.opid  == (OperatorBsonOut & OperatorMask)) 
       g_event |= spew_bson(f->event_triple);
+    reset_ready_event(EV_Overload);
   }
   if(g_event & EV_Null) {
     reset_ready_event(EV_Null);
