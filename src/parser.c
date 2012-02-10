@@ -17,15 +17,9 @@ int SetAttribute(Triple * current,Triple * next) {
 	if( G_strcmp(current->key,SystemNameSpace) )
 		return next->link;
 		trio= find_trio(next->key);
-	if(trio) { 
-		if( (int) trio->type == G_TYPE_SYSTEM) {
-			next->link =  (int) trio->value;
-      *current = *next;
-      return DISCARD;
-    }
-		else if( (int) trio->type == G_TYPE_BIT) 
+	if(trio) 
+    if( (int) trio->type == G_TYPE_BIT) 
 			set_ready_event(EV_SystemEvent);
-  }
 		return next->link;
 	}
 // Front end key word from text and json operators
@@ -80,13 +74,13 @@ int new_jump(char cin, PGRAPH *inner);
 // builds a subgraph on inner from user text
 Triple prev,current,next;
 unsigned char cprev,ccurr,cnext;
-unsigned int ctest;
+
 #define ParserHeader "table:parser"
 int start_parser(char * Json, TABLE *table) {
 	int nchars;
 	PGRAPH *inner; // points to first child
 	inner = (PGRAPH *) &table->list;
-	nchars=0;cprev=1,ccurr=1,cnext=1;ctest=0;
+	nchars=0;cprev=1,ccurr=1,cnext=1;
   del_create_table(table);
   new_child_graph(inner,(void *) '@'); // Header block
   (*inner)->table=table;
@@ -103,7 +97,8 @@ int start_parser(char * Json, TABLE *table) {
 	}  
 	// finish up
 	while((*inner) && count_graph(*inner))
-		close_update_graph(inner);  
+		close_update_graph(inner); 
+  print_trios();
 	return(EV_Ok);
 }
 
@@ -113,15 +108,15 @@ void list_graphs(PGRAPH  *list);
 #ifdef Debug_parser
 char * typeface[] = {
   "{def,hhh,ggg}",
-  "{a=b.c=9. . c.f,d=ef}}",
+  "{a=23. . c=9. . c.f,d=33}",
   "{\"hello everyone\"}",
-  "{ {abc.\"def\".jjj.\"kkk\".lll},rdf,'you'.klf,{ {named,kkk}.{fgh.lmk} }, jkl }",
+  "{ {abc.\"def\".joe:jjj.\"kkk\".lll},anyname:{rdf,may},'you'.klf,{ {named,kkk}.{fgh.lmk} }, jkl }",
   "{a,b,c}",
   "{local:SystemScript{\"select * from console;\"}}",
 	"{abc,def,ghi}",
 	"{@config}",
 	""};
-#define DLINE 3
+#define DLINE 1
 static int debug_counter=DLINE;
 int   parser(char * x,TABLE *table) {
  char buff[200]; 
@@ -138,112 +133,109 @@ int   parser(char * x,TABLE *table) {
   return start_parser(x,table);
 }
 #endif
+void * set_parent_graph_context(PGRAPH * inner,void * val) { 
+  if(*inner) (*inner)->context=val; else  val =0;
+  return val;
+}
+int json_rules(PGRAPH * inner);
+   enum {None,Del,App,Close,New,AppClose,NewApp,
+     DelApp,CloseNew,NewNewApp,AppCloseNew,CloseNewApp,CloseNewAppClose,Name};
+ int new_jump(char cin, PGRAPH *inner) {
+   // prev point to a three element set, all characters in the ublgy set
+   int hindex;
+   cnext = cin;
+   hindex = json_rules(inner);
+   //G_printf("Case %d \n",hindex);
 
-int index_of(unsigned char *,PGRAPH * inner);
-unsigned char  pt[16*4] = 
-"xxxx"    // 0 no match
-"\0.\0\0" // 1 Dot default append
-"\0{\0\0"  // 2 new graph
-",{\0\0" // 3 closeupdate, new graph
-"\0,\0\0" //4  append, close update new_graph
-"},\0\0" //5 closeupdate, new_graph 
-"{,\0\0" //6 new graph append, close and update, new child graph
-"\0:\0\0" //7 named
-"\0}\0\0" //8 append closeupdate change op
-",}\0\0" // 9  append, close update 
-"}}\0\0" // 10 close update
-"\0_\0\0" // 11 OPAQUE CARRIER   
-"\0\xff\0\0" // 12 discard
-"\0=\0\0" // 13 new graph append
- "\0\0\0\0";
-#define ndx(a) a+i*4
-int new_jump(char cin, PGRAPH *inner) {
- // prev point to a three element set, all characters in the ublgy set
-  int hindex;
-  cnext = cin;
-  hindex = index_of(pt,inner);
-  //G_printf("Case %d \n",hindex);
-  switch(hindex) {
-    //dot
-  case 0:  case 12:
-  break;
-   case 1: // dot always appends
-    append_graph(inner,current);
-    break;
-    // Brackets
-  case 3: case 5:
-    G_printf("35PC %c| ",parent_graph_context(inner));
+   switch(hindex) {
+   case None: 
+     break;
+   case Del:
+     delete_graph(inner);
+     break;
+   case App: // dot always appends
+     append_graph(inner,current);
+     break;
+   case Close: // dot always appends
+     close_update_graph(inner);
+     break;
+   case New:
+     new_child_graph(inner,(void *) ccurr);
+     break;
+   case AppClose:
+     append_graph(inner,current);
+     close_update_graph(inner);
+     break;
+  case NewApp:
+     new_child_graph(inner,(void *) '_');
+     append_graph(inner,current);
+     break;
+case DelApp:
+     delete_graph(inner);
+     append_graph(inner,current);
+     break;
+ case CloseNew: 
      close_update_graph(inner); //follow through
-  case 2:
-    new_child_graph(inner,(void *) ccurr);
-    break;
- case 4:
-       append_graph(inner,current);
-       G_printf("4P C %c|",parent_graph_context(inner));
-        close_update_graph(inner);
-    new_child_graph(inner,(void *) ccurr);
-    break;
-    case 13:
-      new_child_graph(inner,(void *) ccurr);
-      append_graph(inner,current);
-      break;
-  case 6:
-   new_child_graph(inner,(void *) ccurr);
-       append_graph(inner,current);
-       G_printf("6 PC %c|",parent_graph_context(inner));
-       close_update_graph(inner);
-    new_child_graph(inner,(void *) ccurr);
-    break;
-case 7: 
-    cnext = SetAttribute(&current,&next);
-  case 8:case 9:
-    current.link  = '_';
-  case 20:
-       append_graph(inner,current);
-       G_printf("89 PC %c|",parent_graph_context(inner)); 
-        close_update_graph(inner);
-    break;
- case 10:
-   G_printf("10 PC %c|",parent_graph_context(inner));
-close_update_graph(inner);
-  break;
-  default:
-   G_printf("  append default \n");
-       append_graph(inner,current);
-    break;
-  }
-  ctest = (ctest << 8) | cnext;
-  cprev = ccurr; ccurr = cnext;
- // G_printf("%x %x %x %x\n",cprev,ccurr,cnext,ctest);
-  prev = current;
-	current = next; 
-  return 0;
+     new_child_graph(inner,(void *) ccurr);
+     break;
+ case NewNewApp:
+     new_child_graph(inner,(void *) '_');
+     new_child_graph(inner,(void *) ccurr);
+     append_graph(inner,current);
+     break;
+ case AppCloseNew: // next Coma element 
+     append_graph(inner,current);
+     close_update_graph(inner);
+     new_child_graph(inner,(void *) ccurr);
+     break;
+case CloseNewApp: // next Coma element
+     close_update_graph(inner);
+     new_child_graph(inner,(void *) ccurr);
+     append_graph(inner,current);
+     break;
+ case CloseNewAppClose: // next Coma element
+     close_update_graph(inner);
+     new_child_graph(inner,(void *) ccurr);
+     append_graph(inner,current);
+     close_update_graph(inner);
+     break;
+   case Name: 
+     SetAttribute(&current,&next);
+     new_child_graph(inner,(void *) ccurr);
+     append_graph(inner,current);
+     break;
+
+   default:
+     G_printf("  append default \n");
+     append_graph(inner,current);
+     break;
+   }
+   //G_printf("%dPC %c %c|",hindex,ccurr,parent_graph_context(inner));
+   cprev = ccurr; ccurr = cnext;
+   // G_printf("%x %x %x %x\n",cprev,ccurr,cnext,ctest);
+   prev = current;
+   current = next; 
+   return 0;
  }
 
-int index_of(unsigned char * p,PGRAPH * inner) {
-  int hindex,i;
-  hindex = 0; 
-  if((char )parent_graph_context(inner) == '=')
-    return 20;
-  for(i=hindex;i < 16;i++){
-    if( ccurr == p[1]) {
-      hindex = i; break;
-    }
-    p+=4;
-  } 
-  if(ccurr == p[1]) { 
-    for(i=hindex;i < 16;i++){
-      if(cprev == p[0]  && ccurr == p[1]){hindex = i; break;};
-      if(ccurr != p[1]) break;
-      p+=4;
-    } 
-    if(cprev == p[0] && ccurr == p[1]) {
-      for(i=hindex;i < 16;i++){
-        if(cprev == p[0] && ccurr == p[1] && cnext == p[2]) {hindex = i; break;};
-        if(cprev != p[0] || ccurr != p[1]) break; 
-        p+=4;
-      }
-    }
-  }
-    return hindex; 
-  }
+int json_rules(PGRAPH * inner) {
+  char context = (char ) parent_graph_context(inner);
+  int action=0;
+if(cprev == '=') return AppClose;  // append, close_update 
+else if((ccurr == '.') && (cnext == '{')) return NewApp; // append potential temp
+else if( ((cprev == ':') ||  (cprev = ',') || (cprev == '.') )
+  && (ccurr == '{')) return None; // do nothing
+else if((cprev = 0) && (ccurr == '{')) return New; // open potential or
+else if((ccurr == '}') && (context == '_')) return DelApp; //context is a potential or, delete it. 
+else if((ccurr == '}') && context =='.') return DelApp; // real and sequence delete context,Append
+// Comma: close_update, new_graph, append, close update. Coma context
+else if((ccurr == '}') &&(context == ',')) return CloseNewAppClose; 
+else if(( cprev == ',') &&(ccurr == ',')) return CloseNewApp; // close_update, new_graph, append.
+else if((ccurr == '}') &&(context == ':')) return Close; //close and update it
+else if(( cprev == '.') &&(ccurr == ',')) return AppCloseNew; // append, close and update ,new graph
+else if(( cprev == '{') &&(ccurr == ',')) return NewApp; //  new_graph, append
+else if((cprev == '{') &&(ccurr == '=')) return NewNewApp; // open potential temp and, open equals context append}
+else if((ccurr == '=')) return NewApp; // open potential temp and, open equals context append}
+else if(ccurr == ':') return Name; // open naming context, append
+else return 0;
+}
