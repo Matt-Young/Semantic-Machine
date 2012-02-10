@@ -169,24 +169,18 @@ int init_run_json(FILTER *f) {
  //triple(f->initial_triple,pop_handler);
 		return status;
 }
-
+ void ugly_handler(int id,Triple *f);
 int event_exec(FILTER * f) {
   int g_event;
   int linkid = f->event_triple->link;
   g_event = f->events; 
   g_event |=  ready.events;
   if(g_event & EV_Done) { // Nothing here but missing code
+    G_printf("Unhandled EV_DONE\n");
     reset_ready_event(EV_Done);
     return g_event;
-  }else if (g_event & EV_Ugly) {  
-        if(linkid == '@')
-          g_event |= init_run_table(f,f->event_triple->key);
-        else if(linkid == '=') {}
-        else {
-    print_triple(f->event_triple);
-        }
-    reset_ready_event(EV_Ugly);
-  } else if(g_event & EV_Overload) {
+  }else if (g_event & EV_Ugly) ugly_handler(linkid,f->event_triple);
+   else if(g_event & EV_Overload) {
     if(ready.opid  == (OperatorJson & OperatorMask))  
       g_event |= init_run_json(f);
     else if (ready.opid  == (OperatorBsonIn & OperatorMask)) 
@@ -267,4 +261,38 @@ int init_gfun() {
 	ready.filter= &null_filter;
 	return 0;
 }
+void ugly_handler(int linkid,Triple *top){
+Code stmt = ready.stmt;   Triple var; 
+        if(linkid == '@'){
+         // set_event( init_run_table(f,f->event_triple->key));
+        }
+        else if(linkid == '=') {
+          // this  is create a new <string,type,value> entry
 
+          Code stmt = ready.stmt;
+          if(EV_Data &  machine_step(stmt) ) {
+            machine_triple(stmt,&var);
+            if(G_isdigit(var.key[0])) 
+              add_trio( 
+                new_string(top->key),
+                G_TYPE_INTEGER,
+                (void *) G_strtol(var.key));
+            else 
+              add_trio( 
+                new_string(top->key),
+                G_TYPE_NAME,
+                find_trio(var.key)->value);
+          }
+        } else if(linkid == ':') {
+         if(EV_Data &  machine_step(stmt) ) {
+            machine_triple(stmt,&var);
+            top->link = 
+              (int) find_trio_value( top->key);
+            triple(top,0);
+         }
+      }
+        else {
+    print_triple(top);
+        }
+    reset_ready_event(EV_Ugly);
+      }

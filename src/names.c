@@ -7,12 +7,12 @@
 Trio g_names[LocalSymbolCount];
 int  g_name_count;
 
-int add_trio( char * name,int type,Pointer value) {
+Trio * add_trio( char * name,int type,Pointer value) {
 g_names[g_name_count].name = name;
 g_names[g_name_count].type = type;
 g_names[g_name_count].value = value;
 g_name_count++;
-return g_name_count;
+return &g_names[g_name_count];
 }
 int add_trios( Trio trios[]) {
 	int i=0;
@@ -35,6 +35,7 @@ Trio  * find_trio(char * name) {
 			return(&g_names[i]);
 	return 0;
 }
+
 Pointer  find_trio_value(char * name) {
 	Trio * trio = find_trio(name);
 	if(trio) return trio->value; else return 0;
@@ -45,3 +46,18 @@ Pointer  find_trio_value(char * name) {
 		G_printf("%3d: |%16s|%4d|%10d| \n",
 		i,g_names[i].name,g_names[i].type,g_names[i].value,i);
 	}
+
+// when we make names we make buffs
+int newcount=0;
+int oldcount=0;
+char * new_string(const char * key) {
+	int size = G_strlen(key)+1;
+	char * p = (char *) G_malloc(size);
+	G_strncpy(p,key,size);
+	newcount++;
+	return(p);
+}
+void del_string(const char * key) { 
+	if(oldcount < newcount) 
+	{oldcount++; G_free( (void *) key);}
+}

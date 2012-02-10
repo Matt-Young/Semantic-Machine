@@ -80,12 +80,13 @@ int new_jump(char cin, PGRAPH *inner);
 // builds a subgraph on inner from user text
 Triple prev,current,next;
 unsigned char cprev,ccurr,cnext;
+unsigned int ctest;
 #define ParserHeader "table:parser"
 int start_parser(char * Json, TABLE *table) {
 	int nchars;
 	PGRAPH *inner; // points to first child
 	inner = (PGRAPH *) &table->list;
-	nchars=0;cprev=1,ccurr=1,cnext=1;
+	nchars=0;cprev=1,ccurr=1,cnext=1;ctest=0;
   del_create_table(table);
   new_child_graph(inner); // Header block
   (*inner)->table=table;
@@ -135,6 +136,7 @@ int   parser(char * x,TABLE *table) {
   return start_parser(x,table);
 }
 #endif
+
 int index_of(pt);
 unsigned char  pt[16*4] = 
 "xxxx"    // 0 no match
@@ -146,9 +148,10 @@ unsigned char  pt[16*4] =
 "{,\0\0" //6 new graph append, close and update, new child graph
 "\0:\0\0" //7 named
 "\0}\0\0" //8 append closeupdate change op
-".}\0\0" // 9 append closeupdate change op
-"\0_\0\0" // 10 OPAQUE CARRIER   
-"\0\xff\0\0" // 11 discard
+",}\0\0" // 9  append, close update 
+"}}\0\0" // 10 close update
+"\0_\0\0" // 11 OPAQUE CARRIER   
+"\0\xff\0\0" // 12 discard
  "\0\0\0\0";
 #define ndx(a) a+i*4
 int new_jump(char cin, PGRAPH *inner) {
@@ -159,7 +162,7 @@ int new_jump(char cin, PGRAPH *inner) {
   //G_printf("Case %d \n",hindex);
   switch(hindex) {
     //dot
-  case 0:
+  case 0:  case 12:
   break;
   case 1: // dot always appends
     append_graph(inner,current);
@@ -186,28 +189,23 @@ case 7:
      new_child_graph(inner);
       append_graph(inner,current);
     break;
-  case 8:
+  case 8:case 9:
 
-  case 9:
-   // current.link  = '_';
+    current.link  = '_';
        append_graph(inner,current);
         close_update_graph(inner);
     break;
  case 10:
-   current.link  = '_';
-       append_graph(inner,current);
-        close_update_graph(inner);
-        close_update_graph(inner);
-         break;
- case 11:
-         break;
+close_update_graph(inner);
+  break;
   default:
    G_printf("  append default \n");
        append_graph(inner,current);
     break;
   }
-
+  ctest = (ctest << 8) | cnext;
   cprev = ccurr; ccurr = cnext;
+  G_printf("%x %x %x %x\n",cprev,ccurr,cnext,ctest);
   prev = current;
 	current = next; 
    //G_buff_counts();

@@ -53,6 +53,7 @@ void* G_memcpy(void* s, const void* ct, int n) {return memcpy(s, ct, (size_t) n)
 void G_error(char * c,int i) {G_printf("error %d\n",c); G_exit(i);}
 int G_isdigit(int c) {return(isdigit(c));}
 char * G_gets(char * line) { return gets(line);}
+long G_strtol(char *s) {return strtol(s, 0,0);}
 void G_debug(void * format){};
 
 // Below are specific console operations for the parser

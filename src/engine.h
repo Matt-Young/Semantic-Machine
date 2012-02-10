@@ -9,7 +9,7 @@ extern OP operands[];
 #define GCHAR '_'
 // Operator space on the predicate
 enum { SystemExit,SystemCall,SystemDup,SystemPop,
-		SystemExec,SystemScript,SystemDecode,SystemConfig,SystemTable,SystemEcho};
+		SystemExec,SystemScript,SystemDecode,SystemConfig,SystemName,SystemEcho};
 #define SystemMax SystemEcho
 #define SystemUser SystemMax + 6
 #define SystemScratch SystemUser +1

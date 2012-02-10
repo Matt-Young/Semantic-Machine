@@ -9,20 +9,6 @@ Pointer g_db;
 
 const Triple SCRATCH_Triple = {"Scratch",SystemScratch,0};
 
-//triple bind, unbind
-int newcount=0;
-int oldcount=0;
-char * newkey(const char * key) {
-	int size = G_strlen(key)+1;
-	char * p = (char *) G_malloc(size);
-	G_strncpy(p,key,size);
-	newcount++;
-	return(p);
-}
-void delkey(const char * key) { 
-	if(oldcount < newcount) 
-	{oldcount++; G_free( (void *) key);}
-}
 
 int install_sql_script(char * ch,int opid) {
 	int status;
