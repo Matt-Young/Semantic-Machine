@@ -37,37 +37,38 @@ int install_sql_script(char * ch,int opid) {
 
 // install key at installed operand position pointer
 int  config_handler(Triple t[]) {
-	int status=EV_Ok;
-	Code stmt = operands[t[0].link].stmt;
+	int status;
+	Code stmt = get_ready_stmt;
 	const char * ch = t->key;
-	int count = t[0].pointer;
-	int opid;Triple var;
+	int count = t[0].pointer-1; // exclude current triple
+	int opid;int param; Triple var;
 	Trio * trio;
-
+  param=0;
 	while(count) {
-		status = machine_triple(stmt,&var);
-		if(status != EV_Ok)
-			G_error("Prepare",G_ERR_PREPARE);
-		if(status == EV_Data) {
-			if(count == 0 )  // install user script
-				status = install_sql_script(var.key,opid);
-			if(count ==1) {
-				opid = G_atoi(t->key);
-				if((OperatorMaximum < opid) ) 
-					return(EV_Incomplete);
-			} else  { // Install map
-				trio = find_trio(var.key);
-				if(!trio || (trio->type != G_TYPE_MAPPER))
-					return(EV_Incomplete);
-				else
-					operands[opid].maps[count-1]= (Mapper) trio->value;
-			} 
-		}else
+		if(EV_Data & (status = machine_step(stmt) )) {
+      status = machine_triple(stmt,&var);
+      if(var.link != '_') {
+			    if(param == 0) {
+				    opid = G_atoi(t->key);
+				    if((OperatorMaximum < opid) ) 
+					    return(EV_Incomplete);
+			    } else  if(param == 1 )  // install user script
+				    status = install_sql_script(var.key,opid); 
+          else { // Install map
+				    trio = find_trio(var.key);
+				    if(!trio || (trio->type != G_TYPE_MAPPER))
+					    return(EV_Incomplete);
+				    else
+					    operands[opid].maps[count-2]= (Mapper) trio->value;
+          }
+          param++;
+        }
+        count--;
+        }
+      }
 			return(status);
-		count--;
 	}
-	return EV_Ok;
-}
+
 int sql_handler(Triple *node) {
 	int status=EV_Ok;
 	install_sql_script((char *) node->key,SystemScratch);
