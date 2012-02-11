@@ -52,7 +52,7 @@ int G_keyop(char * *Json,Triple *t) {
 	} else {
     	t->key=ptr;
     while(!G_isugly(*ptr) && (*ptr != 0) ) ptr++;
-    trim(ptr);tmp = ptr;
+    tmp = ptr; trim(tmp);
 }
 
 white(ptr);
@@ -62,12 +62,15 @@ white(ptr);
       t->link = *ptr;
   else
     t->link = uglies[NullSyntax];
-  *tmp = 0;
-	i =   (int) ptr;
+
+	i =   (int) tmp;
 	i -= (int) start ; // char count
-	*Json = ptr+1;
-	if(!(t->key[0]))
+	
+	if(t->key == ptr)
 		t->key = null_key;  // valid null key
+  else
+      *tmp = 0;
+  *Json = ptr+1;
 	return i;
 }
 int new_jump(char cin, PGRAPH *inner);
@@ -92,13 +95,15 @@ int start_parser(char * Json, TABLE *table) {
     nchars = G_keyop(&Json,&next);
 		next.pointer=1;
     
-    //print_triple(&next);G_printf("\n");
+    print_triple(&next);
     new_jump(next.link,inner);
+     G_graph_counts();
+     G_printf("\n");
 	}  
 	// finish up
 	while((*inner) && count_graph(*inner))
 		close_update_graph(inner); 
-  print_trios();
+  //print_trios();
 	return(EV_Ok);
 }
 
@@ -116,7 +121,7 @@ char * typeface[] = {
 	"{abc,def,ghi}",
 	"{@config}",
 	""};
-#define DLINE 1
+#define DLINE 3
 static int debug_counter=DLINE;
 int   parser(char * x,TABLE *table) {
  char buff[200]; 
@@ -125,7 +130,7 @@ int   parser(char * x,TABLE *table) {
  G_strcpy(buff,typeface[DLINE]);
  G_printf("%s\n",buff);
  start_parser(buff,table);
- G_buff_counts();
+ G_graph_counts();
   return EV_Ok;
 }
 #else
@@ -133,41 +138,39 @@ int   parser(char * x,TABLE *table) {
   return start_parser(x,table);
 }
 #endif
-void * set_parent_graph_context(PGRAPH * inner,void * val) { 
-  if(*inner) (*inner)->context=val; else  val =0;
-  return val;
-}
+
 int json_rules(PGRAPH * inner);
-   enum {None,Del,App,Close,New,AppClose,NewApp,
-     DelApp,CloseNew,NewNewApp,AppCloseNew,CloseNewApp,CloseNewAppClose,Name};
+   enum {None,New,App,AppClose,NewApp,DelApp,
+     CloseNew,NewNewApp,AppDelDel,AppDelClose,
+     AppCloseNew,AppCloseClose,Name};
+char * debugs[]= 
+       {"None","New","App","AppClose","NewApp","DelApp",
+     "CloseNew","NewNewApp","AppDelDel""AppDelClose",
+     "AppCloseNew","AppCloseClose","Name"};
  int new_jump(char cin, PGRAPH *inner) {
    // prev point to a three element set, all characters in the ublgy set
    int hindex;
    cnext = cin;
    hindex = json_rules(inner);
-   //G_printf("Case %d \n",hindex);
+   G_printf("Case: %s ",debugs[hindex]);
 
    switch(hindex) {
    case None: 
      break;
-   case Del:
-     delete_graph(inner);
-     break;
+
    case App: // dot always appends
      append_graph(inner,current);
      break;
-   case Close: // dot always appends
-     close_update_graph(inner);
-     break;
-   case New:
+   case New: // dot always appends
      new_child_graph(inner,(void *) ccurr);
      break;
+
    case AppClose:
      append_graph(inner,current);
      close_update_graph(inner);
      break;
   case NewApp:
-     new_child_graph(inner,(void *) '_');
+     new_child_graph(inner,(void *) ccurr);
      append_graph(inner,current);
      break;
 case DelApp:
@@ -183,22 +186,27 @@ case DelApp:
      new_child_graph(inner,(void *) ccurr);
      append_graph(inner,current);
      break;
+ case AppDelDel:
+     delete_graph(inner);
+     delete_graph(inner);
+     append_graph(inner,current);
+     break;
+ case AppDelClose:
+     append_graph(inner,current);
+     delete_graph(inner);
+     close_update_graph(inner);
+     break;
+  case AppCloseClose:
+     append_graph(inner,current);
+     delete_graph(inner);
+     close_update_graph(inner);
+     break;
  case AppCloseNew: // next Coma element 
      append_graph(inner,current);
      close_update_graph(inner);
      new_child_graph(inner,(void *) ccurr);
      break;
-case CloseNewApp: // next Coma element
-     close_update_graph(inner);
-     new_child_graph(inner,(void *) ccurr);
-     append_graph(inner,current);
-     break;
- case CloseNewAppClose: // next Coma element
-     close_update_graph(inner);
-     new_child_graph(inner,(void *) ccurr);
-     append_graph(inner,current);
-     close_update_graph(inner);
-     break;
+
    case Name: 
      SetAttribute(&current,&next);
      new_child_graph(inner,(void *) ccurr);
@@ -218,24 +226,37 @@ case CloseNewApp: // next Coma element
    return 0;
  }
 
-int json_rules(PGRAPH * inner) {
-  char context = (char ) parent_graph_context(inner);
-  int action=0;
-if(cprev == '=') return AppClose;  // append, close_update 
-else if((ccurr == '.') && (cnext == '{')) return NewApp; // append potential temp
-else if( ((cprev == ':') ||  (cprev = ',') || (cprev == '.') )
-  && (ccurr == '{')) return None; // do nothing
-else if((cprev = 0) && (ccurr == '{')) return New; // open potential or
-else if((ccurr == '}') && (context == '_')) return DelApp; //context is a potential or, delete it. 
-else if((ccurr == '}') && context =='.') return DelApp; // real and sequence delete context,Append
-// Comma: close_update, new_graph, append, close update. Coma context
-else if((ccurr == '}') &&(context == ',')) return CloseNewAppClose; 
-else if(( cprev == ',') &&(ccurr == ',')) return CloseNewApp; // close_update, new_graph, append.
-else if((ccurr == '}') &&(context == ':')) return Close; //close and update it
-else if(( cprev == '.') &&(ccurr == ',')) return AppCloseNew; // append, close and update ,new graph
-else if(( cprev == '{') &&(ccurr == ',')) return NewApp; //  new_graph, append
-else if((cprev == '{') &&(ccurr == '=')) return NewNewApp; // open potential temp and, open equals context append}
-else if((ccurr == '=')) return NewApp; // open potential temp and, open equals context append}
-else if(ccurr == ':') return Name; // open naming context, append
-else return 0;
-}
+ int json_rules(PGRAPH * inner) {
+
+   // Deal with the closing bracket, that is where optimizing takes lace.
+   if(cprev == '{') return NewApp;
+   else if(ccurr == '}') {
+     char child_context = (char ) parent_graph_context(*inner);
+     char parent_context = (char ) parent_graph_context((*inner)->parent);
+     // append close
+     if(( parent_context == '.') &&  (child_context != '.')) return AppClose;
+     else if(( parent_context == '.') &&  (child_context != '.')) return  AppDelDel;
+     else if(( parent_context != ':') &&  (child_context != '.')) return   AppDelClose;
+     else if(( parent_context == ':') &&  (child_context != ',')) return AppCloseClose;
+     else if(child_context == ':') return AppClose; 
+     // And compound objct
+   } 
+      // Named
+   else if (ccurr == ':') 
+     return NewApp;
+   else if (cprev == ':') return AppClose;
+      // Equals pair
+   else if(ccurr == '=') return NewApp; // 
+   else if(cprev == '=') return AppClose;  // append, close_update 
+
+   else if((ccurr == '.') && (cnext == '{')) return NewApp; 
+   else if(ccurr == '.') return App;
+   // Comma
+   else if(ccurr == ',') {
+     if (cprev == '}')  return New;
+     else return AppCloseNew;
+   }
+
+
+   else return None;
+ }
