@@ -13,7 +13,7 @@ PGRAPH delete_graph(PGRAPH *);
 void close_update_graph(PGRAPH *);
 int append_graph(PGRAPH *,Triple );
 int release_graph_list(PGRAPH *);
-void * parent_graph_context(PGRAPH * inner);
+void * parent_graph_context(PGRAPH  inner);
 
 
 int count_graph(PGRAPH );

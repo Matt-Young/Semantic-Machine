@@ -169,6 +169,7 @@ int init_run_json(FILTER *f) {
   set_row_sequence(&r);
  f->initial_triple  = &f->event_table->operators[pop_triple_operator];
  triple(f->initial_triple,pop_handler);
+print_trios();
 		return status;
 }
  void ugly_handler(int id,Triple *f);
@@ -181,7 +182,8 @@ int event_exec(FILTER * f) {
     G_printf("Unhandled EV_DONE\n");
     reset_ready_event(EV_Done);
     return g_event;
-  }else if (g_event & EV_Ugly) ugly_handler(linkid,f->event_triple);
+  }else if (g_event & EV_Ugly) 
+    ugly_handler(linkid,f->event_triple);
    else if(g_event & EV_Overload) {
     if(ready.opid  == (OperatorJson & OperatorMask))  
       g_event |= init_run_json(f);
@@ -264,30 +266,29 @@ int init_gfun() {
 	return 0;
 }
 void ugly_handler(int linkid,Triple *top){
-Code stmt = ready.stmt;   Triple var; 
+Code stmt = ready.stmt;   Triple v1,v2;
+        v1= *top;
         if(linkid == '@'){
          // set_event( init_run_table(f,f->event_triple->key));
         }
         else if(linkid == '=') {
-          // this  is create a new <string,type,value> entry
-
-          Code stmt = ready.stmt;
+          v1.key = new_string(top->key);
           if(EV_Data &  machine_step(stmt) ) {
-            machine_triple(stmt,&var);
-            if(G_isdigit(var.key[0])) 
+            machine_triple(stmt,&v2);
+            if(G_isdigit(v2.key[0])) 
               add_trio( 
-                new_string(top->key),
+                v1.key ,
                 G_TYPE_INTEGER,
-                (void *) G_strtol(var.key));
+                (void *) G_strtol(v2.key));
             else 
               add_trio( 
                 new_string(top->key),
                 G_TYPE_NAME,
-                find_trio(var.key)->value);
+                new_find(v2.key)->value);
           }
         } else if(linkid == ':') {
          if(EV_Data &  machine_step(stmt) ) {
-            machine_triple(stmt,&var);
+            machine_triple(stmt,&v2);
             top->link = 
               (int) find_trio_value( top->key);
             triple(top,0);

@@ -1,5 +1,6 @@
 // Console, set up
 #include "g_types.h"
+#include "names.h"
 #include "../src/console.h"
 //#define Debug_console
 int init_console() { return(0);}
@@ -55,7 +56,16 @@ int G_isdigit(int c) {return(isdigit(c));}
 char * G_gets(char * line) { return gets(line);}
 long G_strtol(char *s) {return strtol(s, 0,0);}
 void G_debug(void * format){};
-
+int G_cmp (char * c1,char * c2) {
+  int i;
+  i = strcmp(((Trio *) c1)->name,((Trio *) c2)->name);
+  return i;}
+void* G_bsearch(const void* key, const void* base, int n, int size) {
+return(bsearch(key, base, n, size, (cmp0) G_cmp));
+};
+ void G_qsort(  void * base, int n, int size) {
+qsort( base, n, size,(cmp0) G_cmp);
+};
 // Below are specific console operations for the parser
 // Is it a character known to the syntax? '
 //#define Line_size 256
@@ -141,6 +151,9 @@ int del_graph_count,new_graph_count;
 int del_table_count,new_table_count;
 int del_data_count,new_data_count;
 int del_thread_count,new_thread_count;
+void G_graph_counts(){
+	printf("Gr: %d %d ",del_graph_count,new_graph_count);
+}
 void G_buff_counts(){
 	printf("Fl: %d %d ",old_filter_count,new_filter_count);
 	printf("Gr: %d %d ",del_graph_count,new_graph_count);

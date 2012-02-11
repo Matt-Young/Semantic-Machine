@@ -103,11 +103,11 @@ int pop_handler(Triple *node) {
 	Triple t;
   stmt = get_ready_stmt();
   status = set_ready_event(0);
-  while( status != EV_Done) {
+  do {
+    unbind_triple(stmt,&t);
+    status = triple(&t,0);
     status = machine_step(stmt );
-	  unbind_triple(stmt,&t);
-	  status = triple(&t,0);
-  }
+  }while( status & EV_Data);
 	  return status;
 }
 int script_handler(Triple *node) {  
@@ -295,6 +295,7 @@ int init_machine() {
 	init_console();
 	return status;
 }
+void sort_names() ;
 void engine_init() {
 		int status; 
 		OP op;
@@ -309,6 +310,8 @@ void engine_init() {
 		status = init_machine();
 		op = operands[GCHAR];
 		print_trios();
+    sort_names();
+    print_trios();
   }
 int main(int argc, char * argv[]) {
   while(argc) {

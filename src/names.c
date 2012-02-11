@@ -61,3 +61,16 @@ void del_string(const char * key) {
 	if(oldcount < newcount) 
 	{oldcount++; G_free( (void *) key);}
 }
+
+Trio * new_find(char * key) {
+  Trio * t;
+  t = (Trio *) 
+    G_bsearch((void *) key, (void *) g_names, g_name_count, sizeof(Trio));
+  if(t == 0) 
+    return add_trio(key,0,0); 
+  else return t;
+}
+
+void sort_names() {
+ G_qsort( g_names, g_name_count, sizeof(Trio));
+}

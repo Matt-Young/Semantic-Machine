@@ -130,6 +130,6 @@ void list_graphs(PGRAPH  *list,char * arg){
   }
 }
 
-void * parent_graph_context(PGRAPH * inner) { 
-  if(*inner) return(*inner)->context; else return 0;}
+void * parent_graph_context(PGRAPH graph) { 
+  if(graph) return graph->context; else return 0;}
      

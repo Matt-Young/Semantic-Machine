@@ -9,3 +9,4 @@ Trio *  find_trio(char * name);
 Trio * find_or_add_trio(char * name);
 char * new_string(const char * );
 void del_string(const char *);
+Trio * new_find(char * key);
