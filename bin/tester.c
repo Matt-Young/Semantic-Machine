@@ -74,11 +74,12 @@ void main(int argc, char *argv[]){
   } 
 
   if(argv[1] && !strcmp(argv[1], "-t")) {
-    pthread_t *thread;
+    pthread_t thread;
     int status;
-    printf("Thread\n");
-    status = pthread_create(thread,0,start_routine,0);
-    printf("Thread %d\n",status);
+    thread = 0;
+    printf("Thread %d\n",thread);
+    status = pthread_create(&thread,0,start_routine,0);
+    printf("Thread %d %d %d\n",status,thread,*thread);
     exit(0);
   }
   if(argv[1] && !strcmp(argv[1], "-f")) {

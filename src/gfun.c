@@ -138,7 +138,7 @@ int events(FILTER * f) {
 	  return status;
   }
 
- // The main io routines initialize and run here
+ // The main io graph_changess initialize and run here
 
 int spew_bson(Triple *t) {
     TABLE * table; char * buff;

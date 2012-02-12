@@ -1,5 +1,5 @@
 
-/* This file contains all the routines to bind prepared 
+/* This file contains all the graph_changess to bind prepared 
 and installed statements, and it prepares the table
 for insert, update and selectg.  
 Table stuff really doesn belong here, as table are going to be an
