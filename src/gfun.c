@@ -172,7 +172,7 @@ int init_run_json(FILTER *f) {
 print_trios();
 		return status;
 }
- void ugly_handler(int id,Triple *f);
+
 int event_exec(FILTER * f) {
   int g_event;
   int linkid = f->event_triple->link;
@@ -182,8 +182,7 @@ int event_exec(FILTER * f) {
     G_printf("Unhandled EV_DONE\n");
     reset_ready_event(EV_Done);
     return g_event;
-  }else if (g_event & EV_Ugly) 
-    ugly_handler(linkid,f->event_triple);
+  }
    else if(g_event & EV_Overload) {
     if(ready.opid  == (OperatorJson & OperatorMask))  
       g_event |= init_run_json(f);
@@ -265,11 +264,16 @@ int init_gfun() {
 	ready.filter= &null_filter;
 	return 0;
 }
-void ugly_handler(int linkid,Triple *top){
-Code stmt = ready.stmt;   Triple v1,v2;
-        v1= *top;
+
+// Uglies get their own direct handler
+
+int ugly_handler(Triple *top){
+  int linkid;
+  Code stmt = ready.stmt;   Triple v1,v2;
+        v1= *top; 
+        linkid =  v1.link;
         if(linkid == '@'){
-         // set_event( init_run_table(f,f->event_triple->key));
+         G_printf("Magic %s",v1.key);
         }
         else if(linkid == '=') {
           v1.key = new_string(top->key);
@@ -298,4 +302,5 @@ Code stmt = ready.stmt;   Triple v1,v2;
     print_triple(top);
         }
     reset_ready_event(EV_Ugly);
+    return 0;
       }

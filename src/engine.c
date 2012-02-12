@@ -243,11 +243,12 @@ Trio engine_trios[] = {
 
 	// defult operands
 	const  Triple G_null_graph = {"_",'_',0};
+  int ugly_handler(Triple *top);
 	int init_operands() {
 		int i; 
 		G_memset(operands,0,sizeof(operands));
 		for(i=SystemUser;i < OperatorMaximum;i++) {
-			operands[i].handler = event_handler;
+			operands[i].handler = ugly_handler;
 			if(G_isugly(i) )
 				operands[i].properties = EV_Ugly |EV_No_bind;
 			else
