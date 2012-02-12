@@ -94,7 +94,7 @@ int flush_users() {
       g_names[i].type = G_TYPE_NONE;
       g_names[i].name = (char *) zzz;
     }
-  //g_name_count = start;
+  g_name_count -= count;
   return count;
 }
 Pointer  find_trio_value(char * name) {
