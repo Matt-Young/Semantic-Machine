@@ -101,7 +101,7 @@ Mapper null_map(void * p,int * i);
   operands[opid].handler = 0;  // May be over ridden
   operands[opid].properties = EV_Overload;
   for(i=0; installs[format].map_name[i];i++) {
-	  local_symbol = find_trio(installs[format].map_name[i]);
+	  local_symbol = find_name(installs[format].map_name[i]);
   if(local_symbol->type == G_TYPE_MAPPER)
   	  operands[opid].maps[i]= (Mapper) local_symbol->value;
   else if(local_symbol->type == G_TYPE_BIT)

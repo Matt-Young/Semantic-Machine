@@ -41,7 +41,7 @@ int  config_handler(Triple t[]) {
 			    } else  if(param == 1 )  // install user script
 				    status = install_sql_script(var.key,opid); 
           else { // Install map
-				    trio = find_trio(var.key);
+				    trio = find_name(var.key);
 				    if(!trio || (trio->type != G_TYPE_MAPPER))
 					    return(EV_Incomplete);
 				    else
@@ -69,9 +69,12 @@ int call_handler(Triple *node) {
 	return EV_Ok;
 }
 int exec_handler(Triple *t) {
-	int status;
+	int status; Triple v2;
 	char *err;
-	status = machine_exec(g_db,t->key,&err);
+ if(EV_Data &  machine_step(get_ready_stmt()) ) {
+        machine_triple(get_ready_stmt(),&v2);
+	status = machine_exec(g_db,v2.key,&err);
+ } else G_printf("Sys Exec Error\n");
 	return status;
 }
 
@@ -269,10 +272,11 @@ Trio engine_trios[] = {
 	}
 }
 void console_loop() {
-	Console c;
+	Console c; int symbols;
 	Triple t;
 	int status;
   G_printf("Console loop\n");
+  symbols = g_name_count;
 	for(;;) {
 		G_console(&c);
     G_printf("%s\n",c.base);
@@ -280,7 +284,10 @@ void console_loop() {
 		t.key = c.base;
     t.pointer=1;
 		status = triple(&t,event_handler);
+        flush_users();
         sort_names();
+        G_buff_counts();
+           // print_trios();
 	}
 }
 int init_machine() {
@@ -289,7 +296,8 @@ int init_machine() {
 	status = init_binder(); if(status != EV_Ok) return status;
 	status = init_gfun(); if(status != EV_Ok) return status;
 	status = init_tables(); if(status != EV_Ok) return status;
-	status = init_filters(); if(status != EV_Ok) return status;
+  sort_names(); status = init_filters(); 
+  if(status != EV_Ok) return status;
 	init_console();
 	return status;
 }
@@ -307,9 +315,9 @@ void engine_init() {
 		add_trios(engine_trios);
 		status = init_machine();
 		op = operands[GCHAR];
-		//print_trios();
+
     sort_names();
-    print_trios();
+
   }
 int main(int argc, char * argv[]) {
   while(argc) {

@@ -143,15 +143,19 @@ int del_graph_count,new_graph_count;
 int del_table_count,new_table_count;
 int del_data_count,new_data_count;
 int del_thread_count,new_thread_count;
+int del_name_count,new_name_count;
 void G_graph_counts(){
 	printf("Gr: %d %d ",del_graph_count,new_graph_count);
 }
+int newcount=0;
+int oldcount=0;
 void G_buff_counts(){
-	printf("Fl: %d %d ",old_filter_count,new_filter_count);
+	printf("\nFilt: %d %d ",old_filter_count,new_filter_count);
 	printf("Gr: %d %d ",del_graph_count,new_graph_count);
-	printf("Tb: %d %d ",del_table_count,new_table_count);
-  printf("Th: %d %d ",del_thread_count,new_thread_count);
-  printf("D: %d %d\n",del_data_count,new_data_count);
+	printf("Tbl: %d %d ",del_table_count,new_table_count);
+  printf("Thr: %d %d ",del_thread_count,new_thread_count);
+  printf("D: %d %d",del_data_count,new_data_count);
+   printf("Names: %d %d\n",del_name_count,new_name_count);
 }
 #define Debug_console
 

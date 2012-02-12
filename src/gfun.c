@@ -169,7 +169,7 @@ int init_run_json(FILTER *f) {
   set_row_sequence(&r);
  f->initial_triple  = &f->event_table->operators[pop_triple_operator];
  triple(f->initial_triple,pop_handler);
-print_trios();
+G_printf("\nParse done");
 		return status;
 }
 
@@ -282,13 +282,13 @@ int ugly_handler(Triple *top){
             if(G_isdigit(v2.key[0])) 
               add_trio( 
                 v1.key ,
-                G_TYPE_INTEGER,
+                G_TYPE_USER,
                 (void *) G_strtol(v2.key));
             else 
               add_trio( 
                 new_string(top->key),
-                G_TYPE_NAME,
-                new_find(v2.key));
+                G_TYPE_USER,
+                find_name(v2.key));
           }
         } else if(linkid == ':') {
          if(EV_Data &  machine_step(stmt) ) {

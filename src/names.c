@@ -31,18 +31,7 @@ int init_trios() {
 	G_printf("Init names %d\n",sizeof(g_names));
 	return 0;
 }
-Trio  * find_trio(char * name) { 
-	int i;
-	for(i=0;i < g_name_count;i++) 
-		if(!strcmp(g_names[i].name,name))
-			return(&g_names[i]);
-	return 0;
-}
 
-Pointer  find_trio_value(char * name) {
-	Trio * trio = find_trio(name);
-	if(trio) return trio->value; else return 0;
-}
  void print_trios() { 
 	int i;
   printf("\n");
@@ -52,21 +41,22 @@ Pointer  find_trio_value(char * name) {
 	}
 
 // when we make names we make buffs
-int newcount=0;
-int oldcount=0;
+extern int new_name_count=0;
+extern int del_name_count=0;
 char * new_string(const char * key) {
 	int size = strlen(key)+1;
 	char * p = (char *) malloc(size);
 	strncpy(p,key,size);
-	newcount++;
+	new_name_count++;
 	return(p);
 }
 void del_string(const char * key) { 
-	if(oldcount < newcount) 
-	{oldcount++; G_free( (void *) key);}
+	if(del_name_count < new_name_count) 
+	{del_name_count++; G_free( (void *) key);}
 }
 typedef int (*cmp0)(const void*, const void*);
 typedef int (*cmp1)(const char*, const char*);
+
 int cmp2 (char * c1,Trio * c2) {
   int i;
   i = strcmp(c1,c2->name);
@@ -75,15 +65,37 @@ int cmp3 (Trio * c1,Trio * c2) {
   int i;
   i = strcmp(c1->name,c2->name);
   return i;}
-Trio * new_find(char * key) {
+Trio * get_name(char * key) {
   Trio * t;
-  t = (Trio *) 
-    bsearch((void *) key, (void *) g_names, g_name_count, sizeof(Trio), (cmp1) cmp2);
-  if(t == 0) 
+   t = (Trio *) bsearch((void *) key, (void *) g_names, g_name_count, sizeof(Trio), (cmp0) cmp2);
+   if(t == 0) 
     return add_trio(key,G_TYPE_INTEGER,0); 
-  else return t;
+   else return t;
+}
+Trio * find_name(char * key) {
+  Trio * t;
+  t =  (Trio *) 
+    bsearch((void *) key, (void *) g_names, g_name_count, sizeof(Trio), (cmp0) cmp2);
+  return t;
 }
 
 void sort_names() {
- qsort( g_names, g_name_count, sizeof(Trio), cmp3);
+ qsort( g_names, g_name_count, sizeof(Trio),(cmp0) cmp3);
+}
+const char *zzz = "zzzz";
+int flush_users() {
+  int i;int count=0;
+  for(i=0;i < g_name_count;i++) 
+    if(g_names[i].type == G_TYPE_USER) {
+      del_string( g_names[i].name);
+      count++;
+      g_names[i].type = G_TYPE_NONE;
+      g_names[i].name = (char *) zzz;
+    }
+  //g_name_count = start;
+  return count;
+}
+Pointer  find_trio_value(char * name) {
+	Trio * trio = find_name(name);
+	if(trio) return trio->value; else return 0;
 }
