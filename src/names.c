@@ -9,7 +9,8 @@
 // This is shared memory
 Trio g_names[LocalSymbolCount];
 int  g_name_count;
-
+extern int new_name_count;
+extern int del_name_count;
 Trio * add_trio( char * name,int type,Pointer value) {
 g_names[g_name_count].name = name;
 g_names[g_name_count].type = type;
@@ -29,6 +30,8 @@ int init_trios() {
 	g_name_count=0;
 	G_memset(g_names,0,sizeof(g_names));
 	G_printf("Init names %d\n",sizeof(g_names));
+  del_name_count=0;
+  new_name_count=0;
 	return 0;
 }
 
@@ -41,8 +44,7 @@ int init_trios() {
 	}
 
 // when we make names we make buffs
-extern int new_name_count=0;
-extern int del_name_count=0;
+
 char * new_string(const char * key) {
 	int size = strlen(key)+1;
 	char * p = (char *) malloc(size);

@@ -25,7 +25,7 @@ the lab configuratio, the threads only and the netio
 #include <netinet/in.h>
 #include <errno.h>
 #include "../src/g_types.h"
-#include "../src/machine.h"
+#include "../src/config.h"
 #include "../src/engine.h"
 #include "../src/http_hdrs.h"
 #define error printf

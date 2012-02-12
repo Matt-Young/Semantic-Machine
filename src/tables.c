@@ -41,7 +41,7 @@ void release_table_context(PTABLE pt) {
 }
 
 // direct sql utilities
-#define Sql_create "drop table if exists %s; create table %s (key text,link integer, pointer integer);" 
+#define Sql_create "drop table if exists %s; create table %s (key blob,link integer, pointer integer);" 
 int del_create_table(TABLE *table) {
   char buff[400];char  *err;int status;
   Triple t = {buff,SystemExec,0};

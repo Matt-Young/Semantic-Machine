@@ -1,4 +1,5 @@
 // Console, set up
+#include "config.h"
 #include "g_types.h"
 #include "names.h"
 #include "../src/console.h"
@@ -39,8 +40,7 @@ void G_sprintf(char *s, const char *fmt, ...)
  va_end(argptr);
 }
 void* G_malloc(int size){return malloc(size);}
-void* G_calloc(int size){void * p=  calloc(1,size);memset(p,0,size); 
-return p;}
+void* G_calloc(int size){return  calloc(1,size); }
 void G_free(void* p){free(p);}
 char* G_strncpy(char* s, const char* ct, int n){return strncpy(s,ct,n);}
 char * G_strcpy(char* s, const char* ct){return strcpy(s, ct);}

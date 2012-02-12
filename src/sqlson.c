@@ -1,5 +1,5 @@
 #include "../src/g_types.h"
-#include "../src/machine.h"
+#include "../src/config.h"
 #include "../src/engine.h"
 #include "../src/tables.h"
 #include "../src/console.h"

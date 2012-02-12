@@ -1,6 +1,6 @@
 // All includes
+#include "../src/config.h"
 #include "../src/g_types.h"
-#include "../src/machine.h"
 #include "../src/names.h"
 #include "../src/tables.h"
 #include "../src/graphs.h"

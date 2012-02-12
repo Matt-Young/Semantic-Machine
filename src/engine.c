@@ -279,7 +279,7 @@ void console_loop() {
   symbols = g_name_count;
 	for(;;) {
 		G_console(&c);
-    G_printf("%s\n",c.base);
+    G_printf("\nConsole done %s\n",c.base);
 		t.link =  OperatorJson; // console overload
 		t.key = c.base;
     t.pointer=1;

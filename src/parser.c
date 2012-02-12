@@ -82,7 +82,9 @@ unsigned char cprev,ccurr,cnext;
 int start_parser(char * Json, TABLE *table) {
 	int nchars;
 	PGRAPH *inner; // points to first child
+  G_printf("\nparse start\n");
 	inner = (PGRAPH *) &table->list;
+  *inner =0;
 	nchars=0;cprev=1,ccurr=1,cnext=1;
   del_create_table(table);
   new_child_graph(inner,(void *) '@'); // Header block
@@ -101,9 +103,12 @@ int start_parser(char * Json, TABLE *table) {
      //G_printf("\n");
 	}  
 	// finish up
-	while((*inner) && count_graph(*inner))
-		close_update_graph(inner); 
-  //print_trios();
+	while(*inner) 
+    if(count_graph(*inner))
+		close_update_graph(inner);
+  else delete_graph(inner);
+
+    G_printf("\nparse done\n");
 	return(EV_Ok);
 }
 

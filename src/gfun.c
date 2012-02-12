@@ -158,6 +158,7 @@ int consume_bson(Triple *t) {
 int echo_handler(Triple *node);
 int init_run_json(FILTER *f) {
 	int status; RowSequence r; 
+  char * err;
   G_printf("Json  \n");
   f->event_table = get_table_name("console");
 	status= set_ready_graph(f);
@@ -168,8 +169,12 @@ int init_run_json(FILTER *f) {
   r.end=-1;
   set_row_sequence(&r);
  f->initial_triple  = &f->event_table->operators[pop_triple_operator];
+ status = machine_exec(g_db,"begin ;",&err);
+ G_printf("Parse start\n");
  triple(f->initial_triple,pop_handler);
-G_printf("\nParse done");
+ G_printf("Parse done\n");
+ status = machine_exec(g_db,"commit transaction;",&err);
+
 		return status;
 }
 

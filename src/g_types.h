@@ -1,7 +1,7 @@
 #ifndef G_TYPEDEFS
 #define G_TYPEDEFS
 #undef NETIO
-#define WINDOWS
+
 typedef struct {
   char  * key; 
   int link;
