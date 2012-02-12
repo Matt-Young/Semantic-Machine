@@ -27,8 +27,7 @@ char * G_line(char * line,int n);
 void G_debug(void * format);
 int G_keyop(char ** ,Triple *);
 void G_buff_counts();
-typedef int (*cmp0)(const void*, const void*);
-typedef int (*cmp1)(const char*, const char*);
+
 void G_qsort( void * base, int n, int size);
 void * G_bsearch(const void * key,const void* base,int n, int size);
 void G_graph_counts();

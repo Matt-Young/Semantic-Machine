@@ -1,6 +1,9 @@
 #include "g_types.h"
 #include "names.h"
 #include "console.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 // Just a quick utility to store name value pairs
 // All names here should be constant
 // This is shared memory
@@ -31,7 +34,7 @@ int init_trios() {
 Trio  * find_trio(char * name) { 
 	int i;
 	for(i=0;i < g_name_count;i++) 
-		if(!G_strcmp(g_names[i].name,name))
+		if(!strcmp(g_names[i].name,name))
 			return(&g_names[i]);
 	return 0;
 }
@@ -42,8 +45,9 @@ Pointer  find_trio_value(char * name) {
 }
  void print_trios() { 
 	int i;
+  printf("\n");
 	for(i=0; g_names[i].name;i++) 
-		G_printf("%3d: |%16s|%4d|%10d| \n",
+		printf("%3d: |%16s|%4d|%10d| \n",
 		i,g_names[i].name,g_names[i].type,g_names[i].value,i);
 	}
 
@@ -51,9 +55,9 @@ Pointer  find_trio_value(char * name) {
 int newcount=0;
 int oldcount=0;
 char * new_string(const char * key) {
-	int size = G_strlen(key)+1;
-	char * p = (char *) G_malloc(size);
-	G_strncpy(p,key,size);
+	int size = strlen(key)+1;
+	char * p = (char *) malloc(size);
+	strncpy(p,key,size);
 	newcount++;
 	return(p);
 }
@@ -61,16 +65,25 @@ void del_string(const char * key) {
 	if(oldcount < newcount) 
 	{oldcount++; G_free( (void *) key);}
 }
-
+typedef int (*cmp0)(const void*, const void*);
+typedef int (*cmp1)(const char*, const char*);
+int cmp2 (char * c1,Trio * c2) {
+  int i;
+  i = strcmp(c1,c2->name);
+  return i;}
+int cmp3 (Trio * c1,Trio * c2) {
+  int i;
+  i = strcmp(c1->name,c2->name);
+  return i;}
 Trio * new_find(char * key) {
   Trio * t;
   t = (Trio *) 
-    G_bsearch((void *) key, (void *) g_names, g_name_count, sizeof(Trio));
+    bsearch((void *) key, (void *) g_names, g_name_count, sizeof(Trio), (cmp1) cmp2);
   if(t == 0) 
-    return add_trio(key,0,0); 
+    return add_trio(key,G_TYPE_INTEGER,0); 
   else return t;
 }
 
 void sort_names() {
- G_qsort( g_names, g_name_count, sizeof(Trio));
+ qsort( g_names, g_name_count, sizeof(Trio), cmp3);
 }

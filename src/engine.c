@@ -117,13 +117,9 @@ int script_handler(Triple *node) {
 	return EV_Ok;
 }
 int echo_handler(Triple *node) {
-  int status = set_ready_event(0);
-  if(EV_Data & status) {
-	unbind_triple(get_ready_stmt(),node+1);
   G_printf("\nEcho  ");
-  print_triple(node+1);
-  }
-	return status;
+  print_triple(node);
+	return set_ready_event(0);
 }
 int dup_handler(Triple *node){
 	int id,i;
@@ -284,6 +280,7 @@ void console_loop() {
 		t.key = c.base;
     t.pointer=1;
 		status = triple(&t,event_handler);
+        sort_names();
 	}
 }
 int init_machine() {
@@ -296,7 +293,7 @@ int init_machine() {
 	init_console();
 	return status;
 }
-void sort_names() ;
+
 void engine_init() {
 		int status; 
 		OP op;
@@ -310,7 +307,7 @@ void engine_init() {
 		add_trios(engine_trios);
 		status = init_machine();
 		op = operands[GCHAR];
-		print_trios();
+		//print_trios();
     sort_names();
     print_trios();
   }

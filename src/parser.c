@@ -95,10 +95,10 @@ int start_parser(char * Json, TABLE *table) {
     nchars = G_keyop(&Json,&next);
 		next.pointer=1;
     
-    print_triple(&next);
+    //print_triple(&next);
     json_rules(next.link,inner);
-     G_graph_counts();
-     G_printf("\n");
+    // G_graph_counts();
+     //G_printf("\n");
 	}  
 	// finish up
 	while((*inner) && count_graph(*inner))
@@ -117,7 +117,7 @@ char * typeface[] = {
   "{\"hello everyone\"}",
   "{ {abc.\"def\".joe:jjj.\"kkk\".lll},anyname:{rdf,may},'you'.klf,{ {named,kkk}.{fgh.lmk} }, jkl }",
   "{a,b,c}",
-  "{local:SystemScript{\"select * from console;\"}}",
+  "{a=18,aaa=22. ,{vvv=40,555=2}.local:SystemEcho{\"select * from console;\"}}",
 	"{abc,def,ghi}",
 	"{@config}",
 	""};
@@ -130,7 +130,7 @@ int   parser(char * x,TABLE *table) {
  G_strcpy(buff,typeface[DLINE]);
  G_printf("%s\n",buff);
  start_parser(buff,table);
- G_graph_counts();
+// G_graph_counts();
   return EV_Ok;
 }
 #else
@@ -140,15 +140,15 @@ int   parser(char * x,TABLE *table) {
 #endif
    enum {None,New,App,AppClose,NewApp,DelApp,
      CloseNew,CloseNewApp,AppDel,AppDelClose,
-     AppCloseNew,AppCloseClose,Name,Done};
+     AppCloseNew,AppClosePrev,Name,Done};
 
    int graph_changes(PGRAPH *inner,int hindex) {
 char * debugs[]= 
        {"None","New","App","AppClose","NewApp","DelApp",
      "CloseNew","CloseNewApp","AppDel""AppDelClose",
-     "AppCloseNew","AppCloseClose","Name"};
-    G_printf("Case: %s ",debugs[hindex]);
-    G_printf("p %x c %x n %x\n",cprev,ccurr,cnext);
+     "AppCloseNew","AppClosePrev","Name"};
+   // G_printf("Case: %s ",debugs[hindex]);
+   // G_printf("p %x c %x n %x\n",cprev,ccurr,cnext);
 
     switch(hindex) {
     case None: 
@@ -189,9 +189,9 @@ case DelApp:
      delete_graph(inner);
      close_update_graph(inner);
      break;
-  case AppCloseClose:
+  case AppClosePrev:
      append_graph(inner,current);
-     delete_graph(inner);
+     new_child_graph(inner,(void *) cprev);
      close_update_graph(inner);
      break;
  case AppCloseNew: // next Coma element 
@@ -207,39 +207,40 @@ case DelApp:
      break;
    }
    //G_printf("%dPC %c %c|",hindex,ccurr,parent_graph_context(inner));
-    G_printf("p %x c %x n %x\n",cprev,ccurr,cnext);
+   // G_printf("p %x c %x n %x\n",cprev,ccurr,cnext);
     return 0;
  }
 int json_rules(char cin, PGRAPH *inner) {
    // prev point to a three element set, all characters in the ublgy set
    cnext = cin;
+
 // Action needed by the previous link value
-   // Close out a short form named pair, or the assignemnt pair
-   // ifthese are not compound
-  //if(ccurr != '{') {
-     if (cprev == ':')  graph_changes( inner,AppClose);
-     else if(cprev == '=') graph_changes( inner,AppClose);  // append, close_update 
-  // }
-// Check for an unsed And compound
-   if(ccurr == '}') {
+     // Magic starter
+
+    // check for And compound object
+   if((cnext == '{') && (ccurr == '.'))   {
+       graph_changes( inner,NewApp); 
+   }
+   else if (cprev == ':')  graph_changes( inner,AppClose);
+    else if(cprev == ':') graph_changes( inner,AppClose);  
+    else if (ccurr == '.') graph_changes( inner,App);
+   // Comma name and equals always open compound object
+   else if(ccurr == ',') graph_changes( inner,AppCloseNew);
+   else if (ccurr == ':') graph_changes( inner,NewApp); // Named
+   else  if(ccurr == '=') graph_changes( inner,NewApp); // Equals pair
+   else  if(ccurr == ',') graph_changes( inner,AppCloseNew); // Comma pair
+   else if(ccurr == '@')  graph_changes( inner,NewApp); 
+
+   else if(ccurr == '}') {  
      char child_context = (char ) parent_graph_context(*inner);
      char parent_context = (char ) parent_graph_context((*inner)->parent);
      if(child_context == '.') graph_changes( inner,AppDel);  // Keep parent
      else graph_changes(inner,AppCloseNew);
      }
 
-// Comma name and equals always open compound object
-   else if (ccurr == ':') graph_changes( inner,CloseNewApp); // Named
-   else  if(ccurr == '=') graph_changes( inner,CloseNewApp); // Equals pair
-   else  if(ccurr == ',') graph_changes( inner,CloseNewApp); // Comma pair
-// And Amper operator potentially opens a compound object
-   else if(ccurr == '.') { 
-     if(cnext == '{') graph_changes( inner,CloseNewApp); 
-    else  graph_changes( inner,App);
-   }
-   // Magic starter
-   else if(ccurr == '@')  graph_changes( inner,NewApp); 
-
+   print_triple(&current);
+    G_graph_counts();
+        G_printf("\n");
     cprev = ccurr; ccurr = cnext;
    prev = current;
    current = next; 

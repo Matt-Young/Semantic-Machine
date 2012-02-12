@@ -288,7 +288,7 @@ int ugly_handler(Triple *top){
               add_trio( 
                 new_string(top->key),
                 G_TYPE_NAME,
-                new_find(v2.key)->value);
+                new_find(v2.key));
           }
         } else if(linkid == ':') {
          if(EV_Data &  machine_step(stmt) ) {
