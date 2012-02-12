@@ -86,28 +86,32 @@ int isin(char c,const char *str) {
 }
 int console_command(Console * console,char command ) {
   char  dir[200],line[200],*name;
+  char *ptr;
   struct stat buf;
   FILE * f;int dirlen;
    fgets(line, 100, stdin);
-   if(line[0] == 'q')
+   ptr = strtok(line," ");
+   if(ptr[0] == 'q')
      exit(0);
+   else if (ptr[0] == 'f') { 
+     ptr += strlen(ptr)+1;
+    name = strtok(ptr, "\0");
+    GetCurrentDir(dir,1024);
+    dirlen = strlen(dir);
+    dir[dirlen]='\\';
+    strcpy(dir+dirlen+1,name);
+    printf("\n%s\n",dir);
+    f =  fopen(dir, "r");
 
-  name = strtok(line, " ");
-  GetCurrentDir(dir,1024);
-  dirlen = strlen(dir);
-  dir[dirlen]='/';
-  strcpy(dir+dirlen+1,name);
-  printf("\n%s\n",dir);
-  f =  fopen(dir, "r");
-
-  if(f){
-    fstat(_fileno(f), &buf);
-     console->count = fread(console->base,1, 100, f);
+    if(f){
+      fstat(_fileno(f), &buf);
+      console->count = fread(console->base,1, 100, f);
       printf("Read: %s  %d ",console->base,console->count);
-   }
+    }
    else {
      printf("f %s\n",name);
      perror("Open error ");
+   }
    }
   return 0;
   
