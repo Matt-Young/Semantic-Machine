@@ -16,7 +16,7 @@
 #include <netinet/in.h>
 #include <errno.h>
 #include "g_types.h"
-#include "machine.h"
+#include "config.h"
 #include "console.h"
 #include "http_hdrs.h"
 #undef WINDOWS

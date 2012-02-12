@@ -9,7 +9,6 @@ Pointer g_db;
 
 const Triple SCRATCH_Triple = {"Scratch",SystemScratch,0};
 
-
 int install_sql_script(char * ch,int opid) {
 	int status;
 	status =
@@ -273,7 +272,7 @@ Trio engine_trios[] = {
 }
 void console_loop() {
 	Console c; int symbols;
-	Triple t;char * err;
+	Triple t;
 	int status;
   G_printf("Console loop\n");
   symbols = g_name_count;
@@ -283,8 +282,9 @@ void console_loop() {
 		t.link =  OperatorJson; // console overload
 		t.key = c.base;
     t.pointer=1;
-     status = machine_exec(g_db,"BEGIN IMMEDIATE;",&err);
+     status = machine_lock();
 		status = triple(&t,event_handler);
+     status = machine_unlock();
         flush_users();
         sort_names();
         G_buff_counts();
@@ -320,13 +320,22 @@ void engine_init() {
     sort_names();
 
   }
+#ifndef TEST_ADDR
+char * TEST_ADDR = "127.0.0.1";
+#endif
 int main(int argc, char * argv[]) {
-  while(argc) {
+  int i;
+  for(i=1; i < argc;i++) {
      argc--;
-    if(!G_strcmp(argv[argc], "-V")) {
+    if(!G_strcmp(argv[i], "-V")) {
       G_printf("You are using %s.\n",VERSION);
-      G_exit(0);
-    } else if( !G_strcmp(argv[argc], "--help")  || !G_strcmp(argv[argc], "-h") ) {
+      G_exit();
+    } else if( !G_strcmp(argv[i], "-ip")) {
+#ifndef TEST_ADDR
+      G_strncpy(TEST_ADDR, argv[i+1],10);
+      i++;
+#endif    
+  }else if( !G_strcmp(argv[argc], "--help")  || !G_strcmp(argv[argc], "-h") ) {
       G_printf("Usage: graphs\n");
       G_printf("\n");
       G_printf("Please see https://github.com/Matt-Young/Semantic-Machine/wiki .\n");
@@ -336,10 +345,12 @@ int main(int argc, char * argv[]) {
     }
      engine_init();
 		// Main loop
-     G_printf("Main engine\n");
+
+     print_trios();
 #ifdef NETIO 
     net_start();
 #endif
+   G_printf("Main engine\n");
 	  console_loop();
 
 		return(0);

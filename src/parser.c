@@ -76,7 +76,7 @@ white(ptr);
 int json_rules(char cin, PGRAPH *inner);
 // builds a subgraph on inner from user text
 Triple prev,current,next;
-unsigned char cprev,ccurr,cnext;
+unsigned int cprev,ccurr,cnext;
 
 #define ParserHeader "table:parser"
 int start_parser(char * Json, TABLE *table) {
@@ -114,7 +114,7 @@ int start_parser(char * Json, TABLE *table) {
 
 
 void list_graphs(PGRAPH  *list);
-#define Debug_parser
+#undef Debug_parser
 #ifdef Debug_parser
 char * typeface[] = {
   "{def.ccc.bbb.kkk,hhh.lyu,ggg.aaa}",
@@ -244,8 +244,8 @@ int json_rules(char cin, PGRAPH *inner) {
    else if((ccurr == ',') && ( (cprev == ':') ||  (cprev == '=') ))
      graph_changes( inner,CloseNew);
    else if(ccurr == '}') {  
-     char child_context = (char ) graph_variable(*inner);
-     char parent_context = (char ) graph_variable((*inner)->parent);
+     int child_context = (int ) graph_variable(*inner);
+     int parent_context = (int ) graph_variable((*inner)->parent);
      if( (cprev == ':') ||  (cprev == '=') ) graph_changes(inner,Del);
      else if(parent_context == '{') graph_changes(inner,AppDel);
      else graph_changes(inner,AppCloseNew);

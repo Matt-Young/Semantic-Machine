@@ -38,6 +38,13 @@ int machine_reset(Pointer stmt) {
 
 int machine_exec(Pointer g_db,char * buff,char ** err) {
 	return msg_id(sqlite3_exec((sqlite3 *)g_db,buff,0,0,err));}
+
+int  machine_lock() {
+  char * err;
+  return msg_id(sqlite3_exec((sqlite3 *)g_db,"BEGIN IMMEDIATE;",0,0,&err));}
+int  machine_unlock() {
+    char * err;
+  return msg_id(sqlite3_exec((sqlite3 *)g_db,"COMMIT TRANSACTION;",0,0,&err));}
 int machine_install_callback(Pointer g_db,char * name,int nargs,Pointer gfunction) {
 	return msg_id(sqlite3_create_function_v2((sqlite3 *) g_db,
 		name,nargs,SQLITE_UTF8 ,0,

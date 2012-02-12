@@ -1,6 +1,5 @@
 #ifndef G_TYPEDEFS
 #define G_TYPEDEFS
-#undef NETIO
 
 typedef struct {
   char  * key; 

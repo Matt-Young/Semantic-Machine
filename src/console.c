@@ -98,7 +98,7 @@ int console_command(Console * console,char command ) {
     name = strtok(ptr, "\0");
     GetCurrentDir(dir,1024);
     dirlen = strlen(dir);
-    dir[dirlen]='\\';
+    dir[dirlen]='/';
     strcpy(dir+dirlen+1,name);
     printf("\n%s\n",dir);
     f =  fopen(dir, "r");

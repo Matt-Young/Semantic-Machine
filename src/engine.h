@@ -40,6 +40,8 @@ int machine_exec(Pointer g_db,char * buff,char ** err);
 int machine_install_callback(Pointer g_db,char * name,int nargs,Pointer gfunction);
 void machine_result_int(Pointer context, int value);
 int machine_value_int(Pointer  v);
+int machine_lock();
+int machine_unlock();
 char * machine_script(Pointer stmt);
 int machine_triple(Code stmt,Triple * t);
 int machine_key_len(Code stmt); 
