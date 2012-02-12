@@ -169,10 +169,11 @@ int init_run_json(FILTER *f) {
   r.end=-1;
   set_row_sequence(&r);
  f->initial_triple  = &f->event_table->operators[pop_triple_operator];
- status = machine_exec(g_db,"begin ;",&err);
- G_printf("Parse start\n");
+  G_printf("Begin\n");
+ //status = machine_exec(g_db,"BEGIN IMMEDIATE;",&err);
+ G_printf("\nParse start\n");
  triple(f->initial_triple,pop_handler);
- G_printf("Parse done\n");
+ G_printf("\nParse done\n");
  status = machine_exec(g_db,"commit transaction;",&err);
 
 		return status;

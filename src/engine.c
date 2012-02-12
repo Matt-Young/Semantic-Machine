@@ -273,7 +273,7 @@ Trio engine_trios[] = {
 }
 void console_loop() {
 	Console c; int symbols;
-	Triple t;
+	Triple t;char * err;
 	int status;
   G_printf("Console loop\n");
   symbols = g_name_count;
@@ -283,6 +283,7 @@ void console_loop() {
 		t.link =  OperatorJson; // console overload
 		t.key = c.base;
     t.pointer=1;
+     status = machine_exec(g_db,"BEGIN IMMEDIATE;",&err);
 		status = triple(&t,event_handler);
         flush_users();
         sort_names();
