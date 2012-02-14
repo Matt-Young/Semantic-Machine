@@ -48,7 +48,13 @@ int bind_code(Triple * top,Code stmt) {
 		case G_TYPE_INTEGER:
 			status = machine_bind_int(stmt,index++,(int) pointer);
 			break;
+case G_TYPE_BLOB:
+     status = machine_bind_blob(stmt,index++,top->key,G_strlen(top->key));
+  			status = machine_bind_int(stmt,index++,top->link);
+			status = machine_bind_int(stmt,index++,top->pointer);
+      break;
 		case G_TYPE_TRIPLE:
+
 			status = machine_bind_text(stmt,index++,top->key);
 			status = machine_bind_int(stmt,index++,top->link);
 			status = machine_bind_int(stmt,index++,top->pointer);

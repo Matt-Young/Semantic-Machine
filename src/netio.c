@@ -41,7 +41,7 @@ extern int del_thread_count,new_thread_count;
 static void crit(char * message);
 typedef struct { 
   int newfd;
-  void * remote_addr; 
+  struct sockaddr_in remote_addr; 
   int count;
   int type;
 } Pending;  // Holds things a thread needs
@@ -69,7 +69,7 @@ void * handle_data(void * arg) {
   Pending *p = (Pending *) arg;
   int fd;
   new_thread_count++;
-  struct sockaddr_in * remote = p->remote_addr;
+  
   int rv,rm;
   printf("handler count %d\n",p->count);
   fd = p->newfd;
@@ -93,7 +93,9 @@ void * handle_data(void * arg) {
       t.link = OperatorJson;
     t.pointer = p->count;
     machine_lock();
+     set_web_addr(&p.remote_addrr));
     status = triple(&t,event_handler);
+
     machine_unlock();
     printf(" Action %d ",status);
     print_triple(&t);
@@ -134,7 +136,6 @@ void * net_service (void * port)  {
   if(listen(sockfd, 25) == -1) printf("Couldn't listen on specified port.");
   memset(pendings,0,sizeof(pendings));
   printf("Listening for connections on port %d...\n", port);
-  //status = pthread_create(thread,0,handle_data, 0);
 
   while(1) {
     newfd = accept(sockfd, (struct sockaddr *)&remote_addr, &sin_size);
@@ -161,7 +162,7 @@ void * net_service (void * port)  {
         pendings[i].type = type; 
         pendings[i].newfd = newfd; 
         pendings[i].count = count;
-        pendings[i].remote_addr =(struct sockaddr_in *)&remote_addr;
+        pendings[i].remote_addr =remote_addr;
         status = pthread_create(&thread,0,handle_data, &pendings[i]);//&pendings[i]);
         printf("Done %d\n",status);
       }
@@ -193,24 +194,14 @@ int net_start(void * port) {
  #endif
 #define error printf
 // Little sender
-
-int send_buff(char *buffer,int count,char * ip_addr)
+int Sqlson_to_Bson(Triple t[],char ** buff);
+int send_buff(char *buffer,int count,void * ip_addr)
 {
     int sockfd, portno, n;
     struct sockaddr_in serv_addr;
-    struct hostent *server;
-    portno = TEST_PORT;
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0)  error("ERROR opening socket");
-    server = gethostbyname(ip_addr);
-    if (server == NULL) { error("ERROR, no such host\n");exit(0);}
-
-    bzero((char *) &serv_addr, sizeof(serv_addr));
-    serv_addr.sin_family = AF_INET;
-    bcopy((char *)server->h_addr, 
-         (char *)&serv_addr.sin_addr.s_addr,
-         server->h_length);
-    serv_addr.sin_port = htons(portno);
+    // Get the return address for any emissin from this thread
+    serv_addr.sin_addr = *((serv_addr.sin_addr *)  get_web_addr());
+    machine_unlock();
     if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) 
         error("ERROR connecting");
     n = write(sockfd,buffer,count);
@@ -222,4 +213,6 @@ int send_buff(char *buffer,int count,char * ip_addr)
     close(sockfd);
     return 0;
 }
+
+
 #endif

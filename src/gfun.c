@@ -20,6 +20,7 @@ typedef struct {
   int  events;
   Code stmt;
   int opid;
+  Webaddr return_addr;
 }  READYSET;
 
 READYSET ready;
@@ -102,7 +103,12 @@ int  set_ready_graph(FILTER *f) {
     } else ready.self=0;
   return  EV_Ok;
 }
-
+void set_web_addr(Webaddr *w) {
+  ready.return_addr =  *w;
+}
+Webaddr * get_web_addr(Webaddr *w) {
+  return &ready.return_addr;
+}
 int key_match(const char * k,const char * g) {
   int klen = G_strlen(k);
   int glen = G_strlen(g);
@@ -139,12 +145,14 @@ int events(FILTER * f) {
   }
 
  // The main io graph_changess initialize and run here
-
+ int send_buff(char *buffer,int count,void * ip_addr);
 int spew_bson(Triple *t) {
-    TABLE * table; char * buff;
+    TABLE * table; char * buff;int count;
   	init_table(t->key,0,&table);
-     Sqlson_to_Bson(table->operators,&buff);
-     //sendto(buff);
+    //machine_triple(&addr)_
+     count = Sqlson_to_Bson(table->operators,&buff);
+    // send_buff(buff,count,addr.key);
+     //sendto(buff.addr.key);
      G_free(buff);
      return EV_Ok;
 }
@@ -280,7 +288,7 @@ int ugly_handler(Triple *top){
         if(linkid == '@'){
          G_printf("Magic %s",v1.key);
         }
-        else if(linkid == '=') {
+        else if(linkid == ':') {
           v1.key = new_string(top->key);
           if(EV_Data &  machine_step(stmt) ) {
             machine_triple(stmt,&v2);
@@ -295,7 +303,7 @@ int ugly_handler(Triple *top){
                 G_TYPE_USER,
                 find_name(v2.key));
           }
-        } else if(linkid == ':') {
+        } else if(linkid == '$') {
          if(EV_Data &  machine_step(stmt) ) {
             machine_triple(stmt,&v2);
             top->link = 

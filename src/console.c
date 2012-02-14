@@ -84,16 +84,10 @@ int isin(char c,const char *str) {
 	while((*str)  && (*str != c) ) str++;
 	return *str;
 }
-int console_command(Console * console,char command ) {
+ void   console_file(Console * console,char * ptr) { 
   char  dir[200],line[200],*name;
-  char *ptr;
   struct stat buf;
   FILE * f;int dirlen;
-   fgets(line, 100, stdin);
-   ptr = strtok(line," ");
-   if(ptr[0] == 'q')
-     exit(0);
-   else if (ptr[0] == 'f') { 
      ptr += strlen(ptr)+1;
     name = strtok(ptr, "\0");
     GetCurrentDir(dir,1024);
@@ -113,8 +107,18 @@ int console_command(Console * console,char command ) {
      perror("Open error ");
    }
    }
+int console_command(Console * console,char command ) {
+  char  dir[200],line[200],*name;
+  char *ptr;
+  struct stat buf;
+  FILE * f;int dirlen;
+   fgets(line, 100, stdin);
+   ptr = strtok(line," ");
+   if(ptr[0] == 'q')
+     exit(0);
+   else if (ptr[0] == 'f') 
+     console_file(console,ptr+1);
   return 0;
-  
 }
 // get line with a bit of input editing
 int G_console(Console * console) { 

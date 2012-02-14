@@ -8,16 +8,6 @@ OP operands[OperatorMaximum];
 Pointer g_db;
 int Sqlson_to_Bson(Triple t[],char ** buff);
 const Triple SCRATCH_Triple = {"Scratch",SystemScratch,0};
-int send_buff(char *buffer,int count,char * ip_addr);
-int return_home(Triple t[]) {
-#ifdef NETIO
-  // get named default return ip
-  // void * buff;
-  // Sqlson_to_Bson(t,&buff);
-  // MahineUnlock
-  // send_buff(buff,Sqlson_to_Bson(t,&buff),name.valuer(t[0].key);
-#endif
-}
 int install_sql_script(char * ch,int opid) {
 	int status;
 	status =
@@ -246,6 +236,7 @@ Trio engine_trios[] = {
   { "UnbindTriple", G_TYPE_HANDLER, (Handler) unbind_handler},
   { "AppendHandler", G_TYPE_HANDLER, (Handler) append_handler},
   { "ExitHandler", G_TYPE_HANDLER, (Handler) exit_handler},
+   { "return", G_TYPE_ADDR, 0},
 	{0,0,0}};
 
 	// defult operands
@@ -279,19 +270,23 @@ Trio engine_trios[] = {
 		status = triple(&t,event_handler);
 	}
 }
-void console_loop() {
+  void set_return(Webaddr *w);
+#define TestAddr  "2001:db8:8714:3a90::12"
+void console_loop(){
 	Console c; int symbols;
-	Triple t;
+	Triple t; Webaddr w;
 	int status;
   G_printf("Console loop\n");
   symbols = g_name_count;
+  G_memcpy(&w,TestAddr,sizeof(TestAddr));
 	for(;;) {
 		G_console(&c);
-    G_printf("\nConsole done %s\n",c.base);
+    // check here for any returns
 		t.link =  OperatorJson; // console overload
 		t.key = c.base;
     t.pointer=1;
      status = machine_lock();
+    set_web_addr(&w);
 		status = triple(&t,event_handler);
      status = machine_unlock();
         flush_users();
@@ -346,7 +341,14 @@ int main(int argc, char * argv[]) {
       G_printf("Please see https://github.com/Matt-Young/Semantic-Machine/wiki .\n");
     } else if(!G_strcmp(argv[i], "-port") )
   {  G_printf("Port changed %s\n",argv[i+1]);port = G_strtol(argv[i+1]); i++;}
-    }
+   else if(!G_strcmp(argv[i], "-file") ) {
+  Console c;
+  c.base = (char *) G_malloc(400);
+  G_InitConsole(&c);
+  console_file(&c,argv[i+1]); 
+  G_free(c.base);
+    return(0);
+  } else {
       G_printf("Port %d\n",port);
      engine_init();
 		// Main loop
@@ -357,7 +359,8 @@ int main(int argc, char * argv[]) {
 #endif
    G_printf("Main engine\n");
 	  console_loop();
-
+   }
+  }
 		return(0);
 	}
 	void print_triple(Triple *t) { 

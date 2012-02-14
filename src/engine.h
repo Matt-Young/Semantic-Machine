@@ -27,7 +27,8 @@ int set_ready_event(int EV_event);
 Code get_ready_stmt();
 int reset_ready_event(int EV_event);
 int bind_code(Triple *,Code );
-
+Webaddr * get_web_addr();
+void set_web_addr(Webaddr *);
   // Generics that cover sqlite3
 extern Pointer g_db;
 int open_machine_layer(const char * name,Pointer  mach);
@@ -47,3 +48,4 @@ int machine_triple(Code stmt,Triple * t);
 int machine_key_len(Code stmt); 
 int machine_bind_int(Code stmt,int index,int value);
 int machine_bind_text(Code stmt,int index,char * ch);
+int machine_bind_blob(Code stmt,int index,void * blob,int size);

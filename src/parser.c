@@ -2,7 +2,7 @@
 #include "all.h"
 #include <ctype.h>
 #define DISCARD 0xff
-const char  *uglies = "\"._,{}$!:@=";
+const char  *uglies = "\"._,{}$!:@";
 char * null_key = "_";
 enum {QuoteSyntax,DotSyntax,NullSyntax,CommaSyntax,LeftSyntax,RightSyntax};
 #define ESC 33
@@ -122,7 +122,7 @@ char * typeface[] = {
   "{\"hello everyone\"}",
   "{ {abc.\"def\".joe:jjj.\"kkk\".lll},anyname:{rdf,may},'you'.klf,{ {named,kkk}.{fgh.lmk} }, jkl }",
   "{a,b,c}",
-  "{a=18,aaa=22. ,{vvv=40,555=2}.local:SystemExec{\"select * from console;\"}}",
+  "{a=18,$aaa.22. ,{vvv=40,555=2}.local:SystemExec{\"select * from console;\"}}",
 	"{abc,def,ghi}",
 	"{@config}",
 	""};
@@ -231,6 +231,9 @@ int json_rules(char cin, PGRAPH *inner) {
      current = next;
   return 0;
   }
+  // if ccurr == '$' , then there is an inore and set the 
+  // symbol bit
+  //c->nextlink = '$;)
    cnext = cin;
    if(ccurr == '{')   
        graph_changes( inner,New); 
@@ -246,13 +249,13 @@ int json_rules(char cin, PGRAPH *inner) {
    else if(ccurr == '}') {  
      int child_context = (int ) graph_variable(*inner);
      int parent_context = (int ) graph_variable((*inner)->parent);
-     if( (cprev == ':') ||  (cprev == '=') ) graph_changes(inner,Del);
+     if( (cprev == ':') ||  (ccurr == '$') ) graph_changes(inner,Del);
      else if(parent_context == '{') graph_changes(inner,AppDel);
      else graph_changes(inner,AppCloseNew);
      }
    else if (ccurr == ':') 
        graph_changes( inner,NewApp); // Named
-   else  if(ccurr == '=') graph_changes( inner,NewApp); // Equals pair
+   else  if(cnext == '$') graph_changes( inner,NewApp); // Equals pair
    else if(ccurr == '@')  graph_changes( inner,NewApp); 
        // Just set up potential compound object
  

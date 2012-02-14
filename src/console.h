@@ -1,5 +1,7 @@
 typedef struct {char * buff; char * base; char * current; int size;int count;} Console;
 char * G_InitConsole(Console * console);
+int console_command(Console * console,char command );
+void   console_file(Console * console,char * ptr) ;
 int G_console(Console * console);
 #define Line_size 256
 int  G_isugly(char ch);

@@ -65,8 +65,9 @@ int machine_bind_int(Code stmt,int index,int value) {
 int machine_bind_text(Code stmt,int index,char * ch) {
 	return msg_id(sqlite3_bind_text((sqlite3_stmt*)stmt,index,
 		ch,G_strlen( ch),0));}
-
-
+int machine_bind_blob(Code stmt,int index,void * blob,int size){
+return msg_id( sqlite3_bind_blob((sqlite3_stmt*)stmt, index ,blob, size, 0));
+}
 void unbind_triple(Code stmt,Triple *t) {
   t->key =(char *) sqlite3_column_text( (sqlite3_stmt*) stmt, 0);
 	t->link= machine_column_int(stmt, 1);
