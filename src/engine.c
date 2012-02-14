@@ -277,6 +277,7 @@ void console_loop(){
 	Triple t; Webaddr w;
 	int status;
   G_printf("Console loop\n");
+  w.sa_family = AF_JSON;
   symbols = g_name_count;
   G_memcpy(&w,TestAddr,sizeof(TestAddr));
 	for(;;) {

@@ -238,13 +238,13 @@ int json_rules(char cin, PGRAPH *inner) {
    if(ccurr == '{')   
        graph_changes( inner,New); 
    // One append through this series
-   if( (cprev == ':') ||  (cprev == '=') )
+   if( (cprev == ':')  )
      graph_changes( inner,AppCloseNew);
-   if((ccurr == '.') && !( (cprev == ':') ||  (cprev == '=') ))
+   if((ccurr == '.') && !( (cprev == ':') ||  (cprev == '$') ))
      graph_changes( inner,App);
-   else if((ccurr == ',') && !( (cprev == ':') ||  (cprev == '=') ))
+   else if((ccurr == ',') && !( (cprev == ':') ||  (cprev == '$') ))
        graph_changes( inner,AppCloseNew);
-   else if((ccurr == ',') && ( (cprev == ':') ||  (cprev == '=') ))
+   else if((ccurr == ',') && ( (cprev == ':') ||  (cprev == '$') ))
      graph_changes( inner,CloseNew);
    else if(ccurr == '}') {  
      int child_context = (int ) graph_variable(*inner);
@@ -255,7 +255,7 @@ int json_rules(char cin, PGRAPH *inner) {
      }
    else if (ccurr == ':') 
        graph_changes( inner,NewApp); // Named
-   else  if(cnext == '$') graph_changes( inner,NewApp); // Equals pair
+   else  if(ccurr == '$') graph_changes( inner,NewApp); // Equals pair
    else if(ccurr == '@')  graph_changes( inner,NewApp); 
        // Just set up potential compound object
  

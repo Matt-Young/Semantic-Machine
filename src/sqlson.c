@@ -151,3 +151,16 @@ int Bson_to_Sqlson(Triple t[],char * Bson) {
  //ps(call.empty);
   return make_sqlson_from_bson(t,&call);  //use the null table on input
 }
+int Sqlson_to_Json(Triple t[],char **Bson) {
+  // make lazy J
+  // for each element in J
+  // if new block, add ':'
+  // make json element
+  else
+  // if add add key text link
+}
+  G_memset(&call,0,sizeof(call));
+  call.empty = Bson;
+ //ps(call.empty);
+  return make_sqlson_from_bson(t,&call);  //use the null table on input
+}

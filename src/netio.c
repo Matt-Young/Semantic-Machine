@@ -93,7 +93,7 @@ void * handle_data(void * arg) {
       t.link = OperatorJson;
     t.pointer = p->count;
     machine_lock();
-     set_web_addr(&p.remote_addrr));
+     set_web_addr(&p->remote_addr);
     status = triple(&t,event_handler);
 
     machine_unlock();
@@ -198,9 +198,11 @@ int Sqlson_to_Bson(Triple t[],char ** buff);
 int send_buff(char *buffer,int count,void * ip_addr)
 {
     int sockfd, portno, n;
-    struct sockaddr_in serv_addr;
+    struct sockaddr_storage  serv_addr;
+    struct sockaddr_in  * w;
     // Get the return address for any emissin from this thread
-    serv_addr.sin_addr = *((serv_addr.sin_addr *)  get_web_addr());
+    w = (sockaddr_in *) get_web_addr();
+    memcpy(&serv_addr,w,sizeof(sockaddr_in));
     machine_unlock();
     if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) 
         error("ERROR connecting");

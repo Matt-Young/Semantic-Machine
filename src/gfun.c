@@ -49,6 +49,11 @@ Mapper map_other_start(Pointer * p,int *type) {
 	*type = G_TYPE_INTEGER;
 	return 0;
 	}
+Mapper map_return_addr(Pointer * p,int *type) {
+	*p = (Pointer) (&ready.return_addr);
+	*type = G_TYPE_ADDR;
+	return 0;
+	}
 
 	// Selecting an  installed sql statement
 // This is called afer it is determined an installed sql
@@ -152,11 +157,19 @@ int spew_bson(Triple *t) {
     //machine_triple(&addr)_
      count = Sqlson_to_Bson(table->operators,&buff);
     // send_buff(buff,count,addr.key);
-     //sendto(buff.addr.key);
      G_free(buff);
      return EV_Ok;
 }
-  
+ int spew_json(Triple *t) {
+    TABLE * table; char * buff;int count;
+  	init_table(t->key,0,&table);
+    //machine_triple(&addr)_
+     count = Sqlson_to_Json(table->operators,&buff);
+    // send_buff(buff,count,addr.key);
+     G_free(buff);
+     return EV_Ok;
+}
+ 
 int consume_bson(Triple *t) {
     TABLE * table;
   	init_table("scratch",0,&table);
@@ -271,6 +284,7 @@ Trio gfun_accessor_list[] = {
 	{"BindOtherRow",G_TYPE_MAPPER,(Mapper) map_other_row},
 	{"BindOtherStart",G_TYPE_MAPPER,(Mapper) map_other_start},
   {"BindRelativeSelfRow",G_TYPE_MAPPER,(Mapper)  map_relative_self_row},
+  {"BindReturnAddr",G_TYPE_ADDR,(Mapper) map_return_addr},
 	{0,00,} };
 int init_gfun() {
 	add_trios(gfun_accessor_list);
