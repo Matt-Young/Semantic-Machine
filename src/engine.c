@@ -6,9 +6,18 @@
 // Will be shared Protected
 OP operands[OperatorMaximum];
 Pointer g_db;
-
+int Sqlson_to_Bson(Triple t[],char ** buff);
 const Triple SCRATCH_Triple = {"Scratch",SystemScratch,0};
-
+int send_buff(char *buffer,int count,char * ip_addr);
+int return_home(Triple t[]) {
+#ifdef NETIO
+  // get named default return ip
+  // void * buff;
+  // Sqlson_to_Bson(t,&buff);
+  // MahineUnlock
+  // send_buff(buff,Sqlson_to_Bson(t,&buff),name.valuer(t[0].key);
+#endif
+}
 int install_sql_script(char * ch,int opid) {
 	int status;
 	status =
@@ -323,32 +332,28 @@ void engine_init() {
 #ifndef TEST_ADDR
 char * TEST_ADDR = "127.0.0.1";
 #endif
+int port = TEST_PORT;
 int main(int argc, char * argv[]) {
   int i;
   for(i=1; i < argc;i++) {
-     argc--;
+     G_printf("Arg: %s\n",argv[i]);
     if(!G_strcmp(argv[i], "-V")) {
       G_printf("You are using %s.\n",VERSION);
       G_exit();
-    } else if( !G_strcmp(argv[i], "-ip")) {
-#ifndef TEST_ADDR
-      G_strncpy(TEST_ADDR, argv[i+1],10);
-      i++;
-#endif    
-  }else if( !G_strcmp(argv[argc], "--help")  || !G_strcmp(argv[argc], "-h") ) {
+    } else if( !G_strcmp(argv[i], "--help")  || !G_strcmp(argv[i], "-h") ) {
       G_printf("Usage: graphs\n");
       G_printf("\n");
       G_printf("Please see https://github.com/Matt-Young/Semantic-Machine/wiki .\n");
-    } else if(!G_strcmp(argv[argc], "-addr") )
-  {  G_printf("Address\n"); }
- 
+    } else if(!G_strcmp(argv[i], "-port") )
+  {  G_printf("Port changed %s\n",argv[i+1]);port = G_strtol(argv[i+1]); i++;}
     }
+      G_printf("Port %d\n",port);
      engine_init();
 		// Main loop
 
      print_trios();
 #ifdef NETIO 
-    net_start();
+    net_start((void *) port);
 #endif
    G_printf("Main engine\n");
 	  console_loop();

@@ -7,8 +7,8 @@
 #define SERVER_NAME "Joe"
 #define VERSION "Jane"
 #define TEST_PORT 8000
-#define TEST_ADDR "127.0.0.1"
-//#undef TEST_ADDR
-#undef WINDOWS
-#define NETIO
+//#define TEST_ADDR "127.0.0.1"
+#undef TEST_ADDR
+#define WINDOWS
+#undef NETIO
 

@@ -6,6 +6,8 @@ In the lab, stand alone configuration runs under windows studio on the cheap
 setting either threads or netio then you need to run under cygwin or under linux.
 the lab configuratio, the threads only and the netio
 */
+#include "config.h"
+#ifdef NETIO
 #define DebugNETIO 1
 #include <string.h>
 #include <stdio.h>
@@ -77,6 +79,7 @@ void * handle_data(void * arg) {
   if(rv < p->count) {
     if((rm = send(p->newfd, BAD_MSG, strlen(OK_MSG), 0)) == -1) 
       warn("Error sending data to client.");
+    close(p->newfd);
   }
   else {
     if((rm = send(p->newfd, OK_MSG, strlen(OK_MSG), 0)) == -1) 
@@ -107,11 +110,10 @@ static void crit(char * message) {
   exit(1);
 }
 
-void * net_service (void * arg)  {
+void * net_service (void * port)  {
   Pending pendings[NTHREAD];
   int sockfd = -1;
   int status;
-  int port = TEST_PORT;
   struct sockaddr_in my_addr;
   struct sockaddr_in remote_addr;
   int newfd,count,type;
@@ -122,7 +124,7 @@ void * net_service (void * arg)  {
   sockfd = socket (AF_INET, SOCK_STREAM, 0);
   if(sockfd == -1) printf("Couldn't create socket.");
   my_addr.sin_family = AF_INET;
-  my_addr.sin_port = htons (port);
+  my_addr.sin_port = htons ((int) port);
   my_addr.sin_addr.s_addr = INADDR_ANY;
   bzero (&(my_addr.sin_zero), 8);
 
@@ -168,11 +170,11 @@ void * net_service (void * arg)  {
   return 0;
 }
 
-int net_start() {
+int net_start(void * port) {
   pthread_t thread;
   int status;
   G_printf("Start netio \n");
-  status = pthread_create(&thread,0,net_service,0);
+  status = pthread_create(&thread,0,net_service,(void *) port);
   G_printf("Old thread \n");
   if(status == -1) {
     printf("Error threading");
@@ -180,3 +182,44 @@ int net_start() {
   }
   return 0;
 }
+///////////////////////////////////////
+#undef WINDOWS
+#ifdef WINDOWS
+    #include <direct.h>
+    #define GetCurrentDir _getcwd
+#else
+    //#include <unistd.h>
+    #define GetCurrentDir getcwd
+ #endif
+#define error printf
+// Little sender
+
+int send_buff(char *buffer,int count,char * ip_addr)
+{
+    int sockfd, portno, n;
+    struct sockaddr_in serv_addr;
+    struct hostent *server;
+    portno = TEST_PORT;
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0)  error("ERROR opening socket");
+    server = gethostbyname(ip_addr);
+    if (server == NULL) { error("ERROR, no such host\n");exit(0);}
+
+    bzero((char *) &serv_addr, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    bcopy((char *)server->h_addr, 
+         (char *)&serv_addr.sin_addr.s_addr,
+         server->h_length);
+    serv_addr.sin_port = htons(portno);
+    if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) 
+        error("ERROR connecting");
+    n = write(sockfd,buffer,count);
+    if (n < 0)  error("ERROR writing to socket");
+    bzero(buffer,256);
+    n = read(sockfd,buffer,255);
+    if (n < 0)  error("ERROR reading from socket");
+   // printf("%s\n",buffer);
+    close(sockfd);
+    return 0;
+}
+#endif

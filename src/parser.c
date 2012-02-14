@@ -114,7 +114,7 @@ int start_parser(char * Json, TABLE *table) {
 
 
 void list_graphs(PGRAPH  *list);
-#undef Debug_parser
+#define Debug_parser
 #ifdef Debug_parser
 char * typeface[] = {
   "{def.ccc.bbb.kkk,hhh.lyu,ggg.aaa}",
@@ -126,7 +126,7 @@ char * typeface[] = {
 	"{abc,def,ghi}",
 	"{@config}",
 	""};
-#define DLINE 0
+#define DLINE 3
 static int debug_counter=DLINE;
 int   parser(char * x,TABLE *table) {
  char buff[200]; 

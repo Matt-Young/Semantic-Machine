@@ -29,6 +29,7 @@
  #endif
 #define error printf
 // Little sender
+char  ip_addr[20] = "127.0.0.1";
 int send_buff(char *buffer,int count)
 {
     int sockfd, portno, n;
@@ -37,7 +38,7 @@ int send_buff(char *buffer,int count)
     portno = TEST_PORT;
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0)  error("ERROR opening socket");
-    server = gethostbyname(TEST_ADDR);
+    server = gethostbyname(ip_addr);
     if (server == NULL) { error("ERROR, no such host\n");exit(0);}
 
     bzero((char *) &serv_addr, sizeof(serv_addr));
@@ -58,9 +59,16 @@ int send_buff(char *buffer,int count)
     return 0;
 }
 Console console;
-int main(){
+
+
+int main(int argc,char *argv[]){
   char buffer[1024];
   printf("|%s| \n",GetCurrentDir(buffer,1024));
+
+    if(argc > 1)
+  if( !strcmp(argv[1], "-ip")) 
+      strncpy(ip_addr, argv[2],20);
+    printf("IP: %s\n",ip_addr);
   for(;;) {
     G_console(&console);
    // printf("C: %s %d %d\n",console.base,strlen(console.base),console.count);
