@@ -31,7 +31,7 @@ void look_stmt(Code stmt) ;
 int bind_code(Triple * top,Code stmt) {
 	int opid=top->link & OperatorMask;
 	int status=EV_Ok;
-	Pointer pointer,var;
+	Pointer pointer;
 	int type;
 	int index;
 	Mapper * a;
@@ -49,10 +49,8 @@ int bind_code(Triple * top,Code stmt) {
 			status = machine_bind_int(stmt,index++,(int) pointer);
 			break;
 case G_TYPE_BLOB:
-  a++;
-  	(*a) ( (Pointer *) &var,&type);  // blob size
-    if(type != G_TYPE_INTEGER) G_printf("rror bind\n");
-     status = machine_bind_blob(stmt,index++,top->key,(int) var);
+  // blob format
+     status = machine_bind_blob(stmt,index++,top->key+4,(int)top->key);
   			status = machine_bind_int(stmt,index++,top->link);
 			status = machine_bind_int(stmt,index++,top->pointer);
       break;

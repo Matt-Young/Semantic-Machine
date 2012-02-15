@@ -87,13 +87,13 @@ void * handle_data(void * arg) {
     t.key[rv]=0;
     close(p->newfd);
 
-    if(p->type = 0)
+    if(p->type = Bson_IO)
       t.link = OperatorBsonIn;
-    else if(p->type = 1) 
+    else if(p->type = Json_IO) 
       t.link = OperatorJson;
     t.pointer = p->count;
     machine_lock();
-     set_web_addr(&p->remote_addr);
+     set_web_addr(&p->remote_addr,sizeof(p->remote_addr));
     status = triple(&t,event_handler);
 
     machine_unlock();
@@ -183,26 +183,17 @@ int net_start(void * port) {
   }
   return 0;
 }
-///////////////////////////////////////
-#undef WINDOWS
-#ifdef WINDOWS
-    #include <direct.h>
-    #define GetCurrentDir _getcwd
-#else
-    //#include <unistd.h>
-    #define GetCurrentDir getcwd
- #endif
+
 #define error printf
 // Little sender
 int Sqlson_to_Bson(Triple t[],char ** buff);
 int send_buff(char *buffer,int count,void * ip_addr)
 {
     int sockfd, portno, n;
-    struct sockaddr_storage  serv_addr;
+    struct sockaddr_in  serv_addr;
     struct sockaddr_in  * w;
     // Get the return address for any emissin from this thread
-    w = (sockaddr_in *) get_web_addr();
-    memcpy(&serv_addr,w,sizeof(sockaddr_in));
+    memcpy(&serv_addr,get_web_addr(),sizeof(serv_addr));
     machine_unlock();
     if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) 
         error("ERROR connecting");

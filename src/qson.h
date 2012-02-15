@@ -1,6 +1,7 @@
 
-int  Sqlson_to_Bson(Triple t[],char * *Bson);  // uses remalloc when needed, should return bufer
-int Bson_to_Sqlson(Triple t[], char * Bson);  // I assume bson is word aligned.
+int  Qson_to_Bson(Triple t[],char * *Bson);  // uses remalloc when needed, should return bufer
+int  Qson_to_Json(Triple t[],char * *Bson); 
+int Bson_to_Qson(Triple t[], char * Bson);  // I assume bson is word aligned.
 enum {
     BSON_EOO = 0,
     BSON_DOUBLE = 1,

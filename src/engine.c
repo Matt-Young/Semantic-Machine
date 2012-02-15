@@ -271,13 +271,15 @@ Trio engine_trios[] = {
 	}
 }
   void set_return(Webaddr *w);
+
 #define TestAddr  "2001:db8:8714:3a90::12"
+#define  AF_CONSOLE 0xff
 void console_loop(){
 	Console c; int symbols;
 	Triple t; Webaddr w;
 	int status;
   G_printf("Console loop\n");
-  w.sa_family = AF_JSON;
+  w.sa_family = AF_CONSOLE;
   symbols = g_name_count;
   G_memcpy(&w,TestAddr,sizeof(TestAddr));
 	for(;;) {
@@ -287,7 +289,7 @@ void console_loop(){
 		t.key = c.base;
     t.pointer=1;
      status = machine_lock();
-    set_web_addr(&w);
+    set_web_addr(&w,sizeof(Webaddr));
 		status = triple(&t,event_handler);
      status = machine_unlock();
         flush_users();

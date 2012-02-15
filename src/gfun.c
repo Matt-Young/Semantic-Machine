@@ -1,7 +1,7 @@
 
 #include "all.h"
 #include "filter.h"
-#include "sqlson.h"
+#include "qson.h"
 const Triple NULL_Triple={"_",'_',0};
 
 Mapper filter_map(Pointer * pointer,int * type) {
@@ -108,10 +108,11 @@ int  set_ready_graph(FILTER *f) {
     } else ready.self=0;
   return  EV_Ok;
 }
-void set_web_addr(Webaddr *w) {
-  ready.return_addr =  *w;
+void * set_web_addr(void *w,int size) {
+  G_memcpy(&ready.return_addr,w,size);
+  return &ready.return_addr;
 }
-Webaddr * get_web_addr(Webaddr *w) {
+void * get_web_addr(Webaddr *w) {
   return &ready.return_addr;
 }
 int key_match(const char * k,const char * g) {
@@ -155,7 +156,7 @@ int spew_bson(Triple *t) {
     TABLE * table; char * buff;int count;
   	init_table(t->key,0,&table);
     //machine_triple(&addr)_
-     count = Sqlson_to_Bson(table->operators,&buff);
+     count = Qson_to_Bson(table->operators,&buff);
     // send_buff(buff,count,addr.key);
      G_free(buff);
      return EV_Ok;
@@ -164,7 +165,7 @@ int spew_bson(Triple *t) {
     TABLE * table; char * buff;int count;
   	init_table(t->key,0,&table);
     //machine_triple(&addr)_
-     count = Sqlson_to_Json(table->operators,&buff);
+     count = Qson_to_Json(table->operators,&buff);
     // send_buff(buff,count,addr.key);
      G_free(buff);
      return EV_Ok;
@@ -173,7 +174,7 @@ int spew_bson(Triple *t) {
 int consume_bson(Triple *t) {
     TABLE * table;
   	init_table("scratch",0,&table);
-     Bson_to_Sqlson(table->operators,t->key);
+     Bson_to_Qson(table->operators,t->key);
      return EV_Ok;
 }
 int echo_handler(Triple *node);

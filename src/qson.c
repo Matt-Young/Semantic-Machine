@@ -3,11 +3,11 @@
 #include "../src/engine.h"
 #include "../src/tables.h"
 #include "../src/console.h"
-#include "../src/sqlson.h"
+#include "../src/qson.h"
 // A utility to translate triples into bson and back
 //
 
-int make_sqlson_type(int bson_type){
+int make_qson_type(int bson_type){
   int sqlson_type ='.';  // default type
   if(bson_type == BSON_ARRAY) sqlson_type =',';
   return sqlson_type | bson_type << 8;}
@@ -27,22 +27,29 @@ char *  make_bytes_from_word(char * b,int i) {
     *b++ = i >> 24;
   return b;}
 
-int make_bson_type(int sqlson_type){
-  if(sqlson_type & 0xff00)
-    return  sqlson_type >> 8;
+int make_bson_type(int qson_type){
+  if(qson_type & 0xff00)
+    return  qson_type >> 8;
   else return 1;}
-typedef struct {  int rowcount; 
+// Making lazy Json
+int make_json_type(int qson_type){
+    return  qson_type;
+    }
+  typedef struct {  int rowcount; 
 char * start; Triple t; int byte_count;
 } CallBoxBson;
 // Save a pointer to the parent byte count location
 // Convert and fill n the element type right away
 // and the parent key is valid, fill it in.
-int make_bson_from_sqlson(Triple *tr,CallBoxBson * parent) {
+int make_bson_from_qson(Triple *tr,CallBoxBson * parent,int type) {
   CallBoxBson child;
   char *bson_count_ptr;
   int bson_key_len; int bson_type;
   parent->byte_count=0;
   bson_count_ptr=0;
+  if(type == Json_IO)
+    bson_type = make_json_type(parent->t.link);
+  else
   bson_type = make_bson_type(parent->t.link);
   if((bson_type == BSON_OBJECT) ||(bson_type==BSON_BINARY)
     || (bson_type == BSON_ARRAY) ||(bson_type==BSON_STRING)) {
@@ -69,7 +76,7 @@ int make_bson_from_sqlson(Triple *tr,CallBoxBson * parent) {
     child.rowcount=0;
     triple(tr+pop_triple_operator,0);
     child.t = tr[pop_triple_data]; 
-    parent->byte_count += make_bson_from_sqlson(tr,&child);
+    parent->byte_count += make_bson_from_qson(tr,&child,Bson_IO);
     parent->rowcount +=  child.rowcount;
     parent->start = child.start;
   }
@@ -82,7 +89,7 @@ typedef char  *Bson;
 typedef struct {  int byte_count; 
 char  * empty; Bson b; int rowid;
 } CallBoxSqlson;
-int make_sqlson_element(Triple *tr,CallBoxSqlson * parent) {
+int make_qson_element(Triple *tr,CallBoxSqlson * parent) {
   int i;
     int bson_type = parent->empty[0];
     //ps(parent->empty);
@@ -96,7 +103,7 @@ int make_sqlson_element(Triple *tr,CallBoxSqlson * parent) {
       parent->empty += G_strlen(tr[append_triple_data].key)+1;
       parent->byte_count += G_strlen((char *) parent->empty+1) + 1;
     }  else { parent->empty++;parent->byte_count++;}
-    tr[append_triple_data].link = make_sqlson_type(bson_type);
+    tr[append_triple_data].link = make_qson_type(bson_type);
     tr[append_triple_data].pointer =1;
     tr[append_triple_data].key = (char *) parent->empty;
     triple(tr+append_triple_operator,0);
@@ -108,7 +115,7 @@ int make_sqlson_element(Triple *tr,CallBoxSqlson * parent) {
 }
 //Make triple from Bson
 
-int make_sqlson_from_bson(Triple *tr,CallBoxSqlson * parent) {
+int make_qson_from_bson(Triple *tr,CallBoxSqlson * parent) {
   CallBoxSqlson child;
   int char_count;
   // on entry we have a compound object
@@ -117,14 +124,14 @@ int make_sqlson_from_bson(Triple *tr,CallBoxSqlson * parent) {
     G_printf("Bson Error\n");
   parent->byte_count =4;
   parent->empty +=4;
-  parent->byte_count += make_sqlson_element(tr,parent);  // lead
+  parent->byte_count += make_qson_element(tr,parent);  // lead
   while(parent->byte_count < char_count) {
     child = *parent;
     child.rowid=0;
     if((parent->empty[0] == BSON_ARRAY) || (parent->empty[0] == BSON_OBJECT )) 
-      parent->byte_count += make_sqlson_from_bson(tr,&child);
+      parent->byte_count += make_qson_from_bson(tr,&child);
     else
-      parent->byte_count += make_sqlson_element(tr,&child);
+      parent->byte_count += make_qson_element(tr,&child);
     parent->rowid += child.rowid;
     parent->empty = child.empty;
   }
@@ -132,35 +139,32 @@ int make_sqlson_from_bson(Triple *tr,CallBoxSqlson * parent) {
   return parent->byte_count;
 }
 #define BSIZE 256
-int Sqlson_to_Bson(Triple t[],char ** buff) {
-  CallBoxBson call;
-  G_memset(&call,0,sizeof(call));
-  *buff = (char *) G_calloc(BSIZE);
+char * init_qson(Triple t[],CallBoxBson *call) {
+  char * buff;
+   G_memset(&call,0,sizeof(CallBoxBson));
+  buff =  (char *) G_calloc(BSIZE);
   triple(t+pop_triple_operator,0);
-  call.t = t[pop_triple_data];
-  call.start = *buff;
-  call.rowcount=0; 
-  return make_bson_from_sqlson(t,&call);
+  call->t = t[pop_triple_data];
+  call->start = buff;
+  call->rowcount=0; 
+return buff;}
+
+int Qson_to_Bson(Triple t[],char ** Bson) {
+  CallBoxBson call;
+  *Bson = init_qson(t,&call);
+  return make_bson_from_qson(t,&call,Bson_IO);
 
 }
+int Qson_to_Json(Triple t[],char **Json) {
+    CallBoxBson call;
+    *Json = init_qson(t,&call);
+  return make_bson_from_qson(t,&call,Json_IO);  //use the null table on input
+}
 
-int Bson_to_Sqlson(Triple t[],char * Bson) {
+int Bson_to_Qson(Triple t[],char * Bson) {
   CallBoxSqlson call;
   G_memset(&call,0,sizeof(call));
   call.empty = Bson;
  //ps(call.empty);
-  return make_sqlson_from_bson(t,&call);  //use the null table on input
-}
-int Sqlson_to_Json(Triple t[],char **Bson) {
-  // make lazy J
-  // for each element in J
-  // if new block, add ':'
-  // make json element
-  else
-  // if add add key text link
-}
-  G_memset(&call,0,sizeof(call));
-  call.empty = Bson;
- //ps(call.empty);
-  return make_sqlson_from_bson(t,&call);  //use the null table on input
+  return make_qson_from_bson(t,&call);  //use the null table on input
 }

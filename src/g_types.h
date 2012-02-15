@@ -25,10 +25,14 @@ enum {G_TYPE_NONE,G_TYPE_INTEGER,G_TYPE_FLOAT,
 	G_TYPE_MAPPER,G_TYPE_HANDLER,G_TYPE_TABLE,
 	G_TYPE_SYSTEM,G_TYPE_NAME,G_TYPE_USER,G_TYPE_ADDR};
 // struct in6_addr  unsigned char   s6_addr[16];   // load with inet_pton()};
-typedef struct {    unsigned short  sa_family; unsigned short data[20];} Webaddr;
-// Adresses may be permanently typed??
-#define AF_JSON 0xff
-#define AF_BSON 0xfe
+typedef struct {    unsigned short  sa_family; 
+unsigned short data[20];unsigned short type; } Webaddr;
+// A console AF ype
+#define AF_CONSOLE 0xff
+// Two sub types on Webaddr
+enum { Json_IO,Bson_IO,Qson_IO};
+
+// The null value and other defaults
 #define G_TYPE_NULL 95
 #define GBASE "c:/soft/gbase"
 #define GFUN "gfun"

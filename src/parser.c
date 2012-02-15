@@ -238,9 +238,9 @@ int json_rules(char cin, PGRAPH *inner) {
    if(ccurr == '{')   
        graph_changes( inner,New); 
    // One append through this series
-   if( (cprev == ':')  )
+   if( (cprev == ':') ||  (cprev == '$')  )
      graph_changes( inner,AppCloseNew);
-   if((ccurr == '.') && !( (cprev == ':') ||  (cprev == '$') ))
+   if((ccurr == '.') && !( (cprev == ':') ))
      graph_changes( inner,App);
    else if((ccurr == ',') && !( (cprev == ':') ||  (cprev == '$') ))
        graph_changes( inner,AppCloseNew);
@@ -249,7 +249,7 @@ int json_rules(char cin, PGRAPH *inner) {
    else if(ccurr == '}') {  
      int child_context = (int ) graph_variable(*inner);
      int parent_context = (int ) graph_variable((*inner)->parent);
-     if( (cprev == ':') ||  (ccurr == '$') ) graph_changes(inner,Del);
+     if( cprev == ':' ) graph_changes(inner,Del);
      else if(parent_context == '{') graph_changes(inner,AppDel);
      else graph_changes(inner,AppCloseNew);
      }
