@@ -108,10 +108,8 @@ int isin(char c,const char *str) {
    }
    }
 int console_command(Console * console,char command ) {
-  char  dir[200],line[200],*name;
+  char  line[200];
   char *ptr;
-  struct stat buf;
-  FILE * f;int dirlen;
    fgets(line, 100, stdin);
    ptr = strtok(line," ");
    if(ptr[0] == 'q')

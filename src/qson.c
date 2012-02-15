@@ -31,25 +31,18 @@ int make_bson_type(int qson_type){
   if(qson_type & 0xff00)
     return  qson_type >> 8;
   else return 1;}
-// Making lazy Json
-int make_json_type(int qson_type){
-    return  qson_type;
-    }
   typedef struct {  int rowcount; 
 char * start; Triple t; int byte_count;
 } CallBoxBson;
 // Save a pointer to the parent byte count location
 // Convert and fill n the element type right away
 // and the parent key is valid, fill it in.
-int make_bson_from_qson(Triple *tr,CallBoxBson * parent,int type) {
+int make_from_qson(Triple *tr,CallBoxBson * parent) {
   CallBoxBson child;
   char *bson_count_ptr;
   int bson_key_len; int bson_type;
   parent->byte_count=0;
   bson_count_ptr=0;
-  if(type == Json_IO)
-    bson_type = make_json_type(parent->t.link);
-  else
   bson_type = make_bson_type(parent->t.link);
   if((bson_type == BSON_OBJECT) ||(bson_type==BSON_BINARY)
     || (bson_type == BSON_ARRAY) ||(bson_type==BSON_STRING)) {
@@ -76,7 +69,7 @@ int make_bson_from_qson(Triple *tr,CallBoxBson * parent,int type) {
     child.rowcount=0;
     triple(tr+pop_triple_operator,0);
     child.t = tr[pop_triple_data]; 
-    parent->byte_count += make_bson_from_qson(tr,&child,Bson_IO);
+    parent->byte_count += make_from_qson(tr,&child,Bson_IO);
     parent->rowcount +=  child.rowcount;
     parent->start = child.start;
   }
@@ -152,19 +145,19 @@ return buff;}
 int Qson_to_Bson(Triple t[],char ** Bson) {
   CallBoxBson call;
   *Bson = init_qson(t,&call);
-  return make_bson_from_qson(t,&call,Bson_IO);
+  return make_from_qson(t,&call);
 
 }
 int Qson_to_Json(Triple t[],char **Json) {
     CallBoxBson call;
     *Json = init_qson(t,&call);
-  return make_bson_from_qson(t,&call,Json_IO);  //use the null table on input
+    // 
+  return make_from_qson(t,&call);  //use the null table on input
 }
 
 int Bson_to_Qson(Triple t[],char * Bson) {
   CallBoxSqlson call;
   G_memset(&call,0,sizeof(call));
   call.empty = Bson;
- //ps(call.empty);
   return make_qson_from_bson(t,&call);  //use the null table on input
 }
