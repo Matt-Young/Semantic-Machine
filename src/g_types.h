@@ -28,9 +28,11 @@ enum {G_TYPE_NONE,G_TYPE_INTEGER,G_TYPE_FLOAT,
 typedef struct {    unsigned short  sa_family; 
 unsigned short data[20];unsigned short type; } Webaddr;
 // A console sa family types
+#define AF_FILE  0x70e3
 #define AF_CONSOLE 0x70e2
 #define AF_TABLE   0x70e1
 #define AF_MEMORY  0x70e0
+
 // Two sub types on Webaddr
 enum { Json_IO,Bson_IO,Qson_IO};
 
