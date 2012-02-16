@@ -19,7 +19,7 @@ typedef struct  {
 enum {
 	pop_operator,pop_data,
 	append_operator,append_data,
-  append_blob_operator,append_blob_data,
+  append_old_operator,append_old_data,
 	update_operator,update_data,
 	spare_operator,spare_data};
 

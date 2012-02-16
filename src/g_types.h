@@ -23,12 +23,14 @@ int net_start(void *);
 enum {G_TYPE_NONE,G_TYPE_INTEGER,G_TYPE_FLOAT,
 	G_TYPE_TEXT,G_TYPE_BLOB,G_TYPE_BIT,G_TYPE_TRIPLE,G_TYPE_CODE,
 	G_TYPE_MAPPER,G_TYPE_HANDLER,G_TYPE_TABLE,
-	G_TYPE_SYSTEM,G_TYPE_NAME,G_TYPE_USER,G_TYPE_ADDR};
+	G_TYPE_SYSTEM,G_TYPE_NAME,G_TYPE_USER,G_TYPE_ADDR,G_TYPE_OLD_TRIPLE,};
 // struct in6_addr  unsigned char   s6_addr[16];   // load with inet_pton()};
 typedef struct {    unsigned short  sa_family; 
 unsigned short data[20];unsigned short type; } Webaddr;
-// A console AF ype
-#define AF_CONSOLE 0xff
+// A console sa family types
+#define AF_CONSOLE 0x70e2
+#define AF_TABLE   0x70e1
+#define AF_MEMORY  0x70e0
 // Two sub types on Webaddr
 enum { Json_IO,Bson_IO,Qson_IO};
 

@@ -104,7 +104,7 @@ int append_graph(PGRAPH *list,Triple node) {
     if(!t) status= EV_Error;
     else {
 	    t->operators[append_data] = node;
-	    status = machine_new_operator(&t->operators[append_operator],0);
+	    status = machine_new_operator(&t->operators[append_old_operator],0);
     }
   }
 

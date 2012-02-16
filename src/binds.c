@@ -15,10 +15,12 @@ int bind_count=0;
 Mapper null_map(Pointer  pointer,int  *type) { 
 	*type = G_TYPE_NULL;
 	return 0;}
+Mapper map_old_triple(Pointer *pointer,int *type) {
+	*type = G_TYPE_OLD_TRIPLE;
+	return 0;}
 Mapper map_triple(Pointer *pointer,int *type) {
 	*type = G_TYPE_TRIPLE;
 	return 0;}
-
 
 int local_handler(Triple t) {
 	char buffer[200];
@@ -48,13 +50,13 @@ int bind_code(Triple * top,Code stmt) {
 		case G_TYPE_INTEGER:
 			status = machine_bind_int(stmt,index++,(int) pointer);
 			break;
-case G_TYPE_BLOB:
+case G_TYPE_TRIPLE:
   // blob format, count then data
-     status = machine_bind_blob(stmt,index++,top->key+4,(int)top->key);
+     status = machine_bind_blob(stmt,index++,top->key+4,(int)top->key[0]);
   			status = machine_bind_int(stmt,index++,top->link);
 			status = machine_bind_int(stmt,index++,top->pointer);
       break;
-		case G_TYPE_TRIPLE:
+		case G_TYPE_OLD_TRIPLE:
 
 			status = machine_bind_text(stmt,index++,top->key);
 			status = machine_bind_int(stmt,index++,top->link);
@@ -71,6 +73,7 @@ case G_TYPE_BLOB:
 }
   // tios local to binds
   Trio bind_trios[] ={ {"BindNull",G_TYPE_MAPPER,(Mapper) null_map},
+{"BindOldTriple",G_TYPE_MAPPER,(Mapper) map_old_triple},
 {"BindTriple",G_TYPE_MAPPER,(Mapper) map_triple},
 {0,0,0}};
   int init_binder() {add_trios(bind_trios);return(0);}

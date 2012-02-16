@@ -82,7 +82,7 @@ Triple *  start_table(TABLE * t,int index){
   g->rdx.end=-1;
   set_row_sequence(&g->rdx);
  machine_set_operator(&t->operators[index],exit_handler);
- return &t->operators[pop_data];
+ return &t->operators[index];
 }
 
 #define Sql_delete_rows "delete from %s;"
@@ -113,7 +113,9 @@ const struct new_install{
 	{pop_operator,SystemMax+1,
 	"select key,link,pointer from %s where (gfun(0,rowid) == rowid);",
   "UnbindTriple",0,0,0},
-	{append_operator,SystemMax+2,"insert into %s values( ?, ?, ?);",
+	{append_old_operator,SystemMax+2,"insert into %s values( ?, ?, ?);",
+	  "BindOldTriple","AppendHandler",0,0},
+    {append_operator,SystemMax+2,"insert into %s values( ?, ?, ?);",
 	  "BindTriple","AppendHandler",0,0},
 	{update_operator,SystemMax+3,"update %s set pointer = (?) where rowid = ?;",
 	"BindRelativeSelfRow","BindSelfStart","ExitHandler",0},

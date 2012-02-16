@@ -170,7 +170,7 @@ int  machine_set_operator(Triple top[],Handler handler) {
 	if(events & EV_Debug)
 		G_printf("Debug event ");
 	set_ready_code(opid);
-    events = set_ready_event(events);
+  events = set_ready_event(events);
   return events;
 }
 int  machine_new_operator(Triple top[],Handler handler) {
@@ -268,7 +268,6 @@ Trio engine_trios[] = {
   void set_return(Webaddr *w);
 
 #define TestAddr  "2001:db8:8714:3a90::12"
-#define  AF_CONSOLE 0xff
   int init_table(char * name,int options,TABLE **table);
 int get_qson_graph(TABLE *t);
 int put_qson_graph(TABLE *t);
@@ -284,6 +283,7 @@ void console_loop(){
   init_table("test",0,&table);
   triple = start_table(table,pop_operator);
   get_qson_graph(table);
+  init_table("result",1,&table);
   put_qson_graph(table);
 	for(;;) {
 		G_console(&c);

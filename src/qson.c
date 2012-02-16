@@ -54,25 +54,36 @@ int get_qson_graph(TABLE *t) {
 
 // extract the Qson
 Triple * set_output_buff(Triple *t);
-int put_qson_graph(TABLE *table) {
+int put_qson_graph_mode(TABLE *table,int mode) {
   int rows,len,total; int i;Triple *data;
   Triple * Qson;
-  Code stmt = get_ready_stmt();
+  Code stmt;
+   start_table(table,append_operator);
+  stmt = get_ready_stmt();
   data = &table->operators[append_data];
-  
-    Qson = set_output_buff(0);
+  Qson = set_output_buff(0);
   rows = Qson[0].pointer; total = 0;
-
   for(i=0;i<rows;i++) {
     *data = Qson[i];
     len = make_word_from_bytes(data->key);
     // Json IO
+    if(mode == AF_CONSOLE)
     G_printf("Qson: %d %s \n",len,data->key+4);
-
-  start_table(table,append_operator);
-  machine_step(stmt);
+    else if (mode == AF_TABLE) {
+      machine_reset(stmt);
+      bind_code(&table->operators[append_operator],stmt);
+      machine_step(stmt);
+    }
    G_free(Qson[i].key);
   }
   G_free(Qson);
     return total + sizeof(Triple) * rows;
+}
+int put_qson_graph(TABLE *table) {
+  put_qson_graph_mode(table,AF_TABLE);
+  return 0;
+}
+int print_qson_graph(TABLE *table) {
+  put_qson_graph_mode(table,AF_CONSOLE);
+  return 0;
 }
