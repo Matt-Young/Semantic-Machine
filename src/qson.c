@@ -35,17 +35,18 @@ int get_qson_graph(TABLE *t) {
   i = machine_step_fetch(&v,0); 
   Qson = (Triple *) G_malloc(v.pointer*sizeof(Triple));
   len = machine_key_len(stmt); 
-  key_value = (char *)  G_malloc(len+4);
   set_output_buff(Qson);
-  Qson[0] = v;
+  Qson[0]=v;
   for(i=0;i<v.pointer;i++) {
     if(i)
-    len = machine_step_fetch(&Qson[i],0);
+      len = machine_step_fetch(&Qson[i],0);
     len = machine_key_len(stmt); 
-    key_value = (char *)  G_malloc(len+4);
+    key_value = (char *)  G_malloc(len+5);
     G_memcpy(key_value+4,Qson[i].key,len);
     make_bytes_from_word(key_value,len);
-    total += len;
+    Qson[i].key=key_value;
+    Qson[i].key[len+4]=0;
+    total += len+5;
 
   }
     return total + sizeof(Triple) * v.pointer;
@@ -54,18 +55,23 @@ int get_qson_graph(TABLE *t) {
 // extract the Qson
 Triple * set_output_buff(Triple *t);
 int put_qson_graph(TABLE *table) {
-  int rows,len,total; int i;
-  Code stmt = get_ready_stmt();
+  int rows,len,total; int i;Triple *data;
   Triple * Qson;
+  Code stmt = get_ready_stmt();
+  data = &table->operators[append_data];
+  
     Qson = set_output_buff(0);
   rows = Qson[0].pointer; total = 0;
 
   for(i=0;i<rows;i++) {
-    len = make_word_from_bytes(Qson[i].key);
+    *data = Qson[i];
+    len = make_word_from_bytes(data->key);
     // Json IO
-    //print_triple(Qson[i]);
-  // machine_append_blob(&Qson[i],0);
-   G_free(Qson[i].key+4);
+    G_printf("Qson: %d %s \n",len,data->key+4);
+
+  start_table(table,append_operator);
+  machine_step(stmt);
+   G_free(Qson[i].key);
   }
   G_free(Qson);
     return total + sizeof(Triple) * rows;
