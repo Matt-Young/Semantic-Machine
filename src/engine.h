@@ -29,11 +29,12 @@ int reset_ready_event(int EV_event);
 int bind_code(Triple *,Code );
 void  * get_web_addr();
 void * set_web_addr(void  *,int);
-
+int exit_handler(Triple *node);
 
   // Generics that cover sqlite3
 extern Pointer g_db;
 int open_machine_layer(char * name,Pointer  mach);
+int  machine_set_operator(Triple top[],Handler handler);
 int machine_loop(Triple *t,Handler h) ;
 int machine_new_operator(Triple top[],Handler);
 int machine_append(Triple *t,Handler h);

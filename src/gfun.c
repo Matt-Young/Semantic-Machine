@@ -74,6 +74,7 @@ int incr_row(int delta) {
 }
 int _row() {return(ready.self->row);}
 Triple * set_output_buff(Triple *t) {
+  if(t)
   ready.buff = t;
   return(ready.buff);
 }

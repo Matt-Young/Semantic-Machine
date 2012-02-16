@@ -3,7 +3,7 @@
 #include "engine.h"
 #include "console.h"
 
-
+#define clear_events  reset_ready_event( EV_Done| EV_Data | EV_Error)
 int msg_id(int sqlite_msg) {
 	if(sqlite_msg == SQLITE_OK) return EV_Ok;
 	else if(sqlite_msg == SQLITE_ERROR) return EV_Error;
@@ -31,6 +31,7 @@ int machine_prepare(Pointer g_db,char * ch,Code * stmt) {
 
 
 int machine_step(Code stmt ) { 
+  clear_events;
 	return set_ready_event(msg_id(sqlite3_step((sqlite3_stmt*) stmt )));}
 int machine_reset(Pointer stmt) {
   reset_ready_event( EV_Done| EV_Data | EV_Error);

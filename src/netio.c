@@ -56,8 +56,9 @@ int header_magic(int newfd,int * count) {
   type = -1;
   rv = read(newfd, inbuffer, HEADER_SIZE);
   if(rv != -1 && rv == HEADER_SIZE) {
-    if(!strncmp(inbuffer,JSON_TYPE,MAGIC_SIZE)) type = 1;
-    else if(!strncmp(inbuffer,BSON_TYPE,MAGIC_SIZE)) type = 0;
+    if(!strncmp(inbuffer,JSON_TYPE,MAGIC_SIZE)) type = Json_IO;
+    else if(!strncmp(inbuffer,BSON_TYPE,MAGIC_SIZE)) type = Bson_IO;
+    else if(!strncmp(inbuffer,BSON_TYPE,MAGIC_SIZE)) type = Qson_io;
   }
   if(type != -1)
     sscanf(inbuffer+ MAGIC_SIZE,"%8d",count);

@@ -53,14 +53,15 @@ int del_create_table(TABLE *table) {
 int make_stmt(TABLE * table,int format,char * table_name);
 int init_table(char * name,int options,TABLE **table) {
 	 int status = EV_Ok;
-	 int i;
-	 *table =  get_table_context(name);
+	 int i; TABLE *in;
+	 in =  get_table_context(name);
 	 if(options)
-		 del_create_table(*table);
+		 del_create_table(in);
 	 for(i=0; i < NBUILTINS;i++) {
-		 make_stmt(*table,i,name);
+		 make_stmt(in,i,name);
 	 }
-   new_child_graph((PGRAPH *) (*table)->list,(void *) '_');
+   new_child_graph((PGRAPH *) &in->list,(void *) '_');
+   *table = in;
 	 return status;
  }
 int run_table(TABLE * t,Handler handler){
@@ -80,8 +81,7 @@ Triple *  start_table(TABLE * t,int index){
   g->rdx.rowoffset=1;
   g->rdx.end=-1;
   set_row_sequence(&g->rdx);
- machine_new_operator(&t->operators[index],0);
-
+ machine_set_operator(&t->operators[index],exit_handler);
  return &t->operators[pop_data];
 }
 

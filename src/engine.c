@@ -270,7 +270,8 @@ Trio engine_trios[] = {
 #define TestAddr  "2001:db8:8714:3a90::12"
 #define  AF_CONSOLE 0xff
   int init_table(char * name,int options,TABLE **table);
-int get_qson_graph(Code stmt,Triple *t);
+int get_qson_graph(TABLE *t);
+int put_qson_graph(TABLE *t);
 void console_loop(){
     TABLE *table; Triple * triple;
 	Console c; int symbols;
@@ -280,9 +281,10 @@ void console_loop(){
   w.sa_family = AF_CONSOLE;
   symbols = g_name_count;
   G_memcpy(&w,TestAddr,sizeof(TestAddr));
-  init_table("config",0,&table);
-  triple = start_table(table,0);
-  get_qson_graph(get_ready_stmt(),triple);
+  init_table("test",0,&table);
+  triple = start_table(table,pop_operator);
+  get_qson_graph(table);
+  put_qson_graph(table);
 	for(;;) {
 		G_console(&c);
     // check here for any returns
