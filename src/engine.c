@@ -17,7 +17,7 @@ int install_sql_script(char * ch,int opid) {
 	operands[opid].properties=0;
 	return (EV_Ok);
 }
-
+int SEND_ONLY = 0;  // Global environment
 
 // install key at installed operand position pointer
 int  config_handler(Triple t[]) {
@@ -56,7 +56,7 @@ int  config_handler(Triple t[]) {
 int sql_handler(Triple *node) {
 	int status=EV_Ok;
 	install_sql_script((char *) node->key,SystemScratch);
-	triple((Triple *) &SCRATCH_Triple,0);
+	machine_new_operator((Triple *) &SCRATCH_Triple,0);
 	return status;
 }
 int call_handler(Triple *node) {
@@ -106,7 +106,7 @@ int pop_handler(Triple *node) {
   status = set_ready_event(0);
   do {
     unbind_triple(stmt,&t);
-    status = triple(&t,0);
+    status = machine_new_operator(&t,0);
     status = machine_step(stmt );
   }while( status & EV_Data);
 	  return status;
@@ -155,7 +155,7 @@ Code get_stmt(int opid,Triple * top) {
 // The link then holds the specified graph operator, 
 // this sifts through and finds a handler
 
-int triple(Triple top[],Handler handler) {
+int  machine_set_operator(Triple top[],Handler handler) {
 	int opid,events,status;
 	Code stmt; 
 	void * key;
@@ -166,33 +166,28 @@ int triple(Triple top[],Handler handler) {
   events =operands[ opid ].properties; 
   if(top[0].link & OperatorMSB) 
       events |= EV_Overload;
-	stmt = get_stmt(opid,top);
-  events = set_ready_event(events);
+	set_ready_stmt(get_stmt(opid,top));
 	if(events & EV_Debug)
 		G_printf("Debug event ");
 	set_ready_code(opid);
-  //G_printf(" E: %6x %x %x ",events,stmt,handler);
+    events = set_ready_event(events);
+  return events;
+}
+int  machine_new_operator(Triple top[],Handler handler) {
+  int events,status; Code stmt;
+  events = machine_set_operator(top,handler);
+  stmt = get_ready_stmt();
 	if(!(EV_No_bind & events))
 		status = bind_code(top,stmt);
 	if(status != EV_Ok) 
 		G_printf("bind %x ",status);
    handler = get_ghandler(top,handler);
 	if(!stmt) 
-			status = handler(top);
-	else {
-    set_ready_stmt(stmt);
-		do {
-     // G_printf("mach  ");
-			status = machine_step(stmt );
-      if(status & EV_Error) 
-			  G_printf("err: %6x ",status);
-      else
-        status = handler(top);
-		}  while( !(status & EV_Done) );
-	}   machine_reset(stmt);
-	return status;
+	  handler(top);
+	else 
+    machine_loop(top,handler);
+	return 0;
 }
-
 
 const struct {
 	char * name;
@@ -267,14 +262,17 @@ Trio engine_trios[] = {
 		t=G_null_graph;
 		if(set_ready_event(0) & EV_SystemEvent)
 			t.link = '@';
-		status = triple(&t,event_handler);
+		status = machine_new_operator(&t,event_handler);
 	}
 }
   void set_return(Webaddr *w);
 
 #define TestAddr  "2001:db8:8714:3a90::12"
 #define  AF_CONSOLE 0xff
+  int init_table(char * name,int options,TABLE **table);
+int get_qson_graph(Code stmt,Triple *t);
 void console_loop(){
+    TABLE *table; Triple * triple;
 	Console c; int symbols;
 	Triple t; Webaddr w;
 	int status;
@@ -282,6 +280,9 @@ void console_loop(){
   w.sa_family = AF_CONSOLE;
   symbols = g_name_count;
   G_memcpy(&w,TestAddr,sizeof(TestAddr));
+  init_table("config",0,&table);
+  triple = start_table(table,0);
+  get_qson_graph(get_ready_stmt(),triple);
 	for(;;) {
 		G_console(&c);
     // check here for any returns
@@ -290,7 +291,7 @@ void console_loop(){
     t.pointer=1;
      status = machine_lock();
     set_web_addr(&w,sizeof(Webaddr));
-		status = triple(&t,event_handler);
+		status = machine_new_operator(&t,event_handler);
      status = machine_unlock();
         flush_users();
         sort_names();
@@ -331,8 +332,10 @@ void engine_init() {
 char * TEST_ADDR = "127.0.0.1";
 #endif
 int port = TEST_PORT;
+
 int main(int argc, char * argv[]) {
   int i;
+
   for(i=1; i < argc;i++) {
      G_printf("Arg: %s\n",argv[i]);
     if(!G_strcmp(argv[i], "-V")) {
@@ -351,14 +354,22 @@ int main(int argc, char * argv[]) {
   console_file(&c,argv[i+1]); 
   G_free(c.base);
     return(0);
-  } else {
+   }
+   if(!G_strcmp(argv[i], "-send") ) {
+     SEND_ONLY = 1;
+     G_printf("Send only \n");
+   }
+  {
       G_printf("Port %d\n",port);
      engine_init();
 		// Main loop
 
      print_trios();
+
 #ifdef NETIO 
+     if(!SEND_ONLY)
     net_start((void *) port);
+
 #endif
    G_printf("Main engine\n");
 	  console_loop();

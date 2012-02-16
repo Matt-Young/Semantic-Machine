@@ -84,10 +84,9 @@ int start_parser(char * Json, TABLE *table) {
 	PGRAPH *inner; // points to first child
   G_printf("\nparse start\n");
 	inner = (PGRAPH *) &table->list;
-  *inner =0;
 	nchars=0;cprev=1,ccurr=1,cnext=1;
   del_create_table(table);
-  new_child_graph(inner,(void *) '@'); // Header block
+  (*inner)->context=(void *) '@';
   (*inner)->table=table;
   prev = G_null_graph;
   current.key = ParserHeader;

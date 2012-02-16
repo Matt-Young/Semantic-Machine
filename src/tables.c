@@ -16,6 +16,7 @@ return(pt);}
 void free_table_context(PTABLE pt) {
    if(del_table_count >= new_table_count)
 		G_error("Bad table",G_ERR_GRAPH);
+   delete_graph((PGRAPH *) pt->list);
 	G_free((void *) pt);
 	del_table_count++;
 }
@@ -44,11 +45,46 @@ void release_table_context(PTABLE pt) {
 #define Sql_create "drop table if exists %s; create table %s (key blob,link integer, pointer integer);" 
 int del_create_table(TABLE *table) {
   char buff[400];char  *err;int status;
-  Triple t = {buff,SystemExec,0};
+ // Triple t = {buff,SystemExec,0};
   G_sprintf(buff,Sql_create,table->name,table->name);
     status = machine_exec(g_db,buff,&err);
   return( status);
 }
+int make_stmt(TABLE * table,int format,char * table_name);
+int init_table(char * name,int options,TABLE **table) {
+	 int status = EV_Ok;
+	 int i;
+	 *table =  get_table_context(name);
+	 if(options)
+		 del_create_table(*table);
+	 for(i=0; i < NBUILTINS;i++) {
+		 make_stmt(*table,i,name);
+	 }
+   new_child_graph((PGRAPH *) (*table)->list,(void *) '_');
+	 return status;
+ }
+int run_table(TABLE * t,Handler handler){
+    PGRAPH  g;
+  g = (PGRAPH ) t->list;
+  g->rdx.rowoffset=1;
+  g->rdx.end=-1;
+  set_row_sequence(&g->rdx);
+  G_printf("run table\n");
+ machine_new_operator(&t->operators[pop_operator],handler);
+ G_printf("\ndone\n");
+ return 0;
+}
+Triple *  start_table(TABLE * t,int index){
+  PGRAPH  g;
+  g = (PGRAPH ) t->list;
+  g->rdx.rowoffset=1;
+  g->rdx.end=-1;
+  set_row_sequence(&g->rdx);
+ machine_new_operator(&t->operators[index],0);
+
+ return &t->operators[pop_data];
+}
+
 #define Sql_delete_rows "delete from %s;"
 int del_table_rows(TABLE *table) {
   char buff[400], *err; int status;
@@ -74,12 +110,12 @@ const struct new_install{
 	char * sql;
 	char * map_name[4];
 } installs[] = {
-	{pop_triple_operator,SystemMax+1,
+	{pop_operator,SystemMax+1,
 	"select key,link,pointer from %s where (gfun(0,rowid) == rowid);",
   "UnbindTriple",0,0,0},
-	{append_triple_operator,SystemMax+2,"insert into %s values( ?, ?, ?);",
+	{append_operator,SystemMax+2,"insert into %s values( ?, ?, ?);",
 	  "BindTriple","AppendHandler",0,0},
-	{update_triple_operator,SystemMax+3,"update %s set pointer = (?) where rowid = ?;",
+	{update_operator,SystemMax+3,"update %s set pointer = (?) where rowid = ?;",
 	"BindRelativeSelfRow","BindSelfStart","ExitHandler",0},
 	{0,0,0,0,0,0,0}
 };
@@ -112,17 +148,7 @@ Mapper null_map(void * p,int * i);
   return status;
 }
 
-int init_table(char * name,int options,TABLE **table) {
-	 int status = EV_Ok;
-	 int i;
-	 *table =  get_table_context(name);
-	 if(options)
-		 del_create_table(*table);
-	 for(i=0; i < NBUILTINS;i++) {
-		 make_stmt(*table,i,name);
-	 }
-	 return status;
- }
+
 void gfunction(Pointer context,int n,Pointer * v);
 
  Trio table_trios[] = {{"TablesInit",0,0},{0,0,0}};

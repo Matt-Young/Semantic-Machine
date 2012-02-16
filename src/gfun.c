@@ -20,7 +20,9 @@ typedef struct {
   int  events;
   Code stmt;
   int opid;
+  Triple *buff; // an output
   Webaddr return_addr;
+  TABLE *table;
 }  READYSET;
 
 READYSET ready;
@@ -71,6 +73,10 @@ int incr_row(int delta) {
   ready.self->row+= delta;return(ready.self->row);
 }
 int _row() {return(ready.self->row);}
+Triple * set_output_buff(Triple *t) {
+  ready.buff = t;
+  return(ready.buff);
+}
 int set_row_sequence(RowSequence *r) {
   ready.self = r;
   return(ready.self->row);
@@ -141,62 +147,41 @@ int events(FILTER * f) {
 	  FILTER * child = new_filter_context(parent);
 	  init_table(name,0,&table);
 	  child->event_table=table;
-	  child->initial_triple  = &table->operators[pop_triple_operator];
+	  child->initial_triple  = &table->operators[pop_operator];
 	  new_table_graph(table);
 	  child->g[0] = (PGRAPH) table->list;
 	  status = set_ready_graph(child);
-	  triple(child->initial_triple,0);
+	  machine_new_operator(child->initial_triple,0);
 	  delete_filter(child);
 	  return status;
   }
 
  // The main io graph_changess initialize and run here
  int send_buff(char *buffer,int count,void * ip_addr);
-int spew_bson(Triple *t) {
-    TABLE * table; char * buff;int count;
-  	init_table(t->key,0,&table);
-    //machine_triple(&addr)_
-     count = Qson_to_Bson(table->operators,&buff);
-    // send_buff(buff,count,addr.key);
-     G_free(buff);
-     return EV_Ok;
-}
- int spew_json(Triple *t) {
-    TABLE * table; char * buff;int count;
-  	init_table(t->key,0,&table);
-    //machine_triple(&addr)_
-     count = Qson_to_Json(table->operators,&buff);
-    // send_buff(buff,count,addr.key);
-     G_free(buff);
-     return EV_Ok;
-}
- 
-int consume_bson(Triple *t) {
+ int put_qson_graph(TABLE *table,Triple *Qson) ;
+ int spew_qson(Triple *t) {
+   put_qson_graph(ready.table,t);
+   return 0;
+ }
+int get_qson_graph(Triple *t) ; 
+int consume_qson(Triple *t) {
     TABLE * table;
   	init_table("scratch",0,&table);
-     Bson_to_Qson(table->operators,t->key);
+     get_qson_graph(t);
      return EV_Ok;
 }
 int echo_handler(Triple *node);
 int init_run_json(FILTER *f) {
-	int status; RowSequence r; 
+	int status;
   G_printf("Json  \n");
   f->event_table = get_table_name("console");
 	status= set_ready_graph(f);
 	f->initial_triple = (Triple *) &G_null_graph;
+  G_printf("Begin Json\n");
 	status=parser(f->event_triple->key,f->event_table);
-  G_memset(&r,0,sizeof(r));
-  r.rowoffset=1;
-  r.end=-1;
-  set_row_sequence(&r);
- f->initial_triple  = &f->event_table->operators[pop_triple_operator];
-  G_printf("Begin\n");
- //status = machine_exec(g_db,"BEGIN IMMEDIATE;",&err);
- G_printf("\nParse start\n");
- triple(f->initial_triple,pop_handler);
- G_printf("\nParse done\n");
-
-
+  f->initial_triple  = &f->event_table->operators[pop_operator];
+  run_table(f->event_table,0);
+ G_printf("\nJson done\n");
 		return status;
 }
 
@@ -214,9 +199,9 @@ int event_exec(FILTER * f) {
     if(ready.opid  == (OperatorJson & OperatorMask))  
       g_event |= init_run_json(f);
     else if (ready.opid  == (OperatorBsonIn & OperatorMask)) 
-      g_event |= consume_bson(f->event_triple);
+      g_event |= consume_qson(f->event_triple);
     else if (ready.opid  == (OperatorBsonOut & OperatorMask)) 
-      g_event |= spew_bson(f->event_triple);
+      g_event |= spew_qson(f->event_triple);
     reset_ready_event(EV_Overload);
   }
   if(g_event & EV_Null) {
@@ -323,7 +308,7 @@ int ugly_handler(Triple *top){
             machine_triple(stmt,&v2);
             top->link = 
               (int) find_trio_value( top->key);
-            triple(top,0);
+            machine_new_operator(top,0);
          }
       }
         else {

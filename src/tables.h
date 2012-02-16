@@ -17,11 +17,11 @@ typedef struct  {
 #define TABLE_SQUARE 1
 #define TABLE_NULL  2
 enum {
-	pop_triple_operator,pop_triple_data,
-	append_triple_operator,append_triple_data,
-	update_triple_operator,update_triple_data,
-	fetch_triple_operator,
-  installed_triple_operator};
+	pop_operator,pop_data,
+	append_operator,append_data,
+  append_blob_operator,append_blob_data,
+	update_operator,update_data,
+	spare_operator,spare_data};
 
 typedef TABLE *PTABLE;
 char * NAME(TABLE *);
@@ -30,6 +30,8 @@ TABLE * TABLE_POINTER(int i);
 int DELETE_TABLE(TABLE *);
 int del_create_table(TABLE *);
 int init_table(char * name,int options,TABLE **table);
+int run_table(TABLE * t,Handler handler);
+Triple * start_table(TABLE * t,int index);
 PTABLE get_table_context(char *);
 PTABLE get_table_name(const char * name);
 void release_table_context(PTABLE pt);

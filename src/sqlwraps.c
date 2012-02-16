@@ -16,7 +16,7 @@ int msg_id(int sqlite_msg) {
 void unbind_triple(Code stmt,Triple *t);
 typedef void (*xFunc)(sqlite3_context*,int,sqlite3_value**);
 //void gfunction(sqlite3_context* context,int n,sqlite3_value** v);
-int open_machine_layer(const char * name,Pointer  g_db) {
+int open_machine_layer(char * name,Pointer  g_db) {
 	return msg_id(sqlite3_open(name,(sqlite3 **)g_db));}
 
 Pointer machine_column_text(Code stmt,int colid) {
@@ -78,4 +78,30 @@ int machine_triple(Code stmt,Triple * t) {
 	unbind_triple(stmt,t);
 	return(EV_Ok);
 }
-
+int machine_step_fetch(Triple *t,Handler h) {
+  Code stmt = get_ready_stmt();
+    if(EV_Data &  machine_step(stmt) ) {
+        machine_triple(stmt,t);
+      if(h) h(t);
+    }
+    return set_ready_event(0);
+}
+int machine_append(Triple *t,Handler h) {
+  Code stmt = get_ready_stmt();
+  bind_code(t,stmt);
+  machine_step(stmt );
+  if(h) h(t);
+  return set_ready_event(0);
+}
+int machine_loop(Triple *t,Handler h) {
+  Code stmt = get_ready_stmt();
+  if(stmt)
+		do {
+      if(machine_step(stmt) & EV_Error) 
+			  G_printf("err: loop ");
+      else
+        if(h) h(t);
+		}  while( !(set_ready_event(0) & EV_Done) );
+	machine_reset(stmt);
+  return 0;
+}

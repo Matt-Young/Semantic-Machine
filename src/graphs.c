@@ -79,7 +79,7 @@ void close_update_graph(PGRAPH *list) {
 	 table = parent->table;
    if(!table) status = EV_Error;
    else {
-	 status = triple(&table->operators[update_triple_operator],0);
+	 status = machine_new_operator(&table->operators[update_operator],0);
   delete_graph(list);
    }
     list_graphs(list,"cu");
@@ -103,8 +103,8 @@ int append_graph(PGRAPH *list,Triple node) {
     t = parent->table;
     if(!t) status= EV_Error;
     else {
-	    t->operators[append_triple_data] = node;
-	    status = triple(&t->operators[append_triple_operator],0);
+	    t->operators[append_data] = node;
+	    status = machine_new_operator(&t->operators[append_operator],0);
     }
   }
 

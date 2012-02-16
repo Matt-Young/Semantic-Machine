@@ -22,20 +22,27 @@ enum { OperatorJson = OperatorMSB,OperatorBsonIn,OperatorBsonOut};
 Code set_ready_stmt(Code stmt);
 int set_ready_code(int opid);
 int get_system_call(char * name);
-int triple(Triple top[],Handler);
+;
 int set_ready_event(int EV_event);
 Code get_ready_stmt();
 int reset_ready_event(int EV_event);
 int bind_code(Triple *,Code );
 void  * get_web_addr();
 void * set_web_addr(void  *,int);
+
+
   // Generics that cover sqlite3
 extern Pointer g_db;
-int open_machine_layer(const char * name,Pointer  mach);
+int open_machine_layer(char * name,Pointer  mach);
+int machine_loop(Triple *t,Handler h) ;
+int machine_new_operator(Triple top[],Handler);
+int machine_append(Triple *t,Handler h);
+int machine_append_blob(Triple *t,Handler h);
 Pointer machine_column_text(Code stmt,int colid); 
+int machine_step_fetch(Triple *t,Handler h);
 int machine_column_int(Code stmt,int colid);
 int machine_prepare(Pointer g_db,char * ch,Code * stmt);
-int machine_step(Code stmt );
+int machine_step(Code stmt);
 int machine_reset(Code stmt);
 int machine_exec(Pointer g_db,char * buff,char ** err);
 int machine_install_callback(Pointer g_db,char * name,int nargs,Pointer gfunction);

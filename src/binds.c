@@ -49,7 +49,7 @@ int bind_code(Triple * top,Code stmt) {
 			status = machine_bind_int(stmt,index++,(int) pointer);
 			break;
 case G_TYPE_BLOB:
-  // blob format
+  // blob format, count then data
      status = machine_bind_blob(stmt,index++,top->key+4,(int)top->key);
   			status = machine_bind_int(stmt,index++,top->link);
 			status = machine_bind_int(stmt,index++,top->pointer);

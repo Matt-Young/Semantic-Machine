@@ -7,6 +7,8 @@ setting either threads or netio then you need to run under cygwin or under linux
 the lab configuratio, the threads only and the netio
 */
 #include "config.h"
+#include <winsock2.h>
+#undef NETIO
 #ifdef NETIO
 #define DebugNETIO 1
 #include <string.h>
@@ -15,8 +17,8 @@ the lab configuratio, the threads only and the netio
 #include <stdlib.h>
 #include <unistd.h>
 #include <pthread.h>
-#include <sys/wait.h>
-#include <sys/mman.h>
+//#include <sys/wait.h>
+//#include <sys/mman.h>
 #include <dirent.h>
 #include <signal.h>
 #include <sys/stat.h>

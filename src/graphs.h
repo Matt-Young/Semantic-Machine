@@ -7,6 +7,7 @@ typedef struct  g {
 } GRAPH;
 typedef GRAPH * PGRAPH; 
 int set_row_sequence(RowSequence *);
+
 PGRAPH new_child_graph(PGRAPH *,void * context);
 PGRAPH new_graph_context();
 PGRAPH delete_graph(PGRAPH *);
