@@ -161,14 +161,14 @@ int events(FILTER * f) {
  int send_buff(char *buffer,int count,void * ip_addr);
  int put_qson_graph(TABLE *table,Triple *Qson) ;
  int spew_qson(Triple *t) {
-   put_qson_graph(ready.table,t);
+   //put_qson_graph(ready.table,t);
    return 0;
  }
 int get_qson_graph(Triple *t) ; 
 int consume_qson(Triple *t) {
     TABLE * table;
   	init_table("scratch",0,&table);
-     get_qson_graph(t);
+    // get_qson_graph(t);
      return EV_Ok;
 }
 int echo_handler(Triple *node);
@@ -202,7 +202,7 @@ int event_exec(FILTER * f) {
     else if (ready.opid  == (OperatorBsonIn & OperatorMask)) 
       g_event |= consume_qson(f->event_triple);
     else if (ready.opid  == (OperatorBsonOut & OperatorMask)) 
-      g_event |= spew_qson(f->event_triple);
+     // g_event |= spew_qson(f->event_triple);
     reset_ready_event(EV_Overload);
   }
   if(g_event & EV_Null) {

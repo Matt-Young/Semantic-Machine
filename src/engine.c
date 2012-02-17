@@ -268,23 +268,13 @@ Trio engine_trios[] = {
   void set_return(Webaddr *w);
 
 #define TestAddr  "2001:db8:8714:3a90::12"
-  int init_table(char * name,int options,TABLE **table);
-int get_qson_graph(TABLE *t);
-int put_qson_graph(TABLE *t);
+int test_qson() ;
 void console_loop(){
-    TABLE *table; Triple * triple;
 	Console c; int symbols;
-	Triple t; Webaddr w;
+	Triple t; 
 	int status;
+    test_qson();
   G_printf("Console loop\n");
-  w.sa_family = AF_CONSOLE;
-  symbols = g_name_count;
-  G_memcpy(&w,TestAddr,sizeof(TestAddr));
-  init_table("test",0,&table);
-  triple = start_table(table,pop_operator);
-  get_qson_graph(table);
-  init_table("result",1,&table);
-  put_qson_graph(table);
 	for(;;) {
 		G_console(&c);
     // check here for any returns
@@ -292,7 +282,6 @@ void console_loop(){
 		t.key = c.base;
     t.pointer=1;
      status = machine_lock();
-    set_web_addr(&w,sizeof(Webaddr));
 		status = machine_new_operator(&t,event_handler);
      status = machine_unlock();
         flush_users();
@@ -337,7 +326,6 @@ int port = TEST_PORT;
 
 int main(int argc, char * argv[]) {
   int i;
-
   for(i=1; i < argc;i++) {
      G_printf("Arg: %s\n",argv[i]);
     if(!G_strcmp(argv[i], "-V")) {
