@@ -103,7 +103,7 @@ int append_graph(PGRAPH *list,Triple node) {
     t = parent->table;
     if(!t) status= EV_Error;
     else {
-	    t->operators[append_data] = node;
+	    t->operators[append_old_data] = node;
 	    status = machine_new_operator(&t->operators[append_old_operator],0);
     }
   }
@@ -124,8 +124,8 @@ void list_graphs(PGRAPH  *list,char * arg){
   int i=0;
   g = *list;
   while(g) {
-     //G_printf("%s %d %x %x ",arg,i,g->parent); 
-     //G_printf(" %d %d %d\n",g->rdx.row,g->rdx.end,g->rdx.rowoffset); 
+     G_printf("%s %d %x %x ",arg,i,g->parent); 
+     G_printf(" %d %d %d\n",g->rdx.row,g->rdx.end,g->rdx.rowoffset); 
      g=g->parent;i++;
   }
 }

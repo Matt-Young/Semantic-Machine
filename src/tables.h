@@ -1,4 +1,4 @@
-#define NBUILTINS 3
+#define NBUILTINS 10
 typedef struct {
   int col_count;
   int rowid;
@@ -9,7 +9,7 @@ typedef struct {
 typedef struct  {
   char * name;
   int attribute;
-  Triple operators[NBUILTINS + 5];  // operand sequences for triple machine
+  Triple operators[NBUILTINS];  // operand sequences for triple machine
   int index;
   Pointer list;  //points to the innermost current graph
   COLINFO  info;

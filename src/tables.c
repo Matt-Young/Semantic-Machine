@@ -57,7 +57,7 @@ int init_table(char * name,int options,TABLE **table) {
 	 in =  get_table_context(name);
 	 if(options)
 		 del_create_table(in);
-	 for(i=0; i < NBUILTINS;i++) {
+	 for(i=0; i < 4;i++) {
 		 make_stmt(in,i,name);
 	 }
    new_child_graph((PGRAPH *) &in->list,(void *) '_');

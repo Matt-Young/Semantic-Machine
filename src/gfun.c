@@ -15,8 +15,6 @@ typedef struct {
   RowSequence *self;
   RowSequence *other;
   RowSequence *result;
-  char * table_name;
-  FILTER *filter;
   int  events;
   Code stmt;
   int opid;
@@ -61,8 +59,6 @@ Mapper map_return_addr(Pointer * p,int *type) {
 // This is called afer it is determined an installed sql
 // it is always bound to the table context
 
-FILTER * ready_filter() { return ready.filter;}
-
 // msthods on graph pointers
 int stopped_row() {
 if(ready.self->row == ready.self->end)
@@ -103,16 +99,12 @@ int set_ready_code(int opid) {
 Code set_ready_stmt(Code stmt) {
 	ready.stmt = stmt;
 	return ready.stmt; }
-int  set_ready_graph(FILTER *f) {
+int  set_ready_graph(TABLE * t) {
 	PGRAPH active;
+  active = (PGRAPH) t->list;
 	G_memset(&ready,0,sizeof(ready));
-	ready.filter = f;
-	active = f->g[1];
-	if(f->g[0]) active = f->g[0];
-  if(active) {
-	  ready.table_name = active->table->name;
-    ready.self = &active->rdx;
-    } else ready.self=0;
+  ready.table=t;
+  ready.self = &active->rdx;
   return  EV_Ok;
 }
 void * set_web_addr(void *w,int size) {
@@ -151,7 +143,7 @@ int events(FILTER * f) {
 	  child->initial_triple  = &table->operators[pop_operator];
 	  new_table_graph(table);
 	  child->g[0] = (PGRAPH) table->list;
-	  status = set_ready_graph(child);
+	  status = set_ready_graph(table);
 	  machine_new_operator(child->initial_triple,0);
 	  delete_filter(child);
 	  return status;
@@ -171,17 +163,15 @@ int consume_qson(Triple *t) {
     // get_qson_graph(t);
      return EV_Ok;
 }
-int echo_handler(Triple *node);
-int init_run_json(FILTER *f) {
-	int status;
+int echo_handler(Triple *);
+int init_run_json(Triple *triple) {
+	int status;TABLE * table;
   G_printf("Json  \n");
-  f->event_table = get_table_name("console");
-	status= set_ready_graph(f);
-	f->initial_triple = (Triple *) &G_null_graph;
+ init_table("console",0,&table);
+	status= set_ready_graph(table);
   G_printf("Begin Json\n");
-	status=parser(f->event_triple->key,f->event_table);
-  f->initial_triple  = &f->event_table->operators[pop_operator];
-  run_table(f->event_table,0);
+	status=parser(triple->key,table);
+//  run_table(table,0);
  G_printf("\nJson done\n");
 		return status;
 }
@@ -198,7 +188,7 @@ int event_exec(FILTER * f) {
   }
    else if(g_event & EV_Overload) {
     if(ready.opid  == (OperatorJson & OperatorMask))  
-      g_event |= init_run_json(f);
+      g_event |= init_run_json( f->event_triple );
     else if (ready.opid  == (OperatorBsonIn & OperatorMask)) 
       g_event |= consume_qson(f->event_triple);
     else if (ready.opid  == (OperatorBsonOut & OperatorMask)) 
@@ -217,19 +207,17 @@ int do_square(int mode,FILTER *f);
 
 // Arrive here when some operators has produced events
 int event_handler(Triple * t) {
-  FILTER *f;
-  f = ready.filter;
-  f->event_triple = t;
-  f->events = ready.events;
+  FILTER f;
+  f.event_triple = t;
+  f.events = set_ready_event(0);
   // G_printf("EX %x \n",f->events);
-  if(f->events & EV_Square)  {
-    if(f->g[0]->table->attribute == TABLE_SQUARE)  
-      return do_square(0,f);
-    else if(f->g[1]->table->attribute == TABLE_SQUARE) 
-      return do_square(1,f);
+  if(f.events & EV_Square)  {
+    if(1 == TABLE_SQUARE)  
+      return do_square(0,&f);
+    else if(2== TABLE_SQUARE) 
+      return do_square(1,&f);
   } else
-		return event_exec(f);
-	 return(f->events);
+		return event_exec(&f);
  }
 
 //G function call backs from inside sql
@@ -275,7 +263,6 @@ Trio gfun_accessor_list[] = {
 	{0,00,} };
 int init_gfun() {
 	add_trios(gfun_accessor_list);
-	ready.filter= &null_filter;
 	return 0;
 }
 

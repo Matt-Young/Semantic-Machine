@@ -116,16 +116,16 @@ void list_graphs(PGRAPH  *list);
 #define Debug_parser
 #ifdef Debug_parser
 char * typeface[] = {
-  "{def.ccc.bbb.kkk,hhh.lyu,ggg.aaa}",
+  "{def.ccc,bbb.kkk,hhh.lyu,ggg.aaa}",
   "{a=23. . c=9. . c.f,d=33}",
-  "{\"hello everyone\"}",
+  "{$systemEcho}",
   "{ {abc.\"def\".joe:jjj.\"kkk\".lll},anyname:{rdf,may},'you'.klf,{ {named,kkk}.{fgh.lmk} }, jkl }",
   "{a,b,c}",
   "{a=18,$aaa.22. ,{vvv=40,555=2}.local:SystemExec{\"select * from console;\"}}",
 	"{abc,def,ghi}",
 	"{@config}",
 	""};
-#define DLINE 3
+#define DLINE 0
 static int debug_counter=DLINE;
 int   parser(char * x,TABLE *table) {
  char buff[200]; 
@@ -239,7 +239,7 @@ int json_rules(char cin, PGRAPH *inner) {
    // One append through this series
    if( (cprev == ':') ||  (cprev == '$')  )
      graph_changes( inner,AppCloseNew);
-   if((ccurr == '.') && !( (cprev == ':') ))
+   else if((ccurr == '.') && !( (cprev == ':') ))
      graph_changes( inner,App);
    else if((ccurr == ',') && !( (cprev == ':') ||  (cprev == '$') ))
        graph_changes( inner,AppCloseNew);
@@ -256,11 +256,7 @@ int json_rules(char cin, PGRAPH *inner) {
        graph_changes( inner,NewApp); // Named
    else  if(ccurr == '$') graph_changes( inner,NewApp); // Equals pair
    else if(ccurr == '@')  graph_changes( inner,NewApp); 
-       // Just set up potential compound object
- 
-  // print_triple(&current);
-  //  G_graph_counts();
-   //     G_printf("\n");
+
     cprev = ccurr; ccurr = cnext;
    prev = current;
    current = next; 

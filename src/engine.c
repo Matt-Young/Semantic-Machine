@@ -271,10 +271,10 @@ Trio engine_trios[] = {
 #define TestAddr  "2001:db8:8714:3a90::12"
 int test_qson() ;
 void console_loop(){
-	Console c; int symbols;
+	Console c;
 	Triple t; 
 	int status;
-    test_qson();
+  //  test_qson();
   G_printf("Console loop\n");
 	for(;;) {
 		G_console(&c);
@@ -297,7 +297,8 @@ int init_machine() {
 	status = init_binder(); if(status != EV_Ok) return status;
 	status = init_gfun(); if(status != EV_Ok) return status;
 	status = init_tables(); if(status != EV_Ok) return status;
-  sort_names(); status = init_filters(); 
+  sort_names(); 
+  status = init_filters(); 
   if(status != EV_Ok) return status;
 	init_console();
 	return status;

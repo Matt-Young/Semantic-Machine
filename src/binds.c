@@ -19,7 +19,7 @@ Mapper map_old_triple(Pointer *pointer,int *type) {
 	*type = G_TYPE_OLD_TRIPLE;
 	return 0;}
 Mapper map_triple(Pointer *pointer,int *type) {
-	*type = G_TYPE_TRIPLE;
+	*type = G_TYPE_OLD_TRIPLE;
 	return 0;}
 
 int local_handler(Triple t) {
