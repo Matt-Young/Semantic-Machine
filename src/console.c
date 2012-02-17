@@ -85,7 +85,7 @@ int isin(char c,const char *str) {
 	return *str;
 }
  void   console_file(Console * console,char * ptr) { 
-  char  dir[200],line[200],*name;
+  char  dir[200],*name;
   struct stat buf;
   FILE * f;int dirlen;
      ptr += strlen(ptr)+1;

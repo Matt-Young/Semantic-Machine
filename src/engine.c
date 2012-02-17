@@ -176,6 +176,7 @@ int  machine_set_operator(Triple top[],Handler handler) {
 int  machine_new_operator(Triple top[],Handler handler) {
   int events,status; Code stmt;
   events = machine_set_operator(top,handler);
+  status = EV_Ok;
   stmt = get_ready_stmt();
 	if(!(EV_No_bind & events))
 		status = bind_code(top,stmt);
