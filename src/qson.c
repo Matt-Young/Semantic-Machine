@@ -50,7 +50,7 @@ int table_to_net(TABLE *t) {
     if(i) 
       machine_step_fetch(&Qson[i],0);
     len = machine_key_len(stmt); 
-    strncpy((char *) send_packet,&Qson[i],len);
+    sprintf( (char *) send_packet,"%4d",Qson[i],len);
   //  make_bytes_from_word(Qson[i].key,len);
     send_packet += (len+3)/4;
     Qson = (Triple *) send_packet;
@@ -64,7 +64,7 @@ int file_to_mem(FILE *fd) {
   total=0;
   fread(link_pointer,1,4,fd);
   sscanf(link_pointer+1,"%3d",&rows);
-  Qson = set_output_buff((Triple *) G_malloc(rows*sizeof(Triple)));
+  Qson = set_output_buff((Triple *) malloc(rows*sizeof(Triple)));
   for(i=0;i<rows;i++) {
     if(i) 
         fread(link_pointer,1,4,fd);
@@ -82,8 +82,8 @@ total += len+4;
 return 0;
 }
 int mem_to_file( FILE * dest,int mode){
-  int rows,len,total; int i,j;Triple *Qson;
-  char * key_value;char buff[200];
+  int rows,len,total; int i;Triple *Qson;
+  char * key_value;
    Qson = set_output_buff(0);
   rows = Qson[0].pointer; total = 0;
   for(i=0;i<rows;i++) {
@@ -129,7 +129,7 @@ total += len+4;
 // extract the Qson
 Triple * set_output_buff(Triple *t);
 int mem_to_table(void * dest,int mode) {
-  int rows,len,total; int i,j;Triple *data,var;
+  int rows,total; int i;Triple *data;
   Triple * Qson;
   Code stmt;
   start_table((TABLE *) dest,append_old_operator);

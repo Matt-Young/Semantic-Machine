@@ -7,27 +7,8 @@ setting either threads or netio then you need to run under cygwin or under linux
 the lab configuratio, the threads only and the netio
 */
 #include "config.h"
-#include <winsock2.h>
-#undef NETIO
-#ifdef NETIO
-#define DebugNETIO 1
-#include <string.h>
-#include <stdio.h>
-#include <time.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <pthread.h>
-//#include <sys/wait.h>
-//#include <sys/mman.h>
-#include <dirent.h>
-#include <signal.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <errno.h>
+#include "../socketx/socket_x.h"
+
 #include "../src/g_types.h"
 #include "../src/config.h"
 #include "../src/engine.h"
@@ -52,43 +33,44 @@ int thread_count=0;
 int triple(Triple *top,Handler);
 int header_magic(int newfd,int * count) {
   char inbuffer[HEADER_SIZE];
-  int rv; int type;int i;
+  int rv; int type;
   type = -1;
-  rv = read(newfd, inbuffer, HEADER_SIZE);
+  rv = recv(newfd, inbuffer, HEADER_SIZE,0);
   if(rv != -1 && rv == HEADER_SIZE) {
     if(!strncmp(inbuffer,JSON_TYPE,MAGIC_SIZE)) type = Json_IO;
     else if(!strncmp(inbuffer,BSON_TYPE,MAGIC_SIZE)) type = Bson_IO;
-    else if(!strncmp(inbuffer,BSON_TYPE,MAGIC_SIZE)) type = Qson_io;
+    else if(!strncmp(inbuffer,BSON_TYPE,MAGIC_SIZE)) type = Qson_IO;
   }
   if(type != -1)
     sscanf(inbuffer+ MAGIC_SIZE,"%8d",count);
   else
     *count=0;
+  printf("\nCOUNT ");
+  fwrite(inbuffer,1,*count,stdout);
   return (type);
 }
 int event_handler(Triple *t);
 void * handle_data(void * arg) {
-  Triple t;int status;
+  Triple t;int status=0;
+    int fd;int rv,rm;
   Pending *p = (Pending *) arg;
-  int fd;
+
   new_thread_count++;
-  
-  int rv,rm;
   printf("handler count %d\n",p->count);
   fd = p->newfd;
   t.key = (char *) malloc(p->count);
   new_data_count++;
-  rv = read(p->newfd, t.key, p->count);
+  rv = recv(p->newfd, t.key, p->count,0);
   if(rv < p->count) {
     if((rm = send(p->newfd, BAD_MSG, strlen(OK_MSG), 0)) == -1) 
       warn("Error sending data to client.");
-    close(p->newfd);
+    closesocket(p->newfd);
   }
   else {
     if((rm = send(p->newfd, OK_MSG, strlen(OK_MSG), 0)) == -1) 
       warn("Error sending data to client.");
     t.key[rv]=0;
-    close(p->newfd);
+    closesocket(p->newfd);
 
     if(p->type = Bson_IO)
       t.link = OperatorBsonIn;
@@ -97,17 +79,17 @@ void * handle_data(void * arg) {
     t.pointer = p->count;
     machine_lock();
      set_web_addr(&p->remote_addr,sizeof(p->remote_addr));
-    status = triple(&t,event_handler);
+    //status = machine_new_operator(&t,event_handler);
 
     machine_unlock();
     printf(" Action %d ",status);
-    print_triple(&t);
+//    print_triple(&t);
   }
-  free(t.key);
+ // free(t.key);
   del_data_count++;
   del_thread_count++;
   p->newfd = 0;
-
+  return 0;
 }
 
 static void crit(char * message) {
@@ -118,7 +100,7 @@ static void crit(char * message) {
 void * net_service (void * port)  {
   Pending pendings[NTHREAD];
   int sockfd = -1;
-  int status;
+  int status=0;
   struct sockaddr_in my_addr;
   struct sockaddr_in remote_addr;
   int newfd,count,type;
@@ -126,14 +108,15 @@ void * net_service (void * port)  {
   pthread_t thread;
   printf("Net Service\n");
   memset(pendings,0,sizeof(pendings));
+  SocketStart();
   sockfd = socket (AF_INET, SOCK_STREAM, 0);
   if(sockfd == -1) printf("Couldn't create socket.");
+  memset (&(my_addr.sin_zero),0, sizeof(my_addr));
   my_addr.sin_family = AF_INET;
   my_addr.sin_port = htons ((int) port);
   my_addr.sin_addr.s_addr = INADDR_ANY;
-  bzero (&(my_addr.sin_zero), 8);
 
-  if (bind(sockfd, (struct sockaddr *) &my_addr, sizeof (struct sockaddr)) == -1)
+  if (bind(sockfd, (struct sockaddr *) &my_addr,  sizeof (struct sockaddr)) == -1)
     error("Stern: Couldn't bind to specified port.");
   sin_size = sizeof(struct sockaddr_in);
   if(listen(sockfd, 25) == -1) printf("Couldn't listen on specified port.");
@@ -150,7 +133,7 @@ void * net_service (void * port)  {
     if(type < 0) {
       if((rv = send(newfd, BAD_MSG, strlen(BAD_MSG), 0)) == -1) 
         warn("Error sending data to client.");
-      close(newfd);
+      closesocket(newfd);
     } else if(type >= 0){
       printf("Count: %d\n",count);
       i=0;
@@ -158,7 +141,7 @@ void * net_service (void * port)  {
       if(i==NTHREAD) {
         if((rv = send(newfd, PORT_MSG, strlen(PORT_MSG), 0)) == -1)  
           warn("Error sending data to client.");
-        close(newfd);
+        closesocket(newfd);
       } 
       else {
         printf("Doing %d\n",status);
@@ -177,9 +160,9 @@ void * net_service (void * port)  {
 int net_start(void * port) {
   pthread_t thread;
   int status;
-  G_printf("Start netio \n");
+  printf("Start netio \n");
   status = pthread_create(&thread,0,net_service,(void *) port);
-  G_printf("Old thread \n");
+  printf("Old thread \n");
   if(status == -1) {
     printf("Error threading");
     exit(1);
@@ -192,23 +175,20 @@ int net_start(void * port) {
 int Sqlson_to_Bson(Triple t[],char ** buff);
 int send_buff(char *buffer,int count,void * ip_addr)
 {
-    int sockfd, portno, n;
+    int sockfd=0,  n;
     struct sockaddr_in  serv_addr;
-    struct sockaddr_in  * w;
+    //struct sockaddr_in  * w;
     // Get the return address for any emissin from this thread
     memcpy(&serv_addr,get_web_addr(),sizeof(serv_addr));
     machine_unlock();
     if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) 
         error("ERROR connecting");
-    n = write(sockfd,buffer,count);
+    n = send(sockfd,buffer,count,0);
     if (n < 0)  error("ERROR writing to socket");
-    bzero(buffer,256);
-    n = read(sockfd,buffer,255);
+    memset(buffer,0,256);
+    n = recv(sockfd,buffer,255,0);
     if (n < 0)  error("ERROR reading from socket");
    // printf("%s\n",buffer);
-    close(sockfd);
+    closesocket(sockfd);
     return 0;
 }
-
-
-#endif
