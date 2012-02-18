@@ -99,32 +99,33 @@ int mem_to_file( FILE * dest,int * buff,int mode){
    fclose(dest);
   return 0;
 }
-int * table_to_mem(TABLE *t) {
-  int len,total; Triple v;int i;int * buff;
-  Triple *Qson;char * key_value;
+int  * table_to_mem(TABLE *t) {
+  int len,total; int i,rows;int * buff;
+  Triple Qin,*Qout;char * key_value;
   Code stmt;
   start_table(t,pop_operator);
   stmt = get_ready_stmt();
   total = 0;
   // peek at the header
-  i = machine_step_fetch(&v,0); 
-  buff = (int *) malloc(v.pointer*sizeof(Triple)+8);
-  Qson = (Triple *) (buff+2);
-  *Qson = v;
-  for(i=0;i<v.pointer;i++) {
-    if(i) machine_step_fetch(Qson,0);
+  i = machine_step_fetch(&Qin,0); 
+  rows = Qin.pointer;
+  
+    buff = (int *) malloc(rows*sizeof(Triple)+8);
+  Qout = (Triple *)  (buff+2);
+  for(i=0;i<rows;i++) {
+    if(i) machine_step_fetch(&Qin,0);
   len = machine_key_len(stmt); 
-  key_value = (char *)  malloc(len+5);
+  *Qout = Qin;
+  key_value = (char *)  malloc(len+1);
   sprintf(key_value,"%4d",len);
-  memcpy(key_value+4,Qson->key,len);
-  Qson->key = key_value;
-  Qson->key[len+4]=0;
- 
-  printf("TM%s%c%3d\n",Qson->key,Qson->link,Qson->pointer);
-   Qson++;
+  memcpy(key_value+4,Qin.key,len);
+  key_value[len+4]=0;
+
+  printf("TM%s%c%3d\n",Qout->key,Qout->link,Qout->pointer);
+   Qout++;
 total += len+4;
   }
-  total += sizeof(Triple) * v.pointer;
+  total += sizeof(Triple) * rows;
   sprintf((char *) buff,"%8d",total);
   return buff;
 }
