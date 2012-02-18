@@ -1,14 +1,10 @@
 
 #include "all.h"
-#include "filter.h"
+//#include "filter.h"
 #include "qson.h"
 const Triple NULL_Triple={"_",'_',0};
 
-Mapper filter_map(Pointer * pointer,int * type) {
-*pointer = (void *) &null_filter;
-*type = 6;
-return 0;
-}
+
 //  **  READY FOR RUNNING ******
 typedef struct {
   int count;
@@ -122,30 +118,15 @@ int key_match(const char * k,const char * g) {
   else
     return 0;
 }
-int events(FILTER * f) {
-	if(!f->g[0])
-		f->events |= EV_Null;
-	else  if(f->g[0]->rdx.end > f->g[0]->rdx.row) 
-		f->events |= EV_Incomplete;
-	else if(f->g[1] && (f->g[1]->rdx.end  > f->g[1]->rdx.row)) 
-			f->events |= EV_Incomplete;
-	//if(isnull_filter(f))
-	//	f->events |= EV_Null;
-	return (f->events);
-}
+
 
 // sql table name will cuse events overned by filter paerent->child
- int init_run_table(FILTER * parent,char * name) {
-	  TABLE * table; int status;
-	  FILTER * child = new_filter_context(parent);
+ int init_run_table(char * name) {
+	  TABLE * table; int status; Triple *t;
 	  init_table(name,0,&table);
-	  child->event_table=table;
-	  child->initial_triple  = &table->operators[pop_operator];
-	  new_table_graph(table);
-	  child->g[0] = (PGRAPH) table->list;
+	  t  = &table->operators[pop_operator];
 	  status = set_ready_graph(table);
-	  machine_new_operator(child->initial_triple,0);
-	  delete_filter(child);
+	  machine_new_operator(t,0);
 	  return status;
   }
 
@@ -176,11 +157,10 @@ int init_run_json(Triple *triple) {
 		return status;
 }
 
-int event_exec(FILTER * f) {
+int event_exec(Triple * t) {
   int g_event;
-  int linkid = f->event_triple->link;
-  g_event = f->events; 
-  g_event |=  ready.events;
+  int linkid = t->link;
+  g_event =  ready.events;
   if(g_event & EV_Done) { // Nothing here but missing code
     G_printf("Unhandled EV_DONE\n");
     reset_ready_event(EV_Done);
@@ -188,9 +168,9 @@ int event_exec(FILTER * f) {
   }
    else if(g_event & EV_Overload) {
     if(ready.opid  == (OperatorJson & OperatorMask))  
-      g_event |= init_run_json( f->event_triple );
+      g_event |= init_run_json( t);
     else if (ready.opid  == (OperatorBsonIn & OperatorMask)) 
-      g_event |= consume_qson(f->event_triple);
+      g_event |= consume_qson(t);
     else if (ready.opid  == (OperatorBsonOut & OperatorMask)) 
      // g_event |= spew_qson(f->event_triple);
     reset_ready_event(EV_Overload);
@@ -203,21 +183,17 @@ int event_exec(FILTER * f) {
 void reset_G_columns(TABLE *t) { 
   t->info.col_count = 0;
 }
-int do_square(int mode,FILTER *f);
+int do_square(int mode,TABLE *);
 
 // Arrive here when some operators has produced events
 int event_handler(Triple * t) {
-  FILTER f;
-  f.event_triple = t;
-  f.events = set_ready_event(0);
-  // G_printf("EX %x \n",f->events);
-  if(f.events & EV_Square)  {
+  if(ready.events  & EV_Square)  {
     if(1 == TABLE_SQUARE)  
-      return do_square(0,&f);
-    else if(2== TABLE_SQUARE) 
-      return do_square(1,&f);
+      return do_square(0,ready.table);
+    else if(2 == TABLE_SQUARE) 
+      return do_square(1,ready.table);
   } else
-		return event_exec(&f);
+		return event_exec(t);
  }
 
 //G function call backs from inside sql
@@ -253,7 +229,6 @@ void gfunction(Pointer context,int n, Pointer v[]) {
   }
 }
 Trio gfun_accessor_list[] = {
-	{ "Filter",G_TYPE_MAPPER, (Mapper) filter_map},
 	{"BindSelfRow",G_TYPE_MAPPER,(Mapper) map_self_row},
 	{"BindSelfStart",G_TYPE_MAPPER,(Mapper) map_self_start}, 
 	{"BindOtherRow",G_TYPE_MAPPER,(Mapper) map_other_row},

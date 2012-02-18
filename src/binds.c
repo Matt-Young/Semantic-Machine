@@ -6,15 +6,14 @@ Table stuff really doesn belong here, as table are going to be an
 an index system built on the sqlite_master
 */
 #include "all.h"
-#include "filter.h"
-
-
 #define NUMBINDS 10
 int bind_count=0;
 // various binds
-Mapper null_map(Pointer  pointer,int  *type) { 
-	*type = G_TYPE_NULL;
-	return 0;}
+Mapper null_map(Pointer * pointer,int * type) {
+*pointer = (void *) &_null_graph;
+*type = G_TYPE_NULL;
+return 0;
+}
 Mapper map_old_triple(Pointer *pointer,int *type) {
 	*type = G_TYPE_OLD_TRIPLE;
 	return 0;}

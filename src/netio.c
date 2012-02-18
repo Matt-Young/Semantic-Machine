@@ -50,7 +50,7 @@ int header_magic(int newfd,int * count) {
 }
 int event_handler(Triple *t);
 void * handle_data(void * arg) {
-  Triple t;int status=0;
+  int status=0;
     int fd;int rv,rm;
     Webaddr dest;
   Pending *p = (Pending *) arg;
@@ -58,7 +58,7 @@ void * handle_data(void * arg) {
   new_thread_count++;
   printf("handler count %d\n",p->count);
   fd = p->remote_addr.fd;
-  dest.buff = (char *) malloc(p->count);
+  dest.buff = (int *) malloc(p->count);
   new_data_count++;
   rv = recv(fd, (char *) dest.buff, p->count,0);
   if(rv < p->count) {
@@ -69,19 +69,13 @@ void * handle_data(void * arg) {
   else {
     if((rm = send(fd, OK_MSG, strlen(OK_MSG), 0)) == -1) 
       warn("Error sending data to client.");
-    t.key[rv]=0;
     closesocket(fd);
-
-    if(p->type = Bson_IO)
-      t.link = OperatorBsonIn;
-    else if(p->type = Json_IO) 
-      t.link = OperatorJson;
-    t.pointer = p->count;
     machine_lock();
      set_web_addr(&p->remote_addr,sizeof(p->remote_addr));
      dest.sa_family = AF_TABLE;
-     strcpy((char *) dest.data,"table");
-    //int system_copy_qson(&p->remote_addr,&dest ) 
+     p->remote_addr.count = p->count;
+     strcpy((char *) dest.data,"netio");
+    system_copy_qson(&p->remote_addr,&dest ); 
     machine_unlock();
     printf(" Action %d ",status);
 //    print_triple(&t);

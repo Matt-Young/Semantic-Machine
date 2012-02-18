@@ -33,7 +33,7 @@ int G_keyop(char * *Json,Triple *t) {
 	int i=0;
 	int events=0;
   if(*ptr == 0) {
-    *t = G_null_graph;
+    *t = _null_graph;
 				return -1;
   }
   // Key
@@ -88,7 +88,7 @@ int start_parser(char * Json, TABLE *table) {
   del_create_table(table);
   (*inner)->context=(void *) '@';
   (*inner)->table=table;
-  prev = G_null_graph;
+  prev = _null_graph;
   current.key = ParserHeader;
   current.link = '@';
   ccurr = '@';

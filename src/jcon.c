@@ -21,11 +21,12 @@
 #define error printf
 // Little sender
 char  ip_addr[20] = "127.0.0.1";
-struct sockaddr_in ip4addr;
+
 
 
 int send_buff(char *buffer,int count)
 {
+  struct sockaddr_in ip4addr;
   int sockfd, portno, n;
   struct addrinfo *result,hints;
   struct sockaddr server;

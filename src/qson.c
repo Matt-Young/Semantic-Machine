@@ -13,26 +13,28 @@ int parser(char *buff,TABLE *table);
 //
 // Move a Qson graph between net in native mode
 //
-int qson_to_table(TABLE * table,int * buff) {
-  Triple *Qson; int i;Code stmt;Triple *in;
+int qson_to_table(TABLE * table,char  * buff,int count) {
+    int i,rows;Code stmt;Triple *in;int len;
     machine_set_operator(&table->operators[append_operator],0);
     stmt = get_ready_stmt();
     in = &table->operators[append_data];
-    Qson = (Triple *) (buff+2);
-   for(i=0;i < Qson[0].pointer;i++) {
+    i = 0; while(i < count) {
      //use blob append format
-      *in = Qson[i];
+      in->key = (char *) buff;
+      sscanf(in->key,"%4d%c%3d",&len,&in->link,&in->pointer);
       machine_reset(stmt);
       bind_code(&table->operators[append_operator],stmt);
       machine_step(stmt);
+      i+= (len+8);
+      buff+= (len+8);
    }
-   return 0;
+   return i;
 }
 // extract the Qson
 Triple * set_output_buff(Triple *t);
 int sendx(int sockfd, const void *buf, int len, int flags);
 int closesocketx(int sock);
-int mem_to_net(int fd,int *buff) {
+int mem_to_net(int fd,int *buff,int protocol) {
   int rows,len,total; int i,*j;Triple *Qson; char  dest[20];
   char * key_value;
   Qson = (Triple *) (buff+2);
@@ -43,6 +45,8 @@ int mem_to_net(int fd,int *buff) {
     sscanf(key_value,"%4d",&len);
     sprintf(dest,"%c%3d%4d",Qson[i].link,Qson[i].pointer,len);
     sendx(fd,dest,8,0);
+    if(protocol  = Qson_IO) 
+      len = (((len + 3) >>2) << 2);
     sendx(fd,key_value+4,len,0);
     printf("MN%s%c%3d%\n",key_value,Qson->link,Qson->pointer);
   }
@@ -169,11 +173,14 @@ int system_copy_qson(Webaddr *from,Webaddr *to ) {
       init_table((char *) to->data,1,&table);
       mem_to_table(table,to->buff,AF_TABLE);
     } 
+    if(to->sa_family== AF_INET){
+      mem_to_net(to->fd,from->buff,Qson_IO);
+    } 
   }
   else if(from->sa_family== AF_TABLE && to->sa_family== AF_INET){
     TABLE * table;
     init_table((char *) to->data,0,&table);
-    mem_to_net(to->fd,(int *) from->buff);
+    //table_to_net(to->fd,(int *) from->buff);
   }
   else if(from->sa_family== AF_INET && to->sa_family== AF_TABLE){
     TABLE * table;
@@ -182,7 +189,7 @@ int system_copy_qson(Webaddr *from,Webaddr *to ) {
     if(from->fd == Json_IO) 
     parser((char *) from->buff,table);    // Json from the net
     else if (from->fd == Qson_IO)
-      qson_to_table(table,to->buff);
+      qson_to_table(table,(char *) to->buff,to->count);
   }
   else  if(from->sa_family== AF_TABLE && to->sa_family== AF_MEMORY){
     TABLE * table;

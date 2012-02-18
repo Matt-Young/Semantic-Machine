@@ -1,7 +1,7 @@
 // G engine
 
 #include "all.h"
-#include "filter.h"
+
 #undef Debug_engine
 // Will be shared Protected
 OP operands[OperatorMaximum];
@@ -236,7 +236,7 @@ Trio engine_trios[] = {
 	{0,0,0}};
 
 	// defult operands
-	const  Triple G_null_graph = {"_",'_',0};
+Triple _null_graph = {"_",'_',0};
   int ugly_handler(Triple *top);
 	int init_operands() {
 		int i; 
@@ -260,7 +260,7 @@ Trio engine_trios[] = {
 	int status;
 	debug_loop();
 	for(;;) {
-		t=G_null_graph;
+		t=_null_graph;
 		if(set_ready_event(0) & EV_SystemEvent)
 			t.link = '@';
 		status = machine_new_operator(&t,event_handler);
@@ -298,7 +298,6 @@ int init_machine() {
 	status = init_gfun(); if(status != EV_Ok) return status;
 	status = init_tables(); if(status != EV_Ok) return status;
   sort_names(); 
-  status = init_filters(); 
   if(status != EV_Ok) return status;
 	init_console();
 	return status;

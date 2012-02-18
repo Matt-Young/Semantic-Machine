@@ -1,6 +1,6 @@
 #include "../include/sqlite3.h"
 #include "all.h"
-#include "filter.h"
+
 
 extern TABLE tables[];
 Code  Statement;
@@ -33,23 +33,23 @@ Triple column_decoder(COLINFO *c) {
 	  s.link = 0;
       return(s);
   }
+int event_exec(Triple *);
 // defaut grammar is to descend a row with the default Dot
-int do_square(int mode,FILTER *f) {
+int do_square(int mode,TABLE *table) {
 COLINFO *c,*d;
 Triple ct,dt;
-    c = init_col_info(f->g[0]->table);
+    c = init_col_info(table);
     while(c->index < c->col_count) {
 		ct = column_decoder(c); 
-      if(f->g[1]->table->attribute == TABLE_SQUARE) { 
-        d = init_col_info(f->g[1]->table);
+      if(table->attribute == TABLE_SQUARE) { 
+        d = init_col_info(table);
         while(d->index < d->col_count) {
 			dt = column_decoder(d); 
-			f->events = operands[dt.link].properties;
-           event_exec(f);
+           event_exec(&ct);
           }
 	  }
 	  else 
-		  event_exec(f);
+		  event_exec(&dt);
 	  }
 	return 0;
       }

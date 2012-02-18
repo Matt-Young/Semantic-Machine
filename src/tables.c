@@ -1,6 +1,6 @@
 //#include "sqlite_msgs.h"
 #include "all.h"
-#include "filter.h"
+
 // Table stuff, this will change fast and become part of named graphs
 #define NUMBER_TABLES 20
 // Shared memory
