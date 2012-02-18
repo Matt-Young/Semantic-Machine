@@ -1,7 +1,7 @@
 #include "../socketx/socket_x.h"
 
 
-int closesocket_x(int sock) {
+int closesocketx(int sock) {
 #ifdef WINDOWS
   return closesocket(sock);
 #else
@@ -22,3 +22,5 @@ int SocketCleanup() {
 #endif
   return 0;}
 
+int sendx(int sockfd, const void *buf, int len, int flags) {
+  send(sockfd,(const char *) buf,len,flags);}

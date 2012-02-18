@@ -23,8 +23,7 @@ extern int del_data_count,new_data_count;
 extern int del_thread_count,new_thread_count;
 static void crit(char * message);
 typedef struct { 
-  int newfd;
-  struct sockaddr_in remote_addr; 
+  Webaddr remote_addr; 
   int count;
   int type;
 } Pending;  // Holds things a thread needs
@@ -53,24 +52,25 @@ int event_handler(Triple *t);
 void * handle_data(void * arg) {
   Triple t;int status=0;
     int fd;int rv,rm;
+    Webaddr dest;
   Pending *p = (Pending *) arg;
-
+  fd = p->remote_addr.fd;
   new_thread_count++;
   printf("handler count %d\n",p->count);
-  fd = p->newfd;
-  t.key = (char *) malloc(p->count);
+  fd = p->remote_addr.fd;
+  dest.buff = (char *) malloc(p->count);
   new_data_count++;
-  rv = recv(p->newfd, t.key, p->count,0);
+  rv = recv(fd, (char *) dest.buff, p->count,0);
   if(rv < p->count) {
-    if((rm = send(p->newfd, BAD_MSG, strlen(OK_MSG), 0)) == -1) 
+    if((rm = send(fd, BAD_MSG, strlen(OK_MSG), 0)) == -1) 
       warn("Error sending data to client.");
-    closesocket(p->newfd);
+    closesocket(fd);
   }
   else {
-    if((rm = send(p->newfd, OK_MSG, strlen(OK_MSG), 0)) == -1) 
+    if((rm = send(fd, OK_MSG, strlen(OK_MSG), 0)) == -1) 
       warn("Error sending data to client.");
     t.key[rv]=0;
-    closesocket(p->newfd);
+    closesocket(fd);
 
     if(p->type = Bson_IO)
       t.link = OperatorBsonIn;
@@ -79,8 +79,9 @@ void * handle_data(void * arg) {
     t.pointer = p->count;
     machine_lock();
      set_web_addr(&p->remote_addr,sizeof(p->remote_addr));
-    //status = machine_new_operator(&t,event_handler);
-
+     dest.sa_family = AF_TABLE;
+     strcpy((char *) dest.data,"table");
+    //int system_copy_qson(&p->remote_addr,&dest ) 
     machine_unlock();
     printf(" Action %d ",status);
 //    print_triple(&t);
@@ -88,7 +89,7 @@ void * handle_data(void * arg) {
  // free(t.key);
   del_data_count++;
   del_thread_count++;
-  p->newfd = 0;
+  p->count = 0;
   return 0;
 }
 
@@ -137,7 +138,7 @@ void * net_service (void * port)  {
     } else if(type >= 0){
       printf("Count: %d\n",count);
       i=0;
-      while(pendings[i].newfd && i < NTHREAD) i++;
+      while(pendings[i].count && i < NTHREAD) i++;
       if(i==NTHREAD) {
         if((rv = send(newfd, PORT_MSG, strlen(PORT_MSG), 0)) == -1)  
           warn("Error sending data to client.");
@@ -146,9 +147,9 @@ void * net_service (void * port)  {
       else {
         printf("Doing %d\n",status);
         pendings[i].type = type; 
-        pendings[i].newfd = newfd; 
         pendings[i].count = count;
-        pendings[i].remote_addr =remote_addr;
+        memcpy(&pendings[i].remote_addr,&remote_addr,sizeof(remote_addr));
+         pendings[i].remote_addr.fd = newfd;
         status = pthread_create(&thread,0,handle_data, &pendings[i]);//&pendings[i]);
         printf("Done %d\n",status);
       }
@@ -175,20 +176,26 @@ int net_start(void * port) {
 int Sqlson_to_Bson(Triple t[],char ** buff);
 int send_buff(char *buffer,int count,void * ip_addr)
 {
-    int sockfd=0,  n;
-    struct sockaddr_in  serv_addr;
-    //struct sockaddr_in  * w;
-    // Get the return address for any emissin from this thread
-    memcpy(&serv_addr,get_web_addr(),sizeof(serv_addr));
-    machine_unlock();
-    if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) 
-        error("ERROR connecting");
-    n = send(sockfd,buffer,count,0);
-    if (n < 0)  error("ERROR writing to socket");
-    memset(buffer,0,256);
-    n = recv(sockfd,buffer,255,0);
-    if (n < 0)  error("ERROR reading from socket");
-   // printf("%s\n",buffer);
-    closesocket(sockfd);
-    return 0;
+  struct sockaddr_in ip4addr;
+  int sockfd, portno, n;
+//  struct addrinfo *result; //,hints;
+  //struct sockaddr server;
+  portno = TEST_PORT;
+  ip4addr.sin_family = AF_INET;
+  ip4addr.sin_port = htons(8000);
+  n = inet_pton(AF_INET, "127.0.0.1", &ip4addr.sin_addr);
+  sockfd = socket(PF_INET, SOCK_STREAM, 0);
+  n=connect(sockfd,(struct sockaddr *) &ip4addr, sizeof(ip4addr)); 
+  if(n) {
+  printf("Connect error \n");
+    return EV_Error;
+}
+  n = send(sockfd,buffer,count,0);
+  if (n < 0)  error("ERROR writing to socket");
+   memset(buffer,0,256);
+  n = recv(sockfd,buffer,255,0);
+  if (n < 0)  error("ERROR reading from socket");
+  printf("%s\n",buffer);
+  closesocket(sockfd);
+  return 0;
 }
