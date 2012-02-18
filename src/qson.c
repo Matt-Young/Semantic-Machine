@@ -6,7 +6,7 @@
 #include "../src/engine.h"
 #include "../src/tables.h"
 #include "../src/qson.h"
-
+int parser(char *buff,TABLE *table);
 //*******************************
 // Qson Switch
 //***********************
@@ -178,12 +178,14 @@ int system_copy_qson(Webaddr *from,Webaddr *to ) {
   }
   else if(from->sa_family== AF_INET && to->sa_family== AF_TABLE){
     TABLE * table;
+    // Json from the net
+    printf("Table to %s\n",(char *)  from->data);
     init_table((char *) to->data,1,&table);
-    net_to_table(table,(int *) from->data);
-    // else this might be or the network
+    parser((char *) from->buff,table);
   }
   else  if(from->sa_family== AF_TABLE && to->sa_family== AF_MEMORY){
     TABLE * table;
+    printf("Table from %s\n",(char *)  from->data);
     init_table((char *) from->data,0,&table);
     table_to_mem(table);
     // else this might be or the network
@@ -196,6 +198,8 @@ int system_copy_qson(Webaddr *from,Webaddr *to ) {
     fclose(fd);
     // else this might be or the network
   }
+
+
   return 0;
 }
 
