@@ -242,41 +242,67 @@ int init_gfun() {
 }
 
 // Uglies get their own direct handler
-
-int ugly_handler(Triple *top){
-  int linkid;
-  Code stmt = ready.stmt;   Triple v1,v2;
-        v1= *top; 
-        linkid =  v1.link;
-        if(linkid == '@'){
-         G_printf("Magic %s",v1.key);
-        }
-        else if(linkid == ':') {
-          v1.key = new_string(top->key);
-          if(EV_Data &  machine_step(stmt) ) {
-            machine_triple(stmt,&v2);
-            if(G_isdigit(v2.key[0])) 
-              add_trio( 
-                v1.key ,
-                G_TYPE_USER,
-                (void *) G_strtol(v2.key));
-            else 
-              add_trio( 
-                new_string(top->key),
-                G_TYPE_USER,
-                find_name(v2.key));
+//Trio * find_name(char * key) ;
+  int ugly_handler(Triple *top){
+    int linkid;
+    Code stmt = ready.stmt;   Triple v1,v2;
+    v1= *top; 
+    linkid =  v1.link;
+    if(linkid == '@'){
+      G_printf("Magic %s",v1.key);
+      // Form zero @SysCall.parm,_
+      // Form one @SysCall.arg...,_
+      // Form two @SysCall,table
+      if(EV_Data &  machine_step(stmt) ) {
+        Trio * s1,*s2;
+        machine_triple(stmt,&v1);	
+        s1 = 
+          find_name( v1.key);
+        v1.link =(int) s1->value;
+        if(EV_Data &  machine_step(stmt) ) {
+          machine_triple(stmt,&v2);
+          v1.key = v2.key;
+          if(v1.pointer == 3) {//form zero
+            get_ghandler(&v1,0)(&v1);
           }
-        } else if(linkid == '$') {
-         if(EV_Data &  machine_step(stmt) ) {
-            machine_triple(stmt,&v2);
-            top->link = 
-              (int) find_trio_value( top->key);
-            machine_new_operator(top,0);
-         }
-      }
-        else {
-    print_triple(top);
+        } else {if(v1.pointer == 2) // form one
+          get_ghandler(&v1,0)(&v2);
+         else { // form two
+          TABLE *table;
+          push_ready();
+          init_table(v2.key,&table);
+          set_ready_graph(table);
+          machine_new_operator(&table->operators[pop_operator],get_ghandler(&v1,0));
+          pop_ready();
         }
+      }				
+    }
+    else if(linkid == ':') {
+      v1.key = new_string(top->key);
+      if(EV_Data &  machine_step(stmt) ) {
+        machine_triple(stmt,&v2);
+        if(G_isdigit(v2.key[0])) 
+          add_trio( 
+          v1.key ,
+          G_TYPE_USER,
+          (void *) G_strtol(v2.key));
+        else 
+          add_trio( 
+          new_string(top->key),
+          G_TYPE_USER,
+          find_name(v2.key));
+      }
+    } else if(linkid == '$') {
+      if(EV_Data &  machine_step(stmt) ) {
+        machine_triple(stmt,&v2);
+        top->link = 
+          (int) find_trio_value( top->key);
+        machine_new_operator(top,0);
+      }
+    }
+    else {
+      print_triple(top);
+    }
     reset_ready_event(EV_Ugly);
     return 0;
       }
