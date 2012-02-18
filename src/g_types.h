@@ -66,10 +66,10 @@ extern Triple _null_graph;
 #define EV_Incomplete 0x4000 // Square table looms ahead
 #define EV_Debug 0x8000
 #define EV_Ugly 0x10000
-#define EV_SystemEvent 0x20000
-#define EV_Network 0x40000
-#define EV_UnbindTriple 0x80000
-
+#define EV_Forms 0xe0000  // system calls use these
+#define EV_FormZero 0x2000
+#define EV_FormOne 0x4000
+#define EV_FormTwo 0x6000
 #endif
 
 

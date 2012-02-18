@@ -57,3 +57,4 @@ int machine_key_len(Code stmt);
 int machine_bind_int(Code stmt,int index,int value);
 int machine_bind_text(Code stmt,int index,char * ch);
 int machine_bind_blob(Code stmt,int index,void * blob,int size);
+Handler get_ghandler(Triple top[],Handler handler);

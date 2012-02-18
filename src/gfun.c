@@ -17,9 +17,23 @@ typedef struct {
   Triple *buff; // an output
   Webaddr return_addr;
   TABLE *table;
-}  READYSET;
+}  Readyset;
 
-READYSET ready;
+Readyset ready;
+Readyset * ready_stack[4];int ready_index=0;
+int push_ready(){
+  ready_stack[ready_index] = (Readyset *) G_malloc(sizeof(Readyset));
+  *ready_stack[ready_index] = ready;
+  ready_index ++; ready_index &= 0x03; 
+  return 0;
+}
+int pop_ready(){
+  ready_stack[ready_index] = (Readyset *) G_malloc(sizeof(Readyset));
+  ready_index --; ready_index &= 0x03; 
+  ready = *ready_stack[ready_index];
+  G_free(ready_stack[ready_index]);
+  return 0;
+}
 Mapper map_self_row(Pointer * p,int *type) {
 	*p = (Pointer) (ready.self->row + ready.self->rowoffset);
 	*type = G_TYPE_INTEGER;
@@ -243,43 +257,42 @@ int init_gfun() {
 
 // Uglies get their own direct handler
 //Trio * find_name(char * key) ;
-  int ugly_handler(Triple *top){
-    int linkid;
-    Code stmt = ready.stmt;   Triple v1,v2;
-    v1= *top; 
-    linkid =  v1.link;
-    if(linkid == '@'){
-      G_printf("Magic %s",v1.key);
-      // Form zero @SysCall.parm,_
-      // Form one @SysCall.arg...,_
-      // Form two @SysCall,table
-      if(EV_Data &  machine_step(stmt) ) {
-        Trio * s1,*s2;
-        machine_triple(stmt,&v1);	
-        s1 = 
-          find_name( v1.key);
-        v1.link =(int) s1->value;
-        if(EV_Data &  machine_step(stmt) ) {
-          machine_triple(stmt,&v2);
-          v1.key = v2.key;
-          if(v1.pointer == 3) {//form zero
-            get_ghandler(&v1,0)(&v1);
-          }
-        } else {if(v1.pointer == 2) // form one
-          get_ghandler(&v1,0)(&v2);
-         else { // form two
-          TABLE *table;
-          push_ready();
-          init_table(v2.key,&table);
-          set_ready_graph(table);
-          machine_new_operator(&table->operators[pop_operator],get_ghandler(&v1,0));
-          pop_ready();
-        }
-      }				
-    }
-    else if(linkid == ':') {
+int ugly_handler(Triple *top){
+  int linkid;
+  Code stmt = ready.stmt;   Triple v1,v2;
+  v1= *top; 
+  linkid =  v1.link;
+  if(linkid == '@'){
+    Trio * s1;int properties;
+    G_printf("Magic %s",v1.key);
+    // Form zero @SysCall.parm,_
+    // Form one @SysCall.arg...,_
+    // Form two @SysCall,table
+    // Form two @SysCall.arg.arg..,table
+    if(EV_Data &  machine_step(stmt) ) 
+      machine_triple(stmt,&v1);	
+    s1 = 
+        find_name( v1.key);
+      v1.link =(int) s1->value;
+      properties=operands[v1.link].properties & EV_Forms ;
+      if(EV_Data &  machine_step(stmt) ) 
+        machine_triple(stmt,&v2);
+      v1.key = v2.key;
+      if(properties == EV_FormZero) //form zero
+        get_ghandler(&v1,0)(&v1);
+      else if(properties == EV_FormOne) // form one
+        get_ghandler(&v1,0)(&v2);
+      else if(properties == EV_FormTwo){ // form two
+        TABLE *table;
+        push_ready();
+        init_table(v2.key,0,&table);
+        set_ready_graph(table);
+        machine_new_operator(&table->operators[pop_operator],get_ghandler(&v1,0));
+        pop_ready();
+      }
+    } else if(linkid == ':') {
       v1.key = new_string(top->key);
-      if(EV_Data &  machine_step(stmt) ) {
+      if(EV_Data &  machine_step(stmt) ) 
         machine_triple(stmt,&v2);
         if(G_isdigit(v2.key[0])) 
           add_trio( 
@@ -291,18 +304,14 @@ int init_gfun() {
           new_string(top->key),
           G_TYPE_USER,
           find_name(v2.key));
-      }
-    } else if(linkid == '$') {
-      if(EV_Data &  machine_step(stmt) ) {
-        machine_triple(stmt,&v2);
-        top->link = 
-          (int) find_trio_value( top->key);
-        machine_new_operator(top,0);
-      }
+      } else if(linkid == '$') {
+        if(EV_Data &  machine_step(stmt) ) 
+          machine_triple(stmt,&v2);
+          top->link = 
+            (int) find_trio_value( top->key);
+          machine_new_operator(top,0);
+      }  else 
+        print_triple(top);
+      reset_ready_event(EV_Ugly);
+      return 0;
     }
-    else {
-      print_triple(top);
-    }
-    reset_ready_event(EV_Ugly);
-    return 0;
-      }

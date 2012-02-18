@@ -189,6 +189,7 @@ int  machine_new_operator(Triple top[],Handler handler) {
     machine_loop(top,handler);
 	return 0;
 }
+//#define EV_Forms 0xe0000  
 
 const struct {
 	char * name;
@@ -200,11 +201,11 @@ const struct {
 	{"SystemCall",SystemCall,EV_No_bind,call_handler},
 	{"SystemDup",SystemDup,EV_No_bind,dup_handler},
 	{"SystemPop",SystemPop,EV_No_bind,pop_handler},
-	{"SystemExec",SystemExec,EV_No_bind,exec_handler},
-	{"SystemScript",SystemScript,EV_No_bind,sql_handler},
-	{"SystemDecode",SystemDecode,EV_No_bind,script_handler},
-	{"SystemConfig",SystemConfig,EV_No_bind,config_handler},
-	{"SystemEcho",SystemEcho,EV_No_bind,echo_handler}
+	{"SystemExec",SystemExec,EV_No_bind+EV_FormZero,exec_handler},
+	{"SystemScript",SystemScript,EV_No_bind+EV_FormZero,sql_handler},
+	{"SystemDecode",SystemDecode,EV_No_bind+EV_FormZero,script_handler},
+	{"SystemConfig",SystemConfig,EV_No_bind+EV_FormOne,config_handler},
+	{"SystemEcho",SystemEcho,EV_No_bind+EV_FormOne,echo_handler}
 };
 int init_handlers() {
 	int i;
@@ -228,7 +229,7 @@ Handler g_debugger(Triple *);
 int g_debugger_state;
 Trio engine_trios[] = { 
 	{ "Debug", G_TYPE_HANDLER, g_debugger},
-	{ "Testing", G_TYPE_BIT, (Pointer) EV_SystemEvent},
+	{ "Testing", G_TYPE_BIT, (Pointer) EV_Debug},
   { "UnbindTriple", G_TYPE_HANDLER, (Handler) unbind_handler},
   { "AppendHandler", G_TYPE_HANDLER, (Handler) append_handler},
   { "ExitHandler", G_TYPE_HANDLER, (Handler) exit_handler},
@@ -258,10 +259,9 @@ Triple _null_graph = {"_",'_',0};
 	//Console c;
 	Triple t;
 	int status;
-	debug_loop();
 	for(;;) {
 		t=_null_graph;
-		if(set_ready_event(0) & EV_SystemEvent)
+		if(set_ready_event(0) & EV_Debug)
 			t.link = '@';
 		status = machine_new_operator(&t,event_handler);
 	}

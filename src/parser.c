@@ -19,8 +19,9 @@ int SetAttribute(Triple * current,Triple * next) {
 		trio= find_name(next->key);
 	if(trio) 
     if( (int) trio->type == G_TYPE_BIT) 
-			set_ready_event(EV_SystemEvent);
+//			set_ready_event(EV_SystemEvent);
 		return next->link;
+  return 0;
 	}
 // Front end key word from text and json operators
 #define trim(tmp) while((tmp != start) && isspace(*(tmp-1))) tmp--;
@@ -218,21 +219,21 @@ case DelApp:
     return 0;
  }
 int json_rules(char cin, PGRAPH *inner) {
-// Some combinations vcan be ignored
-   if((ccurr == '.') && (cprev == '}') ) { // this combination just skipped
+// Some combinations can be ignored
+   if(cprev == '}') {
+	if(ccurr == '.') { // this combination just skipped
      ccurr = cin;
      current = next;
         return 0;
    }
-  if((ccurr == ',') && (cprev == '}')) {
+  if(ccurr == ',')  {
      graph_changes( inner,CloseNew);
      ccurr = cin;
      current = next;
   return 0;
   }
-  // if ccurr == '$' , then there is an inore and set the 
-  // symbol bit
-  //c->nextlink = '$;)
+  }
+
    cnext = cin;
    if(ccurr == '{')   
        graph_changes( inner,New); 
@@ -244,18 +245,17 @@ int json_rules(char cin, PGRAPH *inner) {
    else if((ccurr == ',') && !( (cprev == ':') ||  (cprev == '$') ))
        graph_changes( inner,AppCloseNew);
    else if((ccurr == ',') && ( (cprev == ':') ||  (cprev == '$') ))
-     graph_changes( inner,CloseNew);
+     graph_changes( inner,CloseNew);  // The previous two are bound
    else if(ccurr == '}') {  
      int child_context = (int ) graph_variable(*inner);
      int parent_context = (int ) graph_variable((*inner)->parent);
-     if( cprev == ':' ) graph_changes(inner,Del);
+     if( (cprev == ':') ||  (cprev == '$') ) graph_changes(inner,Del);
      else if(parent_context == '{') graph_changes(inner,AppDel);
      else graph_changes(inner,AppCloseNew);
      }
-   else if (ccurr == ':') 
-       graph_changes( inner,NewApp); // Named
+   else if (ccurr == ':') graph_changes( inner,NewApp); // Named
    else  if(ccurr == '$') graph_changes( inner,NewApp); // Equals pair
-   else if(ccurr == '@')  graph_changes( inner,NewApp); 
+   else if(ccurr == '@')  graph_changes( inner,NewApp); // match mode
 
     cprev = ccurr; ccurr = cnext;
    prev = current;
