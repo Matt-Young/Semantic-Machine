@@ -32,9 +32,24 @@ char * NAME(TABLE *);
 int ATTRIBUTE(TABLE *);
 TABLE * TABLE_POINTER(int i);
 int DELETE_TABLE(TABLE *);
+  /*! \defgroup  Table
+ * Table context for managing sql table
+ */
+/*! \ingroup  Table
+ * Delete and recreate a Qson table.
+ */
 int del_create_table(TABLE *);
+/*! \ingroup  Table
+ * Initialize and potentially delete a table by name.
+ */
 int init_table(char * name,int options,TABLE **table);
+/*! \ingroup  Table
+ * Just feed triple into the pipe.
+ */
 int run_table(TABLE * t,Handler handler);
+/*! \ingroup  Table
+ * Mainly set row sequencers.
+ */
 Triple * start_table(TABLE * t,int index);
 TABLE * get_table_context(char *);
 TABLE * get_table_name(const char * name);
