@@ -9,15 +9,7 @@
 /*! \ingroup  Global Group
  * A global group.
  */
-#include "../src/include/config.h"
 
-#include "../src/include/g_types.h"
-#include "../src/include/names.h"
-#include "../src/include/tables.h"
-#include "../src/include/graphs.h"
-#include "../src/include/engine.h"
-#include "../src/include/console.h"
-#include "../src/include/g.h"
 /*! \ingroup  Global
  * Binds variables to position for a prepared statement.
  */
@@ -46,3 +38,7 @@
  * network listener.
  */
   int net_start(void *);
+  int echo_handler(Triple *);
+  int event_handler(Triple * t);
+  void print_triple(Triple *t);
+  int incr_row(int delta);

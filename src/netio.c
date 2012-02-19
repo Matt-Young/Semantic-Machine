@@ -7,13 +7,17 @@ setting either threads or netio then you need to run under cygwin or under linux
 the lab configuratio, the threads only and the netio
 */
 #define DebugPrint 
+
+
+
 #include "./include/config.h"
 #include "../socketx/socket_x.h"
 
 #include "../src/include/g_types.h"
 #include "../src/include/config.h"
-#include "../src/include/engine.h"
+//#include "../src/include/engine.h"
 #include "../src/include/http_hdrs.h"
+int set_web_addr(Webaddr *,int );
 #define error printf
 #define warn printf
 #define NTHREAD 16 
@@ -71,13 +75,13 @@ void * handle_data(void * arg) {
     if((rm = send(fd, OK_MSG, strlen(OK_MSG), 0)) == -1) 
       warn("Error sending data to client.");
     closesocket(fd);
-    machine_lock();
+    //machine_lock();
      set_web_addr(&p->remote_addr,sizeof(p->remote_addr));
      dest.sa_family = AF_TABLE;
      p->remote_addr.count = p->count;
-     strcpy((char *) dest.data,"netio");
+     strcpy((char *) dest.addr,"netio");
     system_copy_qson(&p->remote_addr,&dest ); 
-    machine_unlock();
+    //machine_unlock();
     DebugPrint(" Action %d ",status);
 //    print_triple(&t);
   }

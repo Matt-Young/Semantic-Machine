@@ -1,5 +1,13 @@
-//#include "sqlite_msgs.h"
-#include "./include/all.h"
+
+#include "../src/include/config.h"
+#include "../src/include/g_types.h"
+#include "../src/include/names.h"
+#include "./include/machine.h"
+#include "../src/include/tables.h"
+#include "../src/include/graphs.h"
+#include "../src/include/engine.h"
+#include "../src/include/console.h"
+
 
 // Table stuff, this will change fast and become part of named graphs
 #define NUMBER_TABLES 20
@@ -15,7 +23,7 @@ return(pt);}
 
 void free_table_context(TABLE *pt) {
    if(del_table_count >= new_table_count)
-		G_error("Bad table",G_ERR_GRAPH);
+		G_printf("Bad table",EV_Error);
    delete_graph((PGRAPH *) pt->list);
 	G_free((void *) pt);
 	del_table_count++;
@@ -76,6 +84,16 @@ int run_table(TABLE * t,Handler handler){
  G_printf("\ndone\n");
  return 0;
 }
+
+ int init_run_table(char * name) {
+	  TABLE * table; int status; Triple *t;
+	  init_table(name,0,&table);
+	  t  = &table->operators[pop_operator];
+	  status = set_ready_graph(table);
+	  machine_new_operator(t,0);
+	  return 0;
+  }
+
 Triple *  start_table(TABLE * t,int index){
   PGRAPH  g;
   g = (PGRAPH ) t->list;

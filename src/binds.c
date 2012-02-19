@@ -5,7 +5,13 @@ for insert, update and selectg.
 Table stuff really doesn belong here, as table are going to be an
 an index system built on the sqlite_master
 */
-#include "./include/all.h"
+#include "../src/include/g_types.h"
+#include "./include/machine.h"
+#include "../src/include/names.h"
+#include "../src/include/tables.h"
+#include "../src/include/graphs.h"
+#include "../src/include/engine.h"
+#include "../src/include/console.h"
 #define NUMBINDS 10
 int bind_count=0;
 // various binds

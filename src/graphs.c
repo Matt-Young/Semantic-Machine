@@ -1,5 +1,11 @@
 
-#include "./include/all.h"
+#include "../src/include/g_types.h"
+
+#include "./include/machine.h"
+#include "../src/include/tables.h"
+#include "../src/include/graphs.h"
+#include "../src/include/engine.h"
+#include "../src/include/console.h"
 void list_graphs(PGRAPH  *list,char*);
 // every graph is an open subraph of its parent. 
 // graph map sqlson sub graphs in the database
@@ -12,7 +18,7 @@ PGRAPH new_graph_context() {
 PGRAPH free_graph_context(PGRAPH  child) {
 	PGRAPH parent=child->parent;
 	if(del_graph_count >= new_graph_count)
-		G_error("Bad graph",G_ERR_GRAPH);
+		G_printf("Bad graph",EV_Error);
 	G_free((void *) child);
 	del_graph_count++;
 	return parent;

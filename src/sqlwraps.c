@@ -1,7 +1,11 @@
 #include "../sqlite/sqlite3.h"
-#include "./include/g_types.h"
-#include "./include/engine.h"
-#include "./include/console.h"
+#include "../src/include/g_types.h"
+
+#include "./include/machine.h"
+#include "../src/include/tables.h"
+#include "../src/include/graphs.h"
+#include "../src/include/engine.h"
+#include "../src/include/console.h"
 
 #define clear_events  reset_ready_event( EV_Done| EV_Data | EV_Error)
 int msg_id(int sqlite_msg) {
@@ -106,3 +110,13 @@ int machine_loop(Triple *t,Handler h) {
 	machine_reset(stmt);
   return 0;
 }
+void machine_name_info(Code * stmt, ColInfo *cinfo) {
+  int i;
+  cinfo->col_count = sqlite3_column_count((sqlite3_stmt*)stmt);
+  for(i=0;i< cinfo->col_count;i++) {
+    cinfo->name[i] = sqlite3_column_name((sqlite3_stmt*) stmt, i);
+    cinfo->type[i] = sqlite3_column_type((sqlite3_stmt*) stmt, i);
+    if(i == 3)
+      cinfo->rowid = sqlite3_column_int((sqlite3_stmt*)stmt, i);
+  }
+}  

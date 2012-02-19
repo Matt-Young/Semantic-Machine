@@ -1,22 +1,14 @@
-/**
- * ... Table context ad defines...
- */
 
 #define NBUILTINS 10
-typedef struct  {
-  int col_count;
-  int rowid;
-  const char * name[8]; 
-  int type[8];
-  int index;
-} COLINFO;
-typedef struct tables  {
+
+typedef struct Tables  {
   char * name;
   int attribute;
   Triple operators[NBUILTINS];  /*!< Prepared statements fo the table */
   int index;
-  Pointer list;  //points to the innermost current graph
-  COLINFO  info;
+  Code stmt;
+  struct  Graph * list;  //points to the innermost current graph
+  ColInfo info;
 } TABLE;
 #define TABLE_SQUARE 1
 #define TABLE_NULL  2
@@ -28,10 +20,10 @@ enum PreparedTableOps {
 	spare_operator,spare_data};
 
 
-char * NAME(TABLE *);
-int ATTRIBUTE(TABLE *);
-TABLE * TABLE_POINTER(int i);
-int DELETE_TABLE(TABLE *);
+//char * NAME(TABLE *);
+//int ATTRIBUTE(TABLE *);
+//ABLE * TABLE_POINTER(int i);
+//int DELETE_TABLE(TABLE *);
   /*! \defgroup  Table
  * Table context for managing sql table
  */
@@ -50,7 +42,13 @@ int run_table(TABLE * t,Handler handler);
 /*! \ingroup  Table
  * Mainly set row sequencers.
  */
+
 Triple * start_table(TABLE * t,int index);
+/*! \ingroup  Table
+ * Set up and run this table.
+ */
+
+int init_run_table(char * name);
 TABLE * get_table_context(char *);
 TABLE * get_table_name(const char * name);
 void release_table_context(TABLE *pt);

@@ -1,7 +1,17 @@
 // G engine
 
-#include "./include/all.h"
+#include "../src/include/config.h"
 
+#include "../src/include/g_types.h"
+
+#include "./include/machine.h"
+#include "../src/include/tables.h"
+#include "../src/include/graphs.h"
+#include "../src/include/engine.h"
+#include "../src/include/console.h"
+#include "../src/include/names.h"
+
+#include "../src/include/all.h"
 #undef Debug_engine
 // Will be shared Protected
 OP operands[OperatorMaximum];
@@ -129,7 +139,7 @@ int dup_handler(Triple *node){
 	id = G_atoi(node->key);
 	G_strcpy(buff,(const char *) machine_script(operands[id].stmt));
 	status = install_sql_script(buff,SystemScratch);
-	if(status != EV_Ok) G_error("Dup",G_ERR_DUP);
+	if(status != EV_Ok) G_printf("Dup",EV_Error);
 	for(i=0;operands[id].maps[i];i++) 
 		operands[SystemScratch].maps[i] = operands[id].maps[i];
 	return EV_Ok;

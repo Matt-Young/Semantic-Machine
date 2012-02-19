@@ -1,8 +1,10 @@
 typedef struct {char * buff; char * base; char * current; int size;int count;} Console;
-char * G_InitConsole(Console * console);
-int console_command(Console * console,char command );
-void   console_file(Console * console,char * ptr) ;
-int G_console(Console * console);
+
+
+int * G_InitConsole(Webaddr * console);
+int console_command(Webaddr * console,char command );
+void   console_file(Webaddr * console,char * ptr) ;
+int G_console(Webaddr * console);
 #define Line_size 256
 int  G_isugly(char ch);
 void G_exit();

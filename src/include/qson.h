@@ -27,6 +27,11 @@ int mem_to_table(void * dest,int * buff,int mode);
  * General call for a Qson move
  */
 int system_copy_qson(Webaddr *from,Webaddr *to );
-int test_qson();
+int test_qson(); 
 
-typedef struct FlatHeader { long link_rows;long Key_count;long key_data;} FlatHeader;
+struct Format { 
+  struct {char link; char rows[3];char key_count[4];long key_data;} Flat;
+  struct  {
+      struct { long link; long rows; long *key_data;} fixed;
+      struct {long key_count; long key_data;} variable;} Memory;
+};

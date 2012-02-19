@@ -1,13 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../src/include/g_types.h"
-#include "../src/include/config.h"
-#include "../src/include/engine.h"
-#include "../src/include/tables.h"
-#include "../src/include/qson.h"
 
+#include "../src/include/config.h"
+#include "../src/include/g_types.h"
+#include "../src/include/names.h"
+#include "./include/machine.h"
+#include "../src/include/tables.h"
+#include "../src/include/engine.h"
 #define DebugPrint printf
+ int parser(char * ,TABLE *);  
 //*******************************
 // Qson Switch
 //***********************
@@ -15,17 +17,16 @@
 // Move a Qson graph form net to Qstore
 //
 int qson_to_table(TABLE * table,char  * buff,int count) {
-    int i,rows;Code stmt;Triple *in;int len;
+    int i;Triple *in;int len;
     machine_set_operator(&table->operators[append_operator],0);
-    stmt = get_ready_stmt();
     in = &table->operators[append_data];
     i = 0; while(i < count) {
      //use blob append format
       in->key = (char *) buff;
       sscanf(in->key,"%4d%c%3d",&len,&in->link,&in->pointer);
-      machine_reset(stmt);
-      bind_code(&table->operators[append_operator],stmt);
-      machine_step(stmt);
+      machine_reset(table->stmt);
+      bind_code(&table->operators[append_operator],table->stmt);
+      machine_step(table->stmt);
       i+= (len+8);
       buff+= (len+8);
    }
@@ -36,7 +37,7 @@ Triple * set_output_buff(Triple *t);
 int sendx(int sockfd, const void *buf, int len, int flags);
 int closesocketx(int sock);
 int mem_to_net(int fd,int *buff,int protocol) {
-  int rows,len,total; int i,*j;Triple *Qson; char  dest[20];
+  int rows,len,total; int i;Triple *Qson; char  dest[20];
   char * key_value;
   Qson = (Triple *) (buff+2);
   sendx(fd,buff,8,0);
@@ -85,7 +86,7 @@ total += len+4;
 return buff;
 }
 int mem_to_file( FILE * dest,int * buff,int mode){
-  int rows,len,total; int i,*j;Triple *Qson;
+  int rows,len,total; int i;Triple *Qson;
   char * key_value;
    Qson = (Triple *)(buff+2);
    fwrite((char *) buff,1,8,dest);  // total count
@@ -141,22 +142,22 @@ total += len+4;
 
 // extract the Qson
 Triple * set_output_buff(Triple *t);
-int mem_to_table(void * dest,int * buff,int mode) {
-  int rows,total; int i,*j;Triple *data;
+int mem_to_table(TABLE* table,int * buff,int mode) {
+  int rows,total; int i;Triple *data;
   Triple * Qson;
   Code stmt;
-  start_table((TABLE *) dest,append_old_operator);
-  stmt = get_ready_stmt();
-  data = &((TABLE *) dest)->operators[append_old_data];
+  start_table((TABLE *) table,append_old_operator);
+
+  data = &(table)->operators[append_old_data];
   Qson = (Triple *) (buff+2);
   rows = Qson[0].pointer; total = 0;
   for(i=0;i<rows;i++) {
     *data = Qson[i];
       DebugPrint("MT%s%c%3d\n",Qson[i].key,Qson[i].link,Qson[i].pointer);
     //len = (int) Qson.key; // for blob bind
-      machine_reset(stmt);
-      bind_code(&((TABLE *)dest)->operators[append_old_operator],stmt);
-      machine_step(stmt);
+      machine_reset(table->stmt);
+      bind_code(&(table)->operators[append_old_operator],table->stmt);
+      machine_step(table->stmt);
 
     free(Qson[i].key);
   }
@@ -169,8 +170,8 @@ int system_copy_qson(Webaddr *from,Webaddr *to ) {
   if(from->sa_family ==  AF_MEMORY) {
     if(to->sa_family== AF_FILE) {
       FILE *fd;
-      fd= fopen((char *)to->data, "w+");
-      printf("File out %s\n",(char *)  to->data);
+      fd= fopen((char *)to->addr, "w+");
+      printf("File out %s\n",(char *)  to->addr);
       mem_to_file(fd,from->buff,AF_FILE);
       fflush(fd);
       fclose(fd);
@@ -180,7 +181,7 @@ int system_copy_qson(Webaddr *from,Webaddr *to ) {
     }
     if(to->sa_family== AF_TABLE){
       TABLE * table;
-      init_table((char *) to->data,1,&table);
+      init_table((char *) to->addr,1,&table);
       mem_to_table(table,to->buff,AF_TABLE);
     } 
     if(to->sa_family== AF_INET){
@@ -189,13 +190,13 @@ int system_copy_qson(Webaddr *from,Webaddr *to ) {
   }
   else if(from->sa_family== AF_TABLE && to->sa_family== AF_INET){
     TABLE * table;
-    init_table((char *) to->data,0,&table);
+    init_table((char *) to->addr,0,&table);
     //table_to_net(to->fd,(int *) from->buff);
   }
   else if(from->sa_family== AF_INET && to->sa_family== AF_TABLE){
     TABLE * table;
-    printf("Table to %s\n",(char *)  from->data);
-    init_table((char *) to->data,1,&table);
+    printf("Table to %s\n",(char *)  from->addr);
+    init_table((char *) to->addr,1,&table);
     if(from->fd == Json_IO) 
     parser((char *) from->buff,table);    // Json from the net
     else if (from->fd == Qson_IO)
@@ -203,15 +204,15 @@ int system_copy_qson(Webaddr *from,Webaddr *to ) {
   }
   else  if(from->sa_family== AF_TABLE && to->sa_family== AF_MEMORY){
     TABLE * table;
-    printf("Table from %s\n",(char *)  from->data);
-    init_table((char *) from->data,0,&table);
+    printf("Table from %s\n",(char *)  from->addr);
+    init_table((char *) from->addr,0,&table);
     to->buff = table_to_mem(table);
     // else this might be or the network
   }
     else  if(from->sa_family== AF_FILE && to->sa_family== AF_MEMORY){
       FILE *fd;
-     printf("File in %s\n",(char *)  from->data);
-      fd= fopen((char *) from->data, "r");
+     printf("File in %s\n",(char *)  from->buff);
+      fd= fopen((char *) from->addr, "r");
     to->buff = file_to_mem(fd);
     fclose(fd);
     // else this might be or the network
@@ -224,20 +225,20 @@ int system_copy_qson(Webaddr *from,Webaddr *to ) {
 int test_qson() {
 	Webaddr w1,w2;
   printf("Test qson\n");
-  strcpy((char *) w1.data,"test");
+  strcpy((char *) w1.addr,"test");
   w1.sa_family = AF_TABLE;
   w2.sa_family = AF_MEMORY;
   system_copy_qson(&w1,&w2);// table to mem
  w1.sa_family = AF_CONSOLE;
   system_copy_qson(&w2,&w1); // mem to console
-   strcpy((char *) w1.data,"c:\\soft\\result");
+   strcpy((char *) w1.addr,"c:\\soft\\result");
    w1.sa_family = AF_FILE;
   system_copy_qson(&w2,&w1); // mem to file
 
-   strcpy((char *) w1.data,"testagain");
+   strcpy((char *) w1.addr,"testagain");
     w1.sa_family = AF_TABLE;
     system_copy_qson(&w2,&w1);  //mem to table
-  strcpy((char *) w1.data,"c:\\soft\\result");
+  strcpy((char *) w1.addr,"c:\\soft\\result");
     w1.sa_family = AF_FILE;
     system_copy_qson(&w1,&w2);  //file to mem
     return 0;

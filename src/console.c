@@ -61,20 +61,20 @@ void G_debug(void * format){};
 // Below are specific console operations for the parser
 // Is it a character known to the syntax? '
 //#define Line_size 256
-char line[Line_size]; 
-char * G_InitConsole(Console * console) {
+int line[Line_size]; 
+int * G_InitConsole(Webaddr * console) {
 	memset(line,0,Line_size);
 	console->size=Line_size;
-	console->base=line;
-	console->current=line;
+	console->buff=line;
+	console->empty=line;
 	console->count=0;
 	printf("\nInit:");
-	return console->base;
+	return console->buff;
 }
-char * G_AddConsole(Console * console,char cin) {
-	console->current[0] = cin; 
-	console->current++; console->count++;
-	return console->current;
+char * G_AddConsole(Webaddr * console,char cin) {
+	console->empty[0] = cin; 
+	console->empty++; console->count++;
+	return console->empty;
 }
 void G_Test() {
 G_printf("%d ",fgetc(stdin));
@@ -107,7 +107,7 @@ int isin(char c,const char *str) {
      perror("Open error ");
    }
    }
-int console_command(Console * console,char command ) {
+int console_command(Webaddr * console,char command ) {
   char  line[200];
   char *ptr;
    fgets(line, 100, stdin);
@@ -119,13 +119,13 @@ int console_command(Console * console,char command ) {
   return 0;
 }
 // get line with a bit of input editing
-int G_console(Console * console) { 
+int G_console(Webaddr * console) { 
 	char * ptr,cin,cprev;
 	int left,right;
 	left = 0; right = 0;
 	cin = 0;
   
-	ptr = G_InitConsole(console);
+	ptr = (char *) G_InitConsole(console);
   cprev = 0;
 	for(;;) {
     cin = fgetc(stdin);

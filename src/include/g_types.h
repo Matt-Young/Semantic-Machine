@@ -11,12 +11,13 @@ typedef struct {
 
 } Triple;
 
-typedef void * Pointer; //</li> <li>
-typedef int (*Handler)(Triple *);//</li> <li>
-typedef int (*Mapper)(Pointer *pointer,int *type);//</li> <li>
-typedef void * Code;//</li> <li>
-typedef struct g * Pstruct;//</li> 
-
+typedef void * Pointer; 
+typedef int (*Handler)(Triple *);
+typedef int (*Mapper)(Pointer *pointer,int *type);
+typedef void * Code;
+typedef struct g * Pstruct;
+  // Generic context to sqlite3
+extern Pointer g_db;
 
 /**
  * ... g_types.h basic type unique to qson
@@ -30,8 +31,9 @@ enum qson_base_types {G_TYPE_NONE,G_TYPE_INTEGER,G_TYPE_FLOAT,
 
 #define AF_INET6 23
 
-typedef struct {    unsigned short  sa_family; 
-unsigned short pad[12];int * buff;int count;  int fd; char * data[20];} Webaddr;
+typedef struct Webaddr {   unsigned short  sa_family; 
+long addr[8]; int fd;
+int * buff; int count; int size; char * fill; char * empty; } Webaddr;
 // A console sa family types
 #define AF_FILE  0x70e3
 #define AF_CONSOLE 0x70e2

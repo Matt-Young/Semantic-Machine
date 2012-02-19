@@ -1,9 +1,9 @@
 
 typedef struct {int row;int end;int rowoffset;} RowSequence;
-typedef struct  g {
+typedef struct  Graph {
   RowSequence rdx;
   TABLE * table;
-  Pstruct parent;
+  struct Graph * parent;
   void * context;
 } GRAPH;
 typedef GRAPH * PGRAPH; 

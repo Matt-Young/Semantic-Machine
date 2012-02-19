@@ -1,5 +1,11 @@
 
-#include "./include/all.h"
+#include "../src/include/g_types.h"
+
+#include "./include/machine.h"
+#include "../src/include/tables.h"
+#include "../src/include/graphs.h"
+#include "../src/include/console.h"
+#include "../src/include/names.h"
 #include <ctype.h>
 #define DebugPrint
 #define DISCARD 0xff

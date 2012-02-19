@@ -1,10 +1,18 @@
 
-#include "./include/all.h"
+//#include "../src/include/config.h"
+#include "../src/include/g_types.h"
+#include "../src/include/names.h"
+#include "./include/machine.h"
+#include "../src/include/tables.h"
+#include "../src/include/graphs.h"
+#include "../src/include/engine.h"
+#include "../src/include/console.h"
 #include "./include/qson.h"
 Triple _null_graph={'_',0,"_"};
-
+       int print_triple(Triple *);
+       int parser(char *,TABLE *);
 //  **  READY FOR RUNNING ******
-typedef struct {
+typedef struct ReadySet {
   int count;
   RowSequence *self;
   RowSequence *other;
@@ -108,11 +116,9 @@ Code set_ready_stmt(Code stmt) {
 	ready.stmt = stmt;
 	return ready.stmt; }
 int  set_ready_graph(TABLE * t) {
-	PGRAPH active;
-  active = (PGRAPH) t->list;
 	G_memset(&ready,0,sizeof(ready));
   ready.table=t;
-  ready.self = &active->rdx;
+  ready.self = &((PGRAPH) t->list)->rdx;
   return  EV_Ok;
 }
 void * set_web_addr(void *w,int size) {
@@ -131,16 +137,6 @@ int key_match(const char * k,const char * g) {
     return 0;
 }
 
-
-// sql table name will cuse events overned by filter paerent->child
- int init_run_table(char * name) {
-	  TABLE * table; int status; Triple *t;
-	  init_table(name,0,&table);
-	  t  = &table->operators[pop_operator];
-	  status = set_ready_graph(table);
-	  machine_new_operator(t,0);
-	  return status;
-  }
 
  // The main io graph_changess initialize and run here
  int send_buff(char *buffer,int count,void * ip_addr);
