@@ -1,19 +1,19 @@
 //#include "sqlite_msgs.h"
-#include "all.h"
+#include "./include/all.h"
 
 // Table stuff, this will change fast and become part of named graphs
 #define NUMBER_TABLES 20
 // Shared memory
-PTABLE triple_tables[NUMBER_TABLES];
+TABLE *triple_tables[NUMBER_TABLES];
 
 extern int del_table_count,new_table_count;
-PTABLE  new_table_context() {
-  PTABLE pt;
-  pt = (PTABLE) G_calloc(sizeof(TABLE));
+TABLE  *new_table_context() {
+  TABLE *pt;
+  pt = (TABLE *) G_calloc(sizeof(TABLE));
   new_table_count++;
 return(pt);}
 
-void free_table_context(PTABLE pt) {
+void free_table_context(TABLE *pt) {
    if(del_table_count >= new_table_count)
 		G_error("Bad table",G_ERR_GRAPH);
    delete_graph((PGRAPH *) pt->list);
@@ -21,8 +21,8 @@ void free_table_context(PTABLE pt) {
 	del_table_count++;
 }
 
-PTABLE  get_table_context(char * name) {
-  PTABLE pt; int i;
+TABLE * get_table_context(char * name) {
+  TABLE *pt; int i;
   pt = new_table_context();
   pt->name = (char *) G_calloc(G_strlen(name));
   G_strcpy(pt->name,name);
@@ -34,7 +34,7 @@ PTABLE  get_table_context(char * name) {
   triple_tables[i] = pt;
   return pt;
 }
-void release_table_context(PTABLE pt) {
+void release_table_context(TABLE *pt) {
    triple_tables[pt->index]=0;
     G_free((void *) pt->name);
 	G_free((void *) pt);

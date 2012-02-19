@@ -1,6 +1,6 @@
-#include "g_types.h"
-#include "names.h"
-#include "console.h"
+#include "./include/g_types.h"
+#include "./include/names.h"
+#include "./include/console.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

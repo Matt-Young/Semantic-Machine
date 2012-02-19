@@ -1,5 +1,5 @@
 
-#include "all.h"
+#include "./include/all.h"
 #include <ctype.h>
 #define DebugPrint
 #define DISCARD 0xff
@@ -114,7 +114,7 @@ int start_parser(char * Json, TABLE *table) {
 }
 
 
-void list_graphs(PGRAPH  *list);
+//void list_graphs(PGRAPH  *list);
 #define Debug_parser
 #ifdef Debug_parser
 char * typeface[] = {

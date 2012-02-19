@@ -1,7 +1,7 @@
 
-#include "all.h"
-#include "qson.h"
-const Triple NULL_Triple={"_",'_',0};
+#include "./include/all.h"
+#include "./include/qson.h"
+Triple _null_graph={'_',0,"_"};
 
 //  **  READY FOR RUNNING ******
 typedef struct {

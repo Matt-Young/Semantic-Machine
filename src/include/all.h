@@ -12,15 +12,10 @@
 #include "../src/include/engine.h"
 #include "../src/include/console.h"
 #include "../src/include/g.h"
-/**
- * ... Initialization for modules...
- */
-
-
   int init_binder();
   int init_handlers();
   int init_tables();
   int init_gfun();
   int init_console();
-  int parser(char *,TABLE *);
+  int parser(char *buff,TABLE *table);
   int net_start(void *);

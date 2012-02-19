@@ -1,13 +1,13 @@
 // G engine
 
-#include "all.h"
+#include "./include/all.h"
 
 #undef Debug_engine
 // Will be shared Protected
 OP operands[OperatorMaximum];
 Pointer g_db;
 int Sqlson_to_Bson(Triple t[],char ** buff);
-const Triple SCRATCH_Triple = {"Scratch",SystemScratch,0};
+const Triple SCRATCH_Triple = {SystemScratch,0,"Scratch"};
 int install_sql_script(char * ch,int opid) {
 	int status;
 	status =
@@ -238,7 +238,7 @@ Trio engine_trios[] = {
 	{0,0,0}};
 
 	// defult operands
-Triple _null_graph = {"_",'_',0};
+extern Triple _null_graph;
   int ugly_handler(Triple *top);
 	int init_operands() {
 		int i; 

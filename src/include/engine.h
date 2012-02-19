@@ -9,7 +9,7 @@ typedef struct {
 extern OP operands[];
 #define GCHAR '_'
 // Operator space on the predicate
-enum { SystemExit,SystemCall,SystemDup,SystemPop,
+enum SysCalls { SystemExit,SystemCall,SystemDup,SystemPop,
 		SystemExec,SystemScript,SystemDecode,SystemConfig,SystemName,SystemEcho};
 #define SystemMax SystemEcho
 #define SystemUser SystemMax + 6
@@ -40,7 +40,7 @@ extern Pointer g_db;
  */
  
 int open_machine_layer(char * name,Pointer  mach); 
-int  machine_set_operator(Triple top[],Handler handler);/
+int  machine_set_operator(Triple top[],Handler handler);
 int machine_loop(Triple *t,Handler h) ;
 int machine_new_operator(Triple top[],Handler);
 int machine_append(Triple *t,Handler h);
@@ -49,7 +49,7 @@ Pointer machine_column_text(Code stmt,int colid);
 int machine_step_fetch(Triple *t,Handler h);
 int machine_column_int(Code stmt,int colid);
 int machine_prepare(Pointer g_db,char * ch,Code * stmt);
-int machine_step(Code stmt);/
+int machine_step(Code stmt);
 int machine_reset(Code stmt);
 int machine_exec(Pointer g_db,char * buff,char ** err);
 int machine_install_callback(Pointer g_db,char * name,int nargs,Pointer gfunction);

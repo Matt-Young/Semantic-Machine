@@ -7,13 +7,13 @@ setting either threads or netio then you need to run under cygwin or under linux
 the lab configuratio, the threads only and the netio
 */
 #define DebugPrint 
-#include "config.h"
+#include "./include/config.h"
 #include "../socketx/socket_x.h"
 
-#include "../src/g_types.h"
-#include "../src/config.h"
-#include "../src/engine.h"
-#include "../src/http_hdrs.h"
+#include "../src/include/g_types.h"
+#include "../src/include/config.h"
+#include "../src/include/engine.h"
+#include "../src/include/http_hdrs.h"
 #define error printf
 #define warn printf
 #define NTHREAD 16 

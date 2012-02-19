@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../src/g_types.h"
-#include "../src/config.h"
-#include "../src/engine.h"
-#include "../src/tables.h"
-#include "../src/qson.h"
-int parser(char *buff,TABLE *table);
+#include "../src/include/g_types.h"
+#include "../src/include/config.h"
+#include "../src/include/engine.h"
+#include "../src/include/tables.h"
+#include "../src/include/qson.h"
+
 #define DebugPrint printf
 //*******************************
 // Qson Switch

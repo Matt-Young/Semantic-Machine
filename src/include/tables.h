@@ -3,7 +3,7 @@
  */
 
 #define NBUILTINS 10
-typedef struct tables {
+typedef struct  {
   int col_count;
   int rowid;
   const char * name[8]; 
@@ -13,7 +13,7 @@ typedef struct tables {
 typedef struct tables  {
   char * name;
   int attribute;
-  Triple operators[NBUILTINS];  // operand sequences for triple machine
+  Triple operators[NBUILTINS];  /*!< Prepared statements fo the table */
   int index;
   Pointer list;  //points to the innermost current graph
   COLINFO  info;

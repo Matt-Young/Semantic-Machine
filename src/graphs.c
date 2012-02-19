@@ -1,5 +1,5 @@
 
-#include "all.h"
+#include "./include/all.h"
 void list_graphs(PGRAPH  *list,char*);
 // every graph is an open subraph of its parent. 
 // graph map sqlson sub graphs in the database
@@ -111,7 +111,7 @@ int append_graph(PGRAPH *list,Triple node) {
   list_graphs(list,"app");
 	return(status);
 }
-Pointer new_table_graph(PTABLE table) {
+Pointer new_table_graph(TABLE *table) {
 	PGRAPH gr =  new_graph_context();
 	table->list =  (Pointer) gr;
 	gr->table = table;

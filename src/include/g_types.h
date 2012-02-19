@@ -2,8 +2,7 @@
  * ... g_types.h basic type unique to qson
  */
 
-#ifndef G_TYPEDEFS
-#define G_TYPEDEFS
+
 
 typedef struct {
     int link;
@@ -73,6 +72,3 @@ extern Triple _null_graph;
 #define EV_FormZero 0x2000
 #define EV_FormOne 0x4000
 #define EV_FormTwo 0x6000
-#endif
-
- //-->

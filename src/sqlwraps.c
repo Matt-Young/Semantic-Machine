@@ -1,7 +1,7 @@
 #include "../sqlite/sqlite3.h"
-#include "g_types.h"
-#include "engine.h"
-#include "console.h"
+#include "./include/g_types.h"
+#include "./include/engine.h"
+#include "./include/console.h"
 
 #define clear_events  reset_ready_event( EV_Done| EV_Data | EV_Error)
 int msg_id(int sqlite_msg) {
