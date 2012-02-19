@@ -21,37 +21,37 @@ int SEND_ONLY = 0;  // Global environment
 
 // install key at installed operand position pointer
 int  config_handler(Triple t[]) {
-	int status;
-	Code stmt = get_ready_stmt;
-	const char * ch = t->key;
-	int count = t[0].pointer-1; // exclude current triple
-	int opid;int param; Triple var;
-	Trio * trio;
+  int status;
+  Code stmt = get_ready_stmt;
+  const char * ch = t->key;
+  int count = t[0].pointer-1; // exclude current triple
+  int opid;int param; Triple var;
+  Trio * trio;
   param=0;
-	while(count) {
-		if(EV_Data & (status = machine_step(stmt) )) {
+  while(count) {
+    if(EV_Data & (status = machine_step(stmt) )) {
       status = machine_triple(stmt,&var);
       if(var.link != '_') {
-			    if(param == 0) {
-				    opid = G_atoi(t->key);
-				    if((OperatorMaximum < opid) ) 
-					    return(EV_Incomplete);
-			    } else  if(param == 1 )  // install user script
-				    status = install_sql_script(var.key,opid); 
-          else { // Install map
-				    trio = find_name(var.key);
-				    if(!trio || (trio->type != G_TYPE_MAPPER))
-					    return(EV_Incomplete);
-				    else
-					    operands[opid].maps[count-2]= (Mapper) trio->value;
-          }
-          param++;
+        if(param == 0) {
+          opid = G_atoi(t->key);
+          if((OperatorMaximum < opid) ) 
+            return(EV_Incomplete);
+        } else  if(param == 1 )  // install user script
+          status = install_sql_script(var.key,opid); 
+        else { // Install map
+          trio = find_name(var.key);
+          if(!trio || (trio->type != G_TYPE_MAPPER))
+            return(EV_Incomplete);
+          else
+            operands[opid].maps[count-2]= (Mapper) trio->value;
         }
-        count--;
-        }
+        param++;
       }
-			return(status);
-	}
+      count--;
+    }
+  }
+  return(status);
+}
 
 int sql_handler(Triple *node) {
 	int status=EV_Ok;
@@ -141,7 +141,7 @@ Handler get_ghandler(Triple top[],Handler handler) {
 		return operands[top->link & OperatorMask].handler;
   else return pop_handler; // Try and execute the thing
 }
-
+#define DebugPrint
 // Get the stmt
 Code get_stmt(int opid,Triple * top) {
 	if(operands[opid].properties & EV_Overload)
@@ -171,6 +171,7 @@ int  machine_set_operator(Triple top[],Handler handler) {
 		G_printf("Debug event ");
 	set_ready_code(opid);
   events = set_ready_event(events);
+  DebugPrint("New Operator %s %d %d\n",top[0].key,top[0].link,top[0].pointer);
   return events;
 }
 int  machine_new_operator(Triple top[],Handler handler) {

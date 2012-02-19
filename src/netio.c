@@ -6,6 +6,7 @@ In the lab, stand alone configuration runs under windows studio on the cheap
 setting either threads or netio then you need to run under cygwin or under linux.
 the lab configuratio, the threads only and the netio
 */
+#define DebugPrint 
 #include "config.h"
 #include "../socketx/socket_x.h"
 
@@ -56,7 +57,7 @@ void * handle_data(void * arg) {
   Pending *p = (Pending *) arg;
   fd = p->remote_addr.fd;
   new_thread_count++;
-  printf("handler count %d\n",p->count);
+  DebugPrint("handler count %d\n",p->count);
   fd = p->remote_addr.fd;
   dest.buff = (int *) malloc(p->count);
   new_data_count++;
@@ -77,7 +78,7 @@ void * handle_data(void * arg) {
      strcpy((char *) dest.data,"netio");
     system_copy_qson(&p->remote_addr,&dest ); 
     machine_unlock();
-    printf(" Action %d ",status);
+    DebugPrint(" Action %d ",status);
 //    print_triple(&t);
   }
  // free(t.key);

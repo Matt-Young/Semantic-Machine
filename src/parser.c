@@ -1,6 +1,7 @@
 
 #include "all.h"
 #include <ctype.h>
+#define DebugPrint
 #define DISCARD 0xff
 const char  *uglies = "\"._,{}$!:@";
 char * null_key = "_";
@@ -152,8 +153,8 @@ char * debugs[]=
        {"None","New","App","Del","AppClose","NewApp","DelApp",
      "CloseNew","CloseNewApp","AppDel""AppDelClose",
      "AppCloseNew","AppClosePrev","Name"};
-   // G_printf("Case: %s ",debugs[hindex]);
-   // G_printf("p %x c %x n %x\n",cprev,ccurr,cnext);
+   // DebugPrint("Case: %s ",debugs[hindex]);
+   // DebugPrint("p %x c %x n %x\n",cprev,ccurr,cnext);
 
     switch(hindex) {
     case None: 
@@ -214,8 +215,8 @@ case DelApp:
      append_graph(inner,current);
      break;
    }
-   //G_printf("%dPC %c %c|",hindex,ccurr,graph_variable(inner));
-   // G_printf("p %x c %x n %x\n",cprev,ccurr,cnext);
+ DebugPrint("%dPC %c %c|",hindex,ccurr,graph_variable(*inner));
+ DebugPrint("p %x c %x n %x\n",cprev,ccurr,cnext);
     return 0;
  }
 int json_rules(char cin, PGRAPH *inner) {

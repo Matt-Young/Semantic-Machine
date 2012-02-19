@@ -7,6 +7,7 @@
 #include "../src/tables.h"
 #include "../src/qson.h"
 int parser(char *buff,TABLE *table);
+#define DebugPrint printf
 //*******************************
 // Qson Switch
 //***********************
@@ -48,7 +49,7 @@ int mem_to_net(int fd,int *buff,int protocol) {
     if(protocol  = Qson_IO) 
       len = (((len + 3) >>2) << 2);
     sendx(fd,key_value+4,len,0);
-    printf("MN%s%c%3d%\n",key_value,Qson->link,Qson->pointer);
+    DebugPrint("MN%s%c%3d%\n",key_value,Qson->link,Qson->pointer);
   }
    closesocketx(fd);
   return 0;
@@ -72,7 +73,7 @@ int * file_to_mem(FILE *fd) {
   fread(key_value+4,1,len,fd);  // bytes (from fixed ength key values
   Qson->key = key_value;
   Qson->key[len+4]=0;
-  printf("FM%s%c%3d\n",Qson->key,Qson->link,Qson->pointer);
+  DebugPrint("FM%s%c%3d\n",Qson->key,Qson->link,Qson->pointer);
   Qson++;
 total += len+4;
   }
@@ -93,7 +94,7 @@ int mem_to_file( FILE * dest,int * buff,int mode){
     fprintf(dest,"%4d",len);
     fwrite(key_value+4,1,len,dest);
     if(mode != AF_CONSOLE)
-    printf("MF%s%c%3d%\n",key_value,Qson->link,Qson->pointer);
+    DebugPrint("MF%s%c%3d%\n",key_value,Qson->link,Qson->pointer);
   }
   if(mode == AF_FILE)
    fclose(dest);
@@ -121,7 +122,7 @@ int  * table_to_mem(TABLE *t) {
   memcpy(key_value+4,Qin.key,len);
   key_value[len+4]=0;
 
-  printf("TM%s%c%3d\n",Qout->key,Qout->link,Qout->pointer);
+  DebugPrint("TM%s%c%3d\n",Qout->key,Qout->link,Qout->pointer);
    Qout++;
 total += len+4;
   }
@@ -143,7 +144,7 @@ int mem_to_table(void * dest,int * buff,int mode) {
   rows = Qson[0].pointer; total = 0;
   for(i=0;i<rows;i++) {
     *data = Qson[i];
-      printf("MT%s%c%3d\n",Qson[i].key,Qson[i].link,Qson[i].pointer);
+      DebugPrint("MT%s%c%3d\n",Qson[i].key,Qson[i].link,Qson[i].pointer);
     //len = (int) Qson.key; // for blob bind
       machine_reset(stmt);
       bind_code(&((TABLE *)dest)->operators[append_old_operator],stmt);

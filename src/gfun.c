@@ -1,9 +1,7 @@
 
 #include "all.h"
-//#include "filter.h"
 #include "qson.h"
 const Triple NULL_Triple={"_",'_',0};
-
 
 //  **  READY FOR RUNNING ******
 typedef struct {
