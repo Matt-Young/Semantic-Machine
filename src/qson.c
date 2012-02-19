@@ -12,7 +12,7 @@
 // Qson Switch
 //***********************
 //
-// Move a Qson graph between net in native mode
+// Move a Qson graph form net to Qstore
 //
 int qson_to_table(TABLE * table,char  * buff,int count) {
     int i,rows;Code stmt;Triple *in;int len;
@@ -46,9 +46,13 @@ int mem_to_net(int fd,int *buff,int protocol) {
     sscanf(key_value,"%4d",&len);
     sprintf(dest,"%c%3d%4d",Qson[i].link,Qson[i].pointer,len);
     sendx(fd,dest,8,0);
-    if(protocol  = Qson_IO) 
-      len = (((len + 3) >>2) << 2);
-    sendx(fd,key_value+4,len,0);
+    if(protocol  = Qson_IO) {
+    sendx(fd,key_value+4,len/4,0);
+     if (total = (len & 0x3))
+      sendx(fd,"___",4-total,0);  // keep at four byte boudary
+    }
+    else
+     sendx(fd,key_value+4,len,0);
     DebugPrint("MN%s%c%3d%\n",key_value,Qson->link,Qson->pointer);
   }
    closesocketx(fd);
@@ -57,20 +61,19 @@ int mem_to_net(int fd,int *buff,int protocol) {
 // Simple text file format
 int * file_to_mem(FILE *fd) {
   int total,len,rows,i=0,*buff; char * key_value;
-  char link_pointer[4];Triple * Qson;
+  char link_pointer[12];Triple * Qson;
   total=0;
-  fread(link_pointer,1,4,fd);
+  fread(link_pointer,1,12,fd);
   sscanf(link_pointer+1,"%3d",&rows);
   buff = (int *)  malloc(rows*sizeof(Triple)+8);
   Qson = (Triple *) (buff+2);
   for(i=0;i<rows;i++) {
     if(i) 
-        fread(link_pointer,1,4,fd);
-  sscanf(link_pointer,"%c%3d",&Qson->link,&Qson->pointer);
-  fscanf(fd,"%4d",&len);
-  key_value = (char *)  malloc(len+5);
+        fread(link_pointer,1,12,fd);
+  sscanf(link_pointer,"%c%3d4d",&Qson->link,&Qson->pointer,&len);
+  key_value = (char *)  malloc(4*len+5);
   sprintf(key_value,"%4d",len);
-  fread(key_value+4,1,len,fd);  // bytes (from fixed ength key values
+  fread(key_value+4,4,len,fd);  // bytes (from fixed length key values
   Qson->key = key_value;
   Qson->key[len+4]=0;
   DebugPrint("FM%s%c%3d\n",Qson->key,Qson->link,Qson->pointer);
@@ -85,23 +88,26 @@ int mem_to_file( FILE * dest,int * buff,int mode){
   int rows,len,total; int i,*j;Triple *Qson;
   char * key_value;
    Qson = (Triple *)(buff+2);
-   fwrite((char *) buff,1,8,dest);
+   fwrite((char *) buff,1,8,dest);  // total count
   rows = Qson[0].pointer; total = 0;
   for(i=0;i<rows;i++) {
     key_value = Qson[i].key;
     sscanf(key_value,"%4d",&len);
     fprintf(dest,"%c%3d",Qson[i].link,Qson[i].pointer);
     fprintf(dest,"%4d",len);
-    fwrite(key_value+4,1,len,dest);
+    fwrite(key_value+4,4,len,dest);
+    if (total = (len & 0x3))
+      fwrite("___",1,4-total,dest);  // keep at four byte boudary
     if(mode != AF_CONSOLE)
     DebugPrint("MF%s%c%3d%\n",key_value,Qson->link,Qson->pointer);
   }
+
   if(mode == AF_FILE)
    fclose(dest);
   return 0;
 }
 int  * table_to_mem(TABLE *t) {
-  int len,total; int i,rows;int * buff;
+  int len,total; int k,i,rows;int * buff;
   Triple Qin,*Qout;char * key_value;
   Code stmt;
   start_table(t,pop_operator);
@@ -117,9 +123,11 @@ int  * table_to_mem(TABLE *t) {
     if(i) machine_step_fetch(&Qin,0);
   len = machine_key_len(stmt); 
   *Qout = Qin;
-  key_value = (char *)  malloc(len+1);
+  key_value = (char *)  malloc(4*len+1);
   sprintf(key_value,"%4d",len);
-  memcpy(key_value+4,Qin.key,len);
+  memcpy(key_value+4,Qin.key,len*4);
+  if (k = (len & 0x3))
+      memcpy(key_value+4+len*4,"___",4-k);  // keep at four byte boudary
   key_value[len+4]=0;
 
   DebugPrint("TM%s%c%3d\n",Qout->key,Qout->link,Qout->pointer);
@@ -127,7 +135,7 @@ int  * table_to_mem(TABLE *t) {
 total += len+4;
   }
   total += sizeof(Triple) * rows;
-  sprintf((char *) buff,"%8d",total);
+  sprintf((char *) buff,"%8d",(total+3)/4);
   return buff;
 }
 
