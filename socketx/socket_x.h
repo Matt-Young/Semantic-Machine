@@ -25,6 +25,9 @@
 #include <netinet/in.h>
 #include <errno.h>
 #endif
+/**
+ * ... Interfaces to make windows and linux compatible...
+ */
 
 int SocketCleanup();
 int SocketStart();

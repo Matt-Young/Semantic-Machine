@@ -23,4 +23,4 @@ int SocketCleanup() {
   return 0;}
 
 int sendx(int sockfd, const void *buf, int len, int flags) {
-  send(sockfd,(const char *) buf,len,flags);}
+  return send(sockfd,(const char *) buf,len,flags);}
