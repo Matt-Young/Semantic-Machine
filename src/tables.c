@@ -58,11 +58,11 @@ int del_create_table(char * table) {
     return machine_exec(g_db,buff,&err);
 }
 #define Sql_copy \
-  "insert into %s select from %s;" 
+  "insert into %s select * from  %s;" 
 int dup_table(char * in,char * out) {
   char buff[400];char * err;
-  del_create_table( in);
-    G_sprintf(buff,Sql_copy,in,out);
+  del_create_table( out);
+    G_sprintf(buff,Sql_copy,out,in);
     return machine_exec(g_db,buff,&err);
 }
 int make_stmt(TABLE * table,int format,char * table_name);
@@ -107,6 +107,7 @@ Triple *  start_table(TABLE * t,int index){
   g->rdx.end=-1;
   set_row_sequence(&g->rdx);
  machine_set_operator(&t->operators[index],exit_handler);
+ t->stmt=get_ready_stmt();
  return &t->operators[index];
 }
 
@@ -140,9 +141,9 @@ const struct new_install{
   "UnbindTriple",0,0,0},
 	{append_old_operator,SystemMax+2,"insert into %s values( ?, ?, ?);",
 	  "BindOldTriple","AppendHandler",0,0},
-    {append_operator,SystemMax+2,"insert into %s values( ?, ?, ?);",
+ {append_operator,SystemMax+3,"insert into %s values( ?, ?, ?);",
 	  "BindTriple","AppendHandler",0,0},
-	{update_operator,SystemMax+3,"update %s set pointer = (?) where rowid = ?;",
+	{update_operator,SystemMax+4,"update %s set pointer = (?) where rowid = ?;",
 	"BindRelativeSelfRow","BindSelfStart","ExitHandler",0},
 	{0,0,0,0,0,0,0}
 };

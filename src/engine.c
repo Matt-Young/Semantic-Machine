@@ -274,6 +274,7 @@ extern Triple _null_graph;
   void set_return(Webaddr *w);
 
 #define TestAddr  "2001:db8:8714:3a90::12"
+  int debug_json_string(Webaddr * w);
 int test_qson() ;
 void console_loop(){
 	Webaddr from,to;
@@ -281,11 +282,13 @@ void console_loop(){
   to.sa_family = AF_TABLE;
   from.fd = Json_IO;
   G_strcpy((char *) to.addr,"console"); 
-  //  test_qson();
   G_printf("Console loop\n");
 	for(;;) {
-		G_console(&from);
+		//G_console(&from);
+    debug_json_string(&from);
     system_copy_qson(&from,&to);
+    G_free(from.buff);
+    test_qson();
     flush_users();
     sort_names();
     G_buff_counts();

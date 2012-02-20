@@ -87,13 +87,12 @@ Triple prev,current,next;
 unsigned int cprev,ccurr,cnext;
 
 #define ParserHeader "table:parser"
-int start_parser(char * Json, TABLE *table) {
+int parser(char * Json, TABLE *table) {
 	int nchars;
 	PGRAPH *inner; // points to first child
   G_printf("\nparse start\n");
 	inner = (PGRAPH *) &table->list;
 	nchars=0;cprev=1,ccurr=1,cnext=1;
-  del_create_table(table);
   (*inner)->context=(void *) '@';
   (*inner)->table=table;
   prev = _null_graph;
@@ -119,38 +118,6 @@ int start_parser(char * Json, TABLE *table) {
 	return(EV_Ok);
 }
 
-
-//void list_graphs(PGRAPH  *list);
-#define Debug_parser
-#ifdef Debug_parser
-char * typeface[] = {
-  "{@SystenEcho,Mom}",
-  "{def.ccc,bbb.kkk,hhh.lyu,ggg.aaa}",
-  "{a=23. . c=9. . c.f,d=33}",
-  "{$SystemEcho.hello}",
-  "{ {abc.\"def\".joe:jjj.\"kkk\".lll},anyname:{rdf,may},'you'.klf,{ {named,kkk}.{fgh.lmk} }, jkl }",
-
-  "{a=18,$aaa.22. ,{vvv=40,555=2}.local:SystemExec{\"select * from console;\"}}",
-	"{abc,def,ghi}",
-	"{@config}",
-	""};
-#define DLINE 0
-static int debug_counter=DLINE;
-int   parser(char * x,TABLE *table) {
- char buff[200]; 
- 
- G_memset(buff,0,sizeof(buff));
- G_strcpy(buff,typeface[DLINE]);
- G_printf("%s\n",buff);
- start_parser(buff,table);
-// G_graph_counts();
-  return EV_Ok;
-}
-#else
-int   parser(char * x,TABLE *table) {
-  return start_parser(x,table);
-}
-#endif
    enum {None,New,App,Del,AppClose,NewApp,DelApp,
      CloseNew,CloseNewApp,AppDel,AppDelClose,
      AppCloseNew,AppClosePrev,Name,Done};
@@ -222,8 +189,8 @@ case DelApp:
      append_graph(inner,current);
      break;
    }
- DebugPrint("%dPC %c %c|",hindex,ccurr,graph_variable(*inner));
- DebugPrint("p %x c %x n %x\n",cprev,ccurr,cnext);
+ //DebugPrint("%dPC %c %c|",hindex,ccurr,graph_variable(*inner));
+// DebugPrint("p %x c %x n %x\n",cprev,ccurr,cnext);
     return 0;
  }
 int json_rules(char cin, PGRAPH *inner) {
