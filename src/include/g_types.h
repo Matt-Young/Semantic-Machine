@@ -32,9 +32,12 @@ enum qson_base_types {G_TYPE_NONE,G_TYPE_INTEGER,G_TYPE_FLOAT,
 #define AF_INET6 23
 
 typedef struct Webaddr {   unsigned short  sa_family; 
-long addr[8]; int fd;
+long addr[8]; int fd; int format;
 int * buff; int count; int size; char * fill; char * empty; } Webaddr;
+
+
 // Qson io formas
+#define AF_JSON  0x70e4
 #define AF_FILE  0x70e3
 #define AF_CONSOLE 0x70e2
 #define AF_TABLE   0x70e1

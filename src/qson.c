@@ -18,28 +18,42 @@ int parser(char * ,TABLE *);
 // Move a Qson graph form net to Qstore
 //
 void send_(char * data,int len, Webaddr * to) {
-      if(to->sa_family == AF_FILE) 
+  if(to->sa_family == AF_FILE) 
     fwrite(data,1,len,(FILE *) to->addr);
-    if(to->sa_family == AF_INET)
-      send(to->fd,data,1,len);
+  if(to->sa_family == AF_INET)
+    send(to->fd,data,1,len);
 }
 int   table_to_Json(TABLE *t,Webaddr * to) {
+  // set some stuf up to restore Json brackets
+  struct {int count;int total;} brk[8];int cur;
   int len; int i,rows;
   Triple Qin;char * key_value;char tmp[9];
   Code stmt;
+  cur = 0;
   start_table(t,pop_operator);
   stmt = get_ready_stmt();
   // peek at the header
   i = machine_step_fetch(&Qin,0); 
   rows = Qin.pointer;
+  brk[cur].total = Qin.pointer; brk[cur].count = 0;
   for(i=0;i<rows;i++) {
     if(i) machine_step_fetch(&Qin,0);
     len = machine_key_len(stmt); 
     send_(Qin.key,len,to);
     send_(tmp,sprintf(tmp,"%c",Qin.link),to);
-    DebugPrint("TJ%s%c%3d\n",Qin.key,Qin.link,Qin.pointer);
+    // restor brckets
+    brk[cur].count++;
+    while(brk[cur].count == brk[cur].total) {
+      cur--;brk[cur].count += brk[cur+1].count;
+      send_("}",1,to);
+    }
+    if(Qin.pointer >1) {
+      cur++; brk[cur].count = 0;brk[cur].total = Qin.pointer;
+      send_("{",1,to);
+    }
   }
-  return 0;
+  DebugPrint("TJ%s%c%3d\n",Qin.key,Qin.link,Qin.pointer);
+return 0;
 }
 int qson_to_table(TABLE * table,char  * buff,int count) {
   int i;Triple *in;int len;
@@ -88,7 +102,7 @@ int mem_to_net(int fd,int *buff,int protocol) {
 int * file_to_mem(FILE *fd) {
   int len,rows,i=0,*buff; char * key_value;
   char link_pointer[12],total[8];Triple * Qson;
- fread(total,1,8,fd);
+  fread(total,1,8,fd);
   fread(link_pointer,1,12,fd);
   sscanf(link_pointer+1,"%3d",&rows);
   buff = (int *)  malloc(rows*sizeof(Triple)+8);
@@ -218,7 +232,7 @@ int system_copy_qson(Webaddr *from,Webaddr *to ) {
       to->buff = table_to_mem(table);
 
     }
-  // else this might be from the network
+    // else this might be from the network
   } else if ((from->sa_family== AF_INET) || (from->sa_family== AF_CONSOLE)) {
     if( to->sa_family== AF_TABLE) { 
       TABLE * table;
@@ -229,7 +243,7 @@ int system_copy_qson(Webaddr *from,Webaddr *to ) {
       else if (from->fd == Qson_IO)
         qson_to_table(table,(char *) to->buff,to->count);
     }
-   // source is file
+    // source is file
   }  else if(from->sa_family== AF_FILE) {
     if(to->sa_family== AF_MEMORY){
       FILE *fd;

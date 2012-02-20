@@ -44,7 +44,7 @@ int run_table(TABLE * t,Handler handler);
  * Mainly set row sequencers.
  */
 
-Triple * start_table(TABLE * t,int index);
+Code start_table(TABLE * t,int index);
 /*! \ingroup  Table
  * Set up and run this table.
  */

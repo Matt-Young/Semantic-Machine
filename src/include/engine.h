@@ -69,3 +69,4 @@ int exit_handler(Triple *node);
  */
 Handler get_ghandler(Triple top[],Handler handler);
 int pop_handler(Triple *node);
+int call_handler_name(Triple *t);

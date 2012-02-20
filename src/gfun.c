@@ -248,7 +248,7 @@ int init_gfun() {
 	add_trios(gfun_accessor_list);
 	return 0;
 }
-
+int make_webaddr(Trio *s1){return 0;};
 // Uglies get their own direct handler
 //Trio * find_name(char * key) ;
 int ugly_handler(Triple *top){
@@ -257,34 +257,21 @@ int ugly_handler(Triple *top){
   v1= *top; 
   linkid =  v1.link;
   if(linkid == '@'){
-    Trio * s1;int properties;
-    G_printf("Magic %s",v1.key);
-    // Form zero @SysCall.parm,_
-    // Form one @SysCall.arg...,_
-    // Form two @SysCall,table
-    // Form two @SysCall.arg.arg..,table
-    if(EV_Data &  machine_step(stmt) ) 
-      machine_triple(stmt,&v1);	
+    Trio * s1;
+    // update and push the ready set
+    // look up the named destination and make a webaddr
+    // call the specified handler by name
+    incr_row(top->pointer);
+    push_ready();
+
     s1 = 
-        find_name( v1.key);
-      v1.link =(int) s1->value;
-      properties=operands[v1.link].properties & EV_Forms ;
-      if(EV_Data &  machine_step(stmt) ) 
-        machine_triple(stmt,&v2);
-      v1.key = v2.key;
-      if(properties == EV_FormZero) //form zero
-        get_ghandler(&v1,0)(&v1);
-      else if(properties == EV_FormOne) // form one
-        get_ghandler(&v1,0)(&v2);
-      else if(properties == EV_FormTwo){ // form two
-        TABLE *table;
-        push_ready();
-        init_table(v2.key,0,&table);
-        set_ready_graph(table);
-        machine_new_operator(&table->operators[pop_operator],get_ghandler(&v1,0));
+        find_name( top->key);
+        make_webaddr(s1);
+        if(EV_Data &  machine_step(stmt) ) 
+            machine_triple(stmt,&v1);
+        call_handler_name(&v1);
         pop_ready();
-      }
-    } else if(linkid == ':') {
+  }  else if(linkid == ':') {
       v1.key = new_string(top->key);
       if(EV_Data &  machine_step(stmt) ) 
         machine_triple(stmt,&v2);

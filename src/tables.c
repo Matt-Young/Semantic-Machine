@@ -100,7 +100,7 @@ int run_table(TABLE * t,Handler handler){
 	  return 0;
   }
 
-Triple *  start_table(TABLE * t,int index){
+Code   start_table(TABLE * t,int index){
   PGRAPH  g;
   g = (PGRAPH ) t->list;
   g->rdx.rowoffset=1;
@@ -108,7 +108,7 @@ Triple *  start_table(TABLE * t,int index){
   set_row_sequence(&g->rdx);
  machine_set_operator(&t->operators[index],exit_handler);
  t->stmt=get_ready_stmt();
- return &t->operators[index];
+ return t->stmt;
 }
 
 #define Sql_delete_rows "delete from %s;"

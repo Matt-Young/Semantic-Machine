@@ -217,6 +217,16 @@ const struct {
 	{"SystemConfig",SystemConfig,EV_No_bind+EV_FormOne,config_handler},
 	{"SystemEcho",SystemEcho,EV_No_bind+EV_FormOne,echo_handler}
 };
+    // Form zero name@SysCall.parm,_
+    // Form one name@SysCall.arg...,_
+    // Form two name@SysCall,table
+    // Form two name@SysCall.arg.arg..,table
+int call_handler_name(Triple *t) {
+  Trio *s;int index;
+  s = find_name( t->key);
+  index = (int) s->value;
+  return map[index].handler(t);
+}
 int init_handlers() {
 	int i;
 	i=0;
@@ -287,6 +297,7 @@ void console_loop(){
 		//G_console(&from);
     debug_json_string(&from);
     system_copy_qson(&from,&to);
+    //init_run_table(to->table);
     G_free(from.buff);
     test_qson();
     flush_users();

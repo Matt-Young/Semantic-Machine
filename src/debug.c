@@ -4,7 +4,7 @@
 #include <string.h>
 #include "../src/include/g_types.h"
 char * typeface[] = {
-  "{@SystenEcho,Mom}",
+  "{@SystemEcho,Mom}",
   "{def.ccc,bbb.kkk,hhh.lyu,ggg.aaa}",
   "{a=23. . c=9. . c.f,d=33}",
   "{$SystemEcho.hello}",
