@@ -52,9 +52,9 @@ int reset_ready_event(int EV_event);
  */
 int bind_code(Triple *,Code );
 /*! \ingroup  Readyset
- * A generic hold holding information needed to kmove a Qson along
+ * A generic hold holding information needed to move a Qson along
  */
-void  * get_web_addr();
+Webaddr  * get_web_addr();
 /*! \ingroup  Readyset
  * The webaddr is kept in the ready set
  */
@@ -67,6 +67,7 @@ int exit_handler(Triple *node);
 /**
  * ... Stepping Machine API ...
  */
-Handler get_ghandler(Triple top[],Handler handler);
+Handler get_ghandler(int opid,Handler handler);
 int pop_handler(Triple *node);
 int call_handler_name(Triple *t);
+int ugly_handler(Triple *top);

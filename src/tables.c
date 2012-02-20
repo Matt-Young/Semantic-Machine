@@ -96,7 +96,7 @@ int run_table(TABLE * t,Handler handler){
 	  init_table(name,0,&table);
 	  t  = &table->operators[pop_operator];
 	  status = set_ready_graph(table);
-	  machine_new_operator(t,0);
+	  machine_new_operator(t,ugly_handler);
 	  return 0;
   }
 

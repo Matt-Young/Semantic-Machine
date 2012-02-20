@@ -126,9 +126,15 @@ int script_handler(Triple *node) {
 	G_printf("Script: \n%s\n",machine_script(operands[id].stmt));
 	return EV_Ok;
 }
+// echo an table back
 int echo_handler(Triple *node) {
-  G_printf("\nEcho  ");
-  print_triple(node);
+  Triple Qin; Webaddr from;
+  from.sa_family = AF_TABLE;
+
+  G_printf("\nEcho %s ",from.addr);
+  machine_step_fetch(&Qin,0); 
+  G_strcpy((char *) from.addr,Qin.key);
+  system_copy_qson(&from,get_web_addr());
 	return set_ready_event(0);
 }
 int dup_handler(Triple *node){
@@ -143,11 +149,11 @@ int dup_handler(Triple *node){
 		operands[SystemScratch].maps[i] = operands[id].maps[i];
 	return EV_Ok;
 }
-Handler get_ghandler(Triple top[],Handler handler) { 
+Handler get_handler(int opid,Handler handler) { 
 	if(handler)
 		return handler;
-	else if(operands[top->link & OperatorMask].handler)
-		return operands[top->link & OperatorMask].handler;
+	else if(operands[opid & OperatorMask].handler)
+		return operands[opid & OperatorMask].handler;
   else return pop_handler; // Try and execute the thing
 }
 #define DebugPrint
@@ -192,7 +198,7 @@ int  machine_new_operator(Triple top[],Handler handler) {
 		status = bind_code(top,stmt);
 	if(status != EV_Ok) 
 		G_printf("bind %x ",status);
-   handler = get_ghandler(top,handler);
+   handler = get_handler(top->link,handler);
 	if(!stmt) 
 	  handler(top);
 	else 
@@ -217,6 +223,7 @@ const struct {
 	{"SystemConfig",SystemConfig,EV_No_bind+EV_FormOne,config_handler},
 	{"SystemEcho",SystemEcho,EV_No_bind+EV_FormOne,echo_handler}
 };
+// each handler collects its own arguments
     // Form zero name@SysCall.parm,_
     // Form one name@SysCall.arg...,_
     // Form two name@SysCall,table
@@ -225,7 +232,7 @@ int call_handler_name(Triple *t) {
   Trio *s;int index;
   s = find_name( t->key);
   index = (int) s->value;
-  return map[index].handler(t);
+  return get_handler(index,0)(t);
 }
 int init_handlers() {
 	int i;
@@ -297,7 +304,7 @@ void console_loop(){
 		//G_console(&from);
     debug_json_string(&from);
     system_copy_qson(&from,&to);
-    //init_run_table(to->table);
+    init_run_table((char *) &to.addr);
     G_free(from.buff);
     test_qson();
     flush_users();

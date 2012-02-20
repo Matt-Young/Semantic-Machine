@@ -172,11 +172,11 @@ int  * table_to_mem(TABLE *t) {
     DebugPrint("TM%s%c%3d\n",Qout->key,Qin.link,Qout->pointer);
     Qout++;
   }
-
   sprintf(tmp,"%8d",long_count);
   memcpy(buff,tmp,8);
   return buff;
 }
+// default webaddr
 
 // extract the Qson
 Triple * set_output_buff(Triple *t);
@@ -220,14 +220,14 @@ int system_copy_qson(Webaddr *from,Webaddr *to ) {
       mem_to_net(to->fd,from->buff,Qson_IO);
     // If the source is a table
   }else if(from->sa_family== AF_TABLE ) {
-    if( (to->sa_family== AF_JSON) || ( to->sa_family== AF_INET)) {
-      start_table((TABLE *) to->addr,pop_operator);
-      table_to_Json((TABLE *) to->addr,to);
+     TABLE * table;
+    if( (to->sa_family== AF_CONSOLE) || ( to->sa_family== AF_INET)) {
+      printf("Table from %s\n",(char *)  from->addr);
+      init_table((char *) from->addr,0,&table);
+      table_to_Json(table,to);
     }else if(to->sa_family== AF_TABLE)
       dup_table((char *) from->addr,(char *) to->addr);
     else if(to->sa_family== AF_MEMORY){
-      TABLE * table;
-      printf("Table from %s\n",(char *)  from->addr);
       init_table((char *) from->addr,0,&table);
       to->buff = table_to_mem(table);
 

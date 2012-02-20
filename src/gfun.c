@@ -26,17 +26,17 @@ typedef struct ReadySet {
 }  Readyset;
 
 Readyset ready;
-Readyset * ready_stack[4];int ready_index=0;
+Readyset * ready_stack[8];int ready_index=0;
 int push_ready(){
   ready_stack[ready_index] = (Readyset *) G_malloc(sizeof(Readyset));
   *ready_stack[ready_index] = ready;
-  ready_index ++; ready_index &= 0x03; 
+  ready_index ++; ready_index &= 0x07; 
   return 0;
 }
 int pop_ready(){
   ready_stack[ready_index] = (Readyset *) G_malloc(sizeof(Readyset));
-  ready_index --; ready_index &= 0x03; 
-  ready = *ready_stack[ready_index];
+  ready_index --; ready_index &= 0x07; 
+  //ready = *ready_stack[ready_index];
   G_free(ready_stack[ready_index]);
   return 0;
 }
@@ -118,14 +118,17 @@ Code set_ready_stmt(Code stmt) {
 int  set_ready_graph(TABLE * t) {
 	G_memset(&ready,0,sizeof(ready));
   ready.table=t;
+  ready.return_addr.sa_family = AF_CONSOLE;
+  ready.return_addr.format=Json_IO;
   ready.self = &((PGRAPH) t->list)->rdx;
+  ready.self->end = -1;
   return  EV_Ok;
 }
 void * set_web_addr(void *w,int size) {
   G_memcpy(&ready.return_addr,w,size);
   return &ready.return_addr;
 }
-void * get_web_addr(Webaddr *w) {
+Webaddr * get_web_addr() {
   return &ready.return_addr;
 }
 int key_match(const char * k,const char * g) {
@@ -248,29 +251,27 @@ int init_gfun() {
 	add_trios(gfun_accessor_list);
 	return 0;
 }
-int make_webaddr(Trio *s1){return 0;};
 // Uglies get their own direct handler
 //Trio * find_name(char * key) ;
 int ugly_handler(Triple *top){
   int linkid;
-  Code stmt = ready.stmt;   Triple v1,v2;
-  v1= *top; 
-  linkid =  v1.link;
+  Triple v0,v1,v2;
+  Code stmt = ready.stmt;   
+  machine_triple(stmt, &v0);
+  linkid =  v0.link;
   if(linkid == '@'){
-    Trio * s1;
+    Trio * s1; 
     // update and push the ready set
     // look up the named destination and make a webaddr
     // call the specified handler by name
-    incr_row(top->pointer);
-    push_ready();
 
-    s1 = 
-        find_name( top->key);
-        make_webaddr(s1);
-        if(EV_Data &  machine_step(stmt) ) 
-            machine_triple(stmt,&v1);
+   // push_ready();
+    //s1 = 
+      //  find_name( v0.key);
+        machine_step_fetch(&v1,0);
         call_handler_name(&v1);
-        pop_ready();
+    // pop_ready();
+    // incr_row(v0.pointer);
   }  else if(linkid == ':') {
       v1.key = new_string(top->key);
       if(EV_Data &  machine_step(stmt) ) 

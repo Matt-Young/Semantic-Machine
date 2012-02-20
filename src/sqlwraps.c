@@ -85,10 +85,9 @@ int machine_triple(Code stmt,Triple * t) {
 }
 int machine_step_fetch(Triple *t,Handler h) {
   Code stmt = get_ready_stmt();
-    if(EV_Data &  machine_step(stmt) ) {
+     machine_step(stmt);
         machine_triple(stmt,t);
       if(h) h(t);
-    }
     return set_ready_event(0);
 }
 int machine_append(Triple *t,Handler h) {
