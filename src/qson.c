@@ -193,14 +193,15 @@ int system_copy_qson(Webaddr *from,Webaddr *to ) {
     init_table((char *) to->addr,0,&table);
     //table_to_net(to->fd,(int *) from->buff);
   }
-  else if(from->sa_family== AF_INET && to->sa_family== AF_TABLE){
-    TABLE * table;
-    printf("Table to %s\n",(char *)  from->addr);
-    init_table((char *) to->addr,1,&table);
-    if(from->fd == Json_IO) 
-    parser((char *) from->buff,table);    // Json from the net
-    else if (from->fd == Qson_IO)
-      qson_to_table(table,(char *) to->buff,to->count);
+  else if(( to->sa_family== AF_TABLE) 
+     && ((from->sa_family== AF_INET) || (from->sa_family== AF_CONSOLE))) {
+      TABLE * table;
+      printf("New Table  %s\n",(char *)  to->addr);
+      init_table((char *) to->addr,1,&table);
+      if(from->fd == Json_IO) 
+        parser((char *) from->buff,table);    // Json from the net
+      else if (from->fd == Qson_IO)
+        qson_to_table(table,(char *) to->buff,to->count);
   }
   else  if(from->sa_family== AF_TABLE && to->sa_family== AF_MEMORY){
     TABLE * table;

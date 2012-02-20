@@ -34,7 +34,7 @@ enum qson_base_types {G_TYPE_NONE,G_TYPE_INTEGER,G_TYPE_FLOAT,
 typedef struct Webaddr {   unsigned short  sa_family; 
 long addr[8]; int fd;
 int * buff; int count; int size; char * fill; char * empty; } Webaddr;
-// A console sa family types
+// Qson io formas
 #define AF_FILE  0x70e3
 #define AF_CONSOLE 0x70e2
 #define AF_TABLE   0x70e1
@@ -42,7 +42,7 @@ int * buff; int count; int size; char * fill; char * empty; } Webaddr;
 int system_copy_qson(Webaddr *,Webaddr * );
 
 // Two sub types on Webaddr
-enum { Json_IO,Bson_IO,Qson_IO};
+enum SerializedFormat { Json_IO,Bson_IO,Qson_IO};
 
 // The null value and other defaults
 #define G_TYPE_NULL 95
@@ -54,6 +54,7 @@ enum { Json_IO,Bson_IO,Qson_IO};
 void unbind_triple(Code stmt,Triple *t);
 
 extern Triple _null_graph;
+
 #define EV_Ok 0x00
 #define EV_Null 0x01  // Do some null operation
 #define EV_Data 0x02

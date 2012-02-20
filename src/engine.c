@@ -16,8 +16,7 @@
 // Will be shared Protected
 OP operands[OperatorMaximum];
 Pointer g_db;
-int Sqlson_to_Bson(Triple t[],char ** buff);
-const Triple SCRATCH_Triple = {SystemScratch,0,"Scratch"};
+Triple SCRATCH_Triple = {SystemScratch,0,"Scratch"};
 int install_sql_script(char * ch,int opid) {
 	int status;
 	status =
@@ -268,38 +267,28 @@ extern Triple _null_graph;
 	void netio_loop() {G_printf("No network\n");}
 	void debug_loop() {
 	//Console c;
-	Triple t;
-	int status;
-	for(;;) {
-		t=_null_graph;
-		if(set_ready_event(0) & EV_Debug)
-			t.link = '@';
-		status = machine_new_operator(&t,event_handler);
-	}
+	//Triple t;
+	//int status;
+	for(;;) {}  // no debugger!!
 }
   void set_return(Webaddr *w);
 
 #define TestAddr  "2001:db8:8714:3a90::12"
 int test_qson() ;
 void console_loop(){
-	Console c;
-	Triple t; 
-	int status;
+	Webaddr from,to;
+  from.sa_family = AF_CONSOLE;
+  to.sa_family = AF_TABLE;
+  from.fd = Json_IO;
+  G_strcpy((char *) to.addr,"console"); 
   //  test_qson();
   G_printf("Console loop\n");
 	for(;;) {
-		G_console(&c);
-    // check here for any returns
-		t.link =  OperatorJson; // console overload
-		t.key = c.base;
-    t.pointer=1;
-     status = machine_lock();
-		status = machine_new_operator(&t,event_handler);
-     status = machine_unlock();
-        flush_users();
-        sort_names();
-        G_buff_counts();
-           // print_trios();
+		G_console(&from);
+    system_copy_qson(&from,&to);
+    flush_users();
+    sort_names();
+    G_buff_counts();
 	}
 }
 int init_machine() {
@@ -350,33 +339,23 @@ int main(int argc, char * argv[]) {
     } else if(!G_strcmp(argv[i], "-port") )
   {  G_printf("Port changed %s\n",argv[i+1]);port = G_strtol(argv[i+1]); i++;}
    else if(!G_strcmp(argv[i], "-file") ) {
-  Console c;
-  c.base = (char *) G_malloc(400);
+  Webaddr c;
+  c.buff = (int *) G_malloc(400);
   G_InitConsole(&c);
   console_file(&c,argv[i+1]); 
-  G_free(c.base);
+  G_free(c.buff);
     return(0);
    }
-   if(!G_strcmp(argv[i], "-send") ) {
-     SEND_ONLY = 1;
-     G_printf("Send only \n");
-   }
-  {
+
       G_printf("Port %d\n",port);
      engine_init();
 		// Main loop
 
      print_trios();
-
-#ifdef NETIO 
-     if(!SEND_ONLY)
     net_start((void *) port);
-
-#endif
    G_printf("Main engine\n");
 	  console_loop();
    }
-  }
 		return(0);
 	}
 	void print_triple(Triple *t) { 
@@ -384,7 +363,6 @@ int main(int argc, char * argv[]) {
 	// his is a little debgger, and stays ith this file
 	Handler g_debugger(Triple *t) {
 		print_triple(t);
-
 		return 0;
 	}
   

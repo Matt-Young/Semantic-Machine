@@ -84,7 +84,7 @@ int isin(char c,const char *str) {
 	while((*str)  && (*str != c) ) str++;
 	return *str;
 }
- void   console_file(Console * console,char * ptr) { 
+ void   console_file(Webaddr * console,char * ptr) { 
   char  dir[200],*name;
   struct stat buf;
   FILE * f;int dirlen;
@@ -99,8 +99,8 @@ int isin(char c,const char *str) {
 
     if(f){
       fstat(_fileno(f), &buf);
-      console->count = fread(console->base,1, 100, f);
-      printf("Read: %s  %d ",console->base,console->count);
+      console->count = fread(console->buff,1, 100, f);
+      printf("Read: %s  %d ",console->buff,console->count);
     }
    else {
      printf("f %s\n",name);

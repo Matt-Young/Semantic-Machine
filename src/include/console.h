@@ -1,5 +1,3 @@
-typedef struct {char * buff; char * base; char * current; int size;int count;} Console;
-
 
 int * G_InitConsole(Webaddr * console);
 int console_command(Webaddr * console,char command );
