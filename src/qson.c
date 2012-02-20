@@ -8,6 +8,7 @@
 #include "./include/machine.h"
 #include "../src/include/tables.h"
 #include "../src/include/engine.h"
+#include "../socketx/socket_x.h"
 #define DebugPrint printf
 int parser(char * ,TABLE *);  
 //*******************************
@@ -16,6 +17,30 @@ int parser(char * ,TABLE *);
 //
 // Move a Qson graph form net to Qstore
 //
+void send_(char * data,int len, Webaddr * to) {
+      if(to->sa_family == AF_FILE) 
+    fwrite(data,1,len,(FILE *) to->addr);
+    if(to->sa_family == AF_INET)
+      send(to->fd,data,1,len);
+}
+int   table_to_Json(TABLE *t,Webaddr * to) {
+  int len; int i,rows;
+  Triple Qin;char * key_value;char tmp[9];
+  Code stmt;
+  start_table(t,pop_operator);
+  stmt = get_ready_stmt();
+  // peek at the header
+  i = machine_step_fetch(&Qin,0); 
+  rows = Qin.pointer;
+  for(i=0;i<rows;i++) {
+    if(i) machine_step_fetch(&Qin,0);
+    len = machine_key_len(stmt); 
+    send_(Qin.key,len,to);
+    send_(tmp,sprintf(tmp,"%c",Qin.link),to);
+    DebugPrint("TJ%s%c%3d\n",Qin.key,Qin.link,Qin.pointer);
+  }
+  return 0;
+}
 int qson_to_table(TABLE * table,char  * buff,int count) {
   int i;Triple *in;int len;
   machine_set_operator(&table->operators[append_operator],0);
@@ -108,7 +133,7 @@ int mem_to_file( FILE * dest,int * buff,int mode){
 }
 int  * table_to_mem(TABLE *t) {
   int len,long_count; int k,i,rows;int * buff;
-  Triple Qin,*Qout;char * key_value;char tmp[9];
+  Triple Qin,*Qout;char tmp[9];
   Code stmt;
   start_table(t,pop_operator);
   stmt = get_ready_stmt();
@@ -130,9 +155,7 @@ int  * table_to_mem(TABLE *t) {
     Qout->key[len+4]=0;
     sprintf(Qout->key,"%4d",len);
     memcpy(Qout->key+4,Qin.key,len);
-    printf("Link to file%d\n",Qout->link);
     DebugPrint("TM%s%c%3d\n",Qout->key,Qin.link,Qout->pointer);
-    printf("Link another %d\n",Qin.link);
     Qout++;
   }
 
@@ -146,7 +169,6 @@ Triple * set_output_buff(Triple *t);
 int mem_to_table(TABLE* table,int * buff,int mode) {
   int rows,total; int i;Triple *data;
   Triple * Qson;
-  Code stmt;
   start_table((TABLE *) table,append_operator);
 
   data = &(table)->operators[append_data];
@@ -184,13 +206,11 @@ int system_copy_qson(Webaddr *from,Webaddr *to ) {
       mem_to_net(to->fd,from->buff,Qson_IO);
     // If the source is a table
   }else if(from->sa_family== AF_TABLE ) {
-    if( to->sa_family== AF_INET){
-      TABLE * table;
-      start_table((char *) to->addr,0,&table);
-      //table_to_net(to->fd,(int *) from->buff);
-    } else if(to->sa_family== AF_TABLE)
+    if( (to->sa_family== AF_JSON) || ( to->sa_family== AF_INET)) {
+      start_table((TABLE *) to->addr,pop_operator);
+      table_to_Json((TABLE *) to->addr,to);
+    }else if(to->sa_family== AF_TABLE)
       dup_table((char *) from->addr,(char *) to->addr);
-
     else if(to->sa_family== AF_MEMORY){
       TABLE * table;
       printf("Table from %s\n",(char *)  from->addr);
