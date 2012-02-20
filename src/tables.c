@@ -9,9 +9,9 @@
 #include "../src/include/console.h"
 
 
-// Table stuff, this will change fast and become part of named graphs
+
 #define NUMBER_TABLES 20
-// Shared memory
+// Keep a limited set o table open
 TABLE *triple_tables[NUMBER_TABLES];
 
 extern int del_table_count,new_table_count;
@@ -52,20 +52,26 @@ void release_table_context(TABLE *pt) {
 // direct sql utilities
 #define Sql_create \
   "drop table if exists %s; create table %s (link integer, pointer integer,key blob);" 
-int del_create_table(TABLE *table) {
-  char buff[400];char  *err;int status;
- // Triple t = {buff,SystemExec,0};
-  G_sprintf(buff,Sql_create,table->name,table->name);
-    status = machine_exec(g_db,buff,&err);
-  return( status);
+int del_create_table(char * table) {
+  char buff[400];char  *err;
+  G_sprintf(buff,Sql_create,table,table);
+    return machine_exec(g_db,buff,&err);
+}
+#define Sql_copy \
+  "insert into %s select from %s;" 
+int dup_table(char * in,char * out) {
+  char buff[400];char * err;
+  del_create_table( in);
+    G_sprintf(buff,Sql_copy,in,out);
+    return machine_exec(g_db,buff,&err);
 }
 int make_stmt(TABLE * table,int format,char * table_name);
 int init_table(char * name,int options,TABLE **table) {
 	 int status = EV_Ok;
 	 int i; TABLE *in;
+   if(options)
+		 del_create_table(name);
 	 in =  get_table_context(name);
-	 if(options)
-		 del_create_table(in);
 	 for(i=0; i < 4;i++) {
 		 make_stmt(in,i,name);
 	 }

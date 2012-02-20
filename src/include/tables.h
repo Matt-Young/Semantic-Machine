@@ -30,7 +30,8 @@ enum PreparedTableOps {
 /*! \ingroup  Table
  * Delete and recreate a Qson table.
  */
-int del_create_table(TABLE *);
+int del_create_table(char *);
+int dup_table(char * in,char * out);
 /*! \ingroup  Table
  * Initialize and potentially delete a table by name.
  */

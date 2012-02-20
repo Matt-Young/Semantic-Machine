@@ -193,6 +193,8 @@ int system_copy_qson(Webaddr *from,Webaddr *to ) {
     init_table((char *) to->addr,0,&table);
     //table_to_net(to->fd,(int *) from->buff);
   }
+    else if(from->sa_family== AF_TABLE && to->sa_family== AF_TABLE)
+      dup_table((char *) from->addr,(char *) to->addr);
   else if(( to->sa_family== AF_TABLE) 
      && ((from->sa_family== AF_INET) || (from->sa_family== AF_CONSOLE))) {
       TABLE * table;
