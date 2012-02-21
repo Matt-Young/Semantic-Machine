@@ -93,12 +93,12 @@ int parser(char * Json, TABLE *table) {
   G_printf("\nparse start\n");
 	inner = (PGRAPH *) &table->list;
 	nchars=0;cprev=1,ccurr=1,cnext=1;
-  (*inner)->context=(void *) '_';
+  (*inner)->context=(void *) ':';
   (*inner)->table=table;
   prev = _null_graph;
   current.key = ParserHeader;
-  current.link = '_';
-  ccurr = '_';
+  current.link = ':';
+  ccurr = ':';
 	while(nchars >= 0) {
     nchars = G_keyop(&Json,&next);
 		next.pointer=1;

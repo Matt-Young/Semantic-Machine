@@ -9,6 +9,7 @@
 #include "../src/include/graphs.h"
 #include "../src/include/engine.h"
 #include "../src/include/console.h"
+#include "../src/include/debug.h"
 #include "../src/include/names.h"
 
 #include "../src/include/all.h"
@@ -291,7 +292,7 @@ extern Triple _null_graph;
   void set_return(Webaddr *w);
 
 #define TestAddr  "2001:db8:8714:3a90::12"
-  int debug_json_string(Webaddr * w);
+
 int test_qson() ;
 void console_loop(){
 	Webaddr from,to;
@@ -303,8 +304,9 @@ void console_loop(){
   G_printf("Console loop\n");
   // test_qson();
 	for(;;) {
-		G_console(&from);
+		//G_console(&from);
     //debug_json_string(&from);
+    debug_console_file(&from);
     system_copy_qson(&from,&to);
     //system_copy_qson(&to,&from);  // right back
    // init_run_table((char *) &to.addr);

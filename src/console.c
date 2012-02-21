@@ -89,7 +89,7 @@ void   console_file(Webaddr * console,char * ptr) {
   struct stat buf;void * buffer;
   FILE * f;int dirlen;
   type = *ptr++;
-  ptr += strlen(ptr)+1;
+  //ptr += strlen(ptr)+1;
   name = strtok(ptr, "\0");
   GetCurrentDir(dir,1024);
   dirlen = strlen(dir);

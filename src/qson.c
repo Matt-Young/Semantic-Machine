@@ -256,27 +256,3 @@ int system_copy_qson(Webaddr *from,Webaddr *to ) {
   }
   return 0;
 }
-
-int test_qson() {
-  Webaddr w1,w2;
-  printf("Test qson\n");
-  strcpy((char *) w1.addr,"test");
-  strcpy((char *) w2.addr,"console");
-  w1.sa_family = AF_TABLE;
-  w2.sa_family = AF_TABLE;
-  system_copy_qson(&w2,&w1);// table to table
-  w2.sa_family = AF_MEMORY;
-  system_copy_qson(&w1,&w2);// table to mem
-  w1.sa_family = AF_CONSOLE;
-  system_copy_qson(&w2,&w1); // mem to console
-  strcpy((char *) w1.addr,"c:\\soft\\result");
-  w1.sa_family = AF_FILE;
-  system_copy_qson(&w2,&w1); // mem to file
-  strcpy((char *) w1.addr,"testagain");
-  w1.sa_family = AF_TABLE;
-  system_copy_qson(&w2,&w1);  //mem to table
-  strcpy((char *) w1.addr,"c:\\soft\\result");
-  w1.sa_family = AF_FILE;
-  system_copy_qson(&w1,&w2);  //file to mem
-  return 0;
-}
