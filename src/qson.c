@@ -9,7 +9,7 @@
 #include "../src/include/tables.h"
 #include "../src/include/engine.h"
 #include "../socketx/socket_x.h"
-#define DebugPrint printf
+#define DebugPrint
 int parser(char * ,TABLE *);  
 //*******************************
 // Qson Switch
@@ -18,8 +18,8 @@ int parser(char * ,TABLE *);
 // Move a Qson graph form net to Qstore
 //
 void send_(char * data,int len, Webaddr * to) {
-  if(to->sa_family == AF_FILE) 
-    fwrite(data,1,len,(FILE *) to->addr);
+  if((to->sa_family == AF_FILE) || (to->sa_family == AF_CONSOLE)) 
+    fwrite(data,1,len,(FILE *) to->fd);
   if(to->sa_family == AF_INET)
     send(to->fd,data,1,len);
 }
@@ -238,7 +238,7 @@ int system_copy_qson(Webaddr *from,Webaddr *to ) {
       TABLE * table;
       printf("New Table  %s\n",(char *)  to->addr);
       init_table((char *) to->addr,1,&table);
-      if(from->fd == Json_IO) 
+      if(from->format == Json_IO) 
         parser((char *) from->buff,table);    // Json from the net
       else if (from->fd == Qson_IO)
         qson_to_table(table,(char *) to->buff,to->count);

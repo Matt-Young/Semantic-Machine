@@ -163,6 +163,7 @@ void G_buff_counts(){
   printf("D: %d %d",del_data_count,new_data_count);
    printf("Names: %d %d\n",del_name_count,new_name_count);
 }
+void * G_stdout() {return stdout;}
 #define Debug_console
 
 #ifdef Debug_console

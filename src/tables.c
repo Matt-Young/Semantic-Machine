@@ -72,7 +72,7 @@ int init_table(char * name,int options,TABLE **table) {
    if(options)
 		 del_create_table(name);
 	 in =  get_table_context(name);
-	 for(i=0; i < 4;i++) {
+	 for(i=0; i < (spare_operator)/2;i++) {
 		 make_stmt(in,i,name);
 	 }
    new_child_graph((PGRAPH *) &in->list,(void *) '_');
@@ -139,11 +139,14 @@ const struct new_install{
 	{pop_operator,SystemMax+1,
 	"select key,link,pointer from %s where (gfun(0,rowid) == rowid);",
   "UnbindTriple",0,0,0},
-	{append_old_operator,SystemMax+2,"insert into %s values( ?, ?, ?);",
+  {select_operator,SystemMax+2,
+	"select key,link,pointer from %s;",
+  "UnbindTriple",0,0,0},
+	{append_text_operator,SystemMax+3,"insert into %s values( ?, ?, ?);",
 	  "BindOldTriple","AppendHandler",0,0},
- {append_operator,SystemMax+3,"insert into %s values( ?, ?, ?);",
+ {append_operator,SystemMax+4,"insert into %s values( ?, ?, ?);",
 	  "BindTriple","AppendHandler",0,0},
-	{update_operator,SystemMax+4,"update %s set pointer = (?) where rowid = ?;",
+	{update_operator,SystemMax+5,"update %s set pointer = (?) where rowid = ?;",
 	"BindRelativeSelfRow","BindSelfStart","ExitHandler",0},
 	{0,0,0,0,0,0,0}
 };

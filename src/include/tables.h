@@ -1,29 +1,26 @@
 
-#define NBUILTINS 10
 
-typedef struct Tables  {
+#define TABLE_SQUARE 1
+#define TABLE_NULL  2
+enum PreparedTableOps {
+  select_operator,select_data,
+	pop_operator,pop_data,
+	append_operator,append_data,
+  append_text_operator,append_text_data,
+	update_operator,update_data,
+	spare_operator,spare_data};
+
+  typedef struct Tables  {
   char * name;
   int attribute;
-  Triple operators[NBUILTINS];  /*!< Prepared statements fo the table */
+  Triple operators[spare_data+1];  /*!< Prepared statements for the table*/
   int index;
   Code stmt;
   struct  Graph * list;  //points to the innermost current graph
   ColInfo info;
 } TABLE;
-#define TABLE_SQUARE 1
-#define TABLE_NULL  2
-enum PreparedTableOps {
-	pop_operator,pop_data,
-	append_operator,append_data,
-  append_old_operator,append_old_data,
-	update_operator,update_data,
-	spare_operator,spare_data};
 
 
-//char * NAME(TABLE *);
-//int ATTRIBUTE(TABLE *);
-//ABLE * TABLE_POINTER(int i);
-//int DELETE_TABLE(TABLE *);
   /*! \defgroup  Table
  * Table context for managing sql table
  */

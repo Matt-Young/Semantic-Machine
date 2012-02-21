@@ -92,7 +92,7 @@ int append_handler(Triple *node) {
   incr_row(1);
 	return set_ready_event(0);}
 int unbind_handler(Triple *node) { 
-    unbind_triple(operands[node->link].stmt,node+1);
+    unbind_triple(get_ready_stmt(),node+1);
 	return EV_Done;
 }
 int len_handler(Triple *node) {
@@ -297,16 +297,18 @@ void console_loop(){
 	Webaddr from,to;
   from.sa_family = AF_CONSOLE;
   to.sa_family = AF_TABLE;
-  from.fd = Json_IO;
+  from.fd = (int) G_stdout();
+  from.format = Json_IO;
   G_strcpy((char *) to.addr,"console"); 
   G_printf("Console loop\n");
 	for(;;) {
 		//G_console(&from);
     debug_json_string(&from);
     system_copy_qson(&from,&to);
-    init_run_table((char *) &to.addr);
-    G_free(from.buff);
-    test_qson();
+    system_copy_qson(&to,&from);  // right back
+   // init_run_table((char *) &to.addr);
+    //G_free(from.buff);
+    //test_qson();
     flush_users();
     sort_names();
     G_buff_counts();

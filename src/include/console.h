@@ -7,6 +7,7 @@ int G_console(Webaddr * console);
 int  G_isugly(char ch);
 void G_exit();
 void G_Test();
+void * G_stdout();
 void* G_malloc(int size);
 void* G_calloc(int size);
 void G_free(void* p);
