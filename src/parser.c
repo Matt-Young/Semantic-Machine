@@ -118,13 +118,13 @@ int parser(char * Json, TABLE *table) {
 	return(EV_Ok);
 }
 
-   enum {None,New,App,Del,AppClose,NewApp,DelApp,
+   enum {None,New,App,Del,AppClose,NewApp,DelApp,AppNew,
      CloseNew,CloseNewApp,AppDel,AppDelClose,
      AppCloseNew,AppClosePrev,Name,Done};
 
    int graph_changes(PGRAPH *inner,int hindex) {
 char * debugs[]= 
-       {"None","New","App","Del","AppClose","NewApp","DelApp",
+       {"None","New","App","Del","AppClose","NewApp","DelApp","AppNew",
      "CloseNew","CloseNewApp","AppDel""AppDelClose",
      "AppCloseNew","AppClosePrev","Name"};
    // DebugPrint("Case: %s ",debugs[hindex]);
@@ -146,7 +146,12 @@ char * debugs[]=
      append_graph(inner,current);
      close_update_graph(inner);
      break;
-  case NewApp:
+  case NewApp:// @
+     new_child_graph(inner,(void *) ccurr);
+     append_graph(inner,current);
+     break;
+     case AppNew: 
+     append_graph(inner,current);
      new_child_graph(inner,(void *) ccurr);
      append_graph(inner,current);
      break;
@@ -193,48 +198,56 @@ case DelApp:
 // DebugPrint("p %x c %x n %x\n",cprev,ccurr,cnext);
     return 0;
  }
-int json_rules(char cin, PGRAPH *inner) {
-// Some combinations can be ignored
-   if(cprev == '}') {
-	if(ccurr == '.') { // this combination just skipped
-     ccurr = cin;
-     current = next;
-        return 0;
-   }
-  if(ccurr == ',')  {
-     graph_changes( inner,CloseNew);
-     ccurr = cin;
-     current = next;
-  return 0;
-  }
-  }
-
-   cnext = cin;
-   if(ccurr == '{')   
-       graph_changes( inner,New); 
-   // One append through this series
-   if( (cprev == ':') ||  (cprev == '$')  )
-     graph_changes( inner,AppCloseNew);
-   else if((ccurr == '.') && !( (cprev == ':') ))
-     graph_changes( inner,App);
-   else if((ccurr == ',') && !( (cprev == ':') ||  (cprev == '$') ))
-       graph_changes( inner,AppCloseNew);
-   else if((ccurr == ',') && ( (cprev == ':') ||  (cprev == '$') ))
-     graph_changes( inner,CloseNew);  // The previous two are bound
-   else if(ccurr == '}') {  
-     int child_context = (int ) graph_variable(*inner);
-     int parent_context = (int ) graph_variable((*inner)->parent);
-     if( (cprev == ':') ||  (cprev == '$') ) graph_changes(inner,Del);
-     else if(parent_context == '{') graph_changes(inner,AppDel);
-     else graph_changes(inner,AppCloseNew);
+   int json_rules(char cin, PGRAPH *inner) {
+     // Some combinations can be ignored
+     int child_context;
+     if(cprev == '}') {
+       if(ccurr == '.') { // this combination just skipped
+         ccurr = cin;
+         current = next;
+         return 0;
+       }
+       if(ccurr == ',')  {
+         graph_changes( inner,CloseNew);
+         ccurr = cin;
+         current = next;
+         return 0;
+       }
      }
-   else if (ccurr == ':') graph_changes( inner,NewApp); // Named
-   else  if(ccurr == '$') graph_changes( inner,NewApp); // Equals pair
-   else if(ccurr == '@')  graph_changes( inner,NewApp); // match mode
+     child_context = (int ) graph_variable(*inner);
+     cnext = cin;
+     if(ccurr == '{')
+       graph_changes( inner,New);
 
-    cprev = ccurr; ccurr = cnext;
-   prev = current;
-   current = next; 
-   return 0;
- 
- }
+     // One append through this series
+    if( (cprev == ':') ||  (cprev == '$')  ) {
+       graph_changes( inner,AppCloseNew);
+       if(ccurr == ',')
+         graph_changes( inner,CloseNew); // name:value,xxx
+     }
+     else if(ccurr == '.') // yyy,xxx.xxx
+       graph_changes( inner,App);
+     else if(ccurr == ',') {
+       if(child_context != '@')
+       graph_changes( inner,AppCloseNew); //value,xxx
+       else {
+      graph_changes( inner,App);
+      (*inner)->context =(void *) ',';
+       }
+     }
+     else if(ccurr == '}') {  
+
+       int parent_context = (int ) graph_variable((*inner)->parent);
+       if( (cprev == ':') ||  (cprev == '$') ) graph_changes(inner,Del);
+       else if(parent_context == '{') graph_changes(inner,AppDel);
+       else graph_changes(inner,AppCloseNew);
+     }
+     else if (ccurr == ':') graph_changes( inner,NewApp); // Named
+     else  if(ccurr == '$') graph_changes( inner,NewApp); // Equals pair
+     else if(ccurr == '@')  graph_changes( inner,NewApp); 
+     cprev = ccurr; ccurr = cnext;
+     prev = current;
+     current = next; 
+     return 0;
+
+   }

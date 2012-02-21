@@ -39,28 +39,23 @@ int  config_handler(Triple t[]) {
   Trio * trio;
   param=0;
   while(count) {
-    if(EV_Data & (status = machine_step(stmt) )) {
-      status = machine_triple(stmt,&var);
-      if(var.link != '_') {
-        if(param == 0) {
-          opid = G_atoi(t->key);
-          if((OperatorMaximum < opid) ) 
-            return(EV_Incomplete);
-        } else  if(param == 1 )  // install user script
-          status = install_sql_script(var.key,opid); 
-        else { // Install map
-          trio = find_name(var.key);
-          if(!trio || (trio->type != G_TYPE_MAPPER))
-            return(EV_Incomplete);
-          else
-            operands[opid].maps[count-2]= (Mapper) trio->value;
-        }
-        param++;
-      }
-      count--;
+    machine_step_fetch(&var,0);
+    if(param == 0) { 
+        opid = G_atoi(var.key);
+      if((OperatorMaximum < opid) ) 
+        return(EV_Incomplete);
+    } else  if(param == 1 )  // install user script
+      status = install_sql_script(var.key,opid); 
+    else { // Install map
+      trio = find_name(var.key);
+      if(!trio || (trio->type != G_TYPE_MAPPER))
+        return(EV_Incomplete);
+      else
+        operands[opid].maps[count-2]= (Mapper) trio->value;
     }
+    param++;  count--;
   }
-  return(status);
+return(status);
 }
 
 int sql_handler(Triple *node) {
@@ -228,6 +223,7 @@ const struct {
 int call_handler_name(Triple *t) {
   Trio *s;int index;
   s = find_name( t->key);
+  if(!s) G_printf("No system function \n:");
   index = (int) s->value;
   return get_handler(index,0)(t);
 }

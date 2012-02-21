@@ -8,6 +8,7 @@
 
 char * typeface[] = {
   "{@SystemExec,select * from square;}",
+  "{@SystemConfig,37 .\"select * from square; \" }",
   "{def.ccc,bbb.kkk,hhh.lyu,ggg.aaa}",
   "{a=23. . c=9. . c.f,d=33}",
   "{$SystemEcho.hello}",
@@ -17,7 +18,7 @@ char * typeface[] = {
 	"{abc,def,ghi}",
 	"{@config}",
 	""};
-#define DLINE 0
+#define DLINE 1
 static int debug_counter=DLINE;
 
 void debug_json_string(Webaddr * w) {
