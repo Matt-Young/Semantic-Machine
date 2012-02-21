@@ -16,5 +16,5 @@ void del_string(const char *);
 Trio * find_name(char * key);
 Trio * get_name(char * key);
 void sort_names() ;
-int flush_users();
+int flush_user_symbols();
 extern int g_name_count;

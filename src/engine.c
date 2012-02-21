@@ -301,15 +301,16 @@ void console_loop(){
   from.format = Json_IO;
   G_strcpy((char *) to.addr,"console"); 
   G_printf("Console loop\n");
+  // test_qson();
 	for(;;) {
-		//G_console(&from);
-    debug_json_string(&from);
+		G_console(&from);
+    //debug_json_string(&from);
     system_copy_qson(&from,&to);
-    system_copy_qson(&to,&from);  // right back
+    //system_copy_qson(&to,&from);  // right back
    // init_run_table((char *) &to.addr);
     //G_free(from.buff);
     //test_qson();
-    flush_users();
+    flush_user_symbols();
     sort_names();
     G_buff_counts();
 	}

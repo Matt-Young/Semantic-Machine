@@ -33,7 +33,7 @@ enum qson_base_types {G_TYPE_NONE,G_TYPE_INTEGER,G_TYPE_FLOAT,
 
 typedef struct Webaddr {   unsigned short  sa_family; 
 long addr[8]; int fd; int format;
-int * buff; int count; int size; char * fill; char * empty; } Webaddr;
+void * buff; int count; int size; char * fill; char * empty; } Webaddr;
 
 
 // Qson io formas

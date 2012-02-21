@@ -84,29 +84,34 @@ int isin(char c,const char *str) {
 	while((*str)  && (*str != c) ) str++;
 	return *str;
 }
- void   console_file(Webaddr * console,char * ptr) { 
-  char  dir[200],*name;
-  struct stat buf;
+void   console_file(Webaddr * console,char * ptr) { 
+  char  dir[200],*name;char type;
+  struct stat buf;void * buffer;
   FILE * f;int dirlen;
-     ptr += strlen(ptr)+1;
-    name = strtok(ptr, "\0");
-    GetCurrentDir(dir,1024);
-    dirlen = strlen(dir);
-    dir[dirlen]='/';
-    strcpy(dir+dirlen+1,name);
-    printf("\n%s\n",dir);
-    f =  fopen(dir, "r");
+  type = *ptr++;
+  ptr += strlen(ptr)+1;
+  name = strtok(ptr, "\0");
+  GetCurrentDir(dir,1024);
+  dirlen = strlen(dir);
+  dir[dirlen]='\\';
+  strcpy(dir+dirlen+1,name);
+  printf("\n%s\n",dir);
+  f =  fopen("c:/soft/test.txt", "r");
 
-    if(f){
-      fstat(_fileno(f), &buf);
-      console->count = fread(console->buff,1, 100, f);
-      printf("Read: %s  %d ",console->buff,console->count);
-    }
-   else {
-     printf("f %s\n",name);
-     perror("Open error ");
-   }
-   }
+  if(f){
+    fstat(_fileno(f), &buf);
+    console->buff = malloc(buf.st_size+1);
+    console->size = buf.st_size;
+    console->count = fread(console->buff,1, console->size, f);
+    ptr = (char *) console->buff;// defeating the typecastin error
+    ptr[console->size] =0;
+    printf("\nSize%d\n%s\nCount%d\n",console->size,console->buff,console->count);
+  }
+  else {
+    printf("f %s\n",name);
+    perror("Open error ");
+  }
+}
 int console_command(Webaddr * console,char command ) {
   char  line[200];
   char *ptr;
@@ -114,8 +119,8 @@ int console_command(Webaddr * console,char command ) {
    ptr = strtok(line," ");
    if(ptr[0] == 'q')
      exit(0);
-   else if (ptr[0] == 'f') 
-     console_file(console,ptr+1);
+   else if ((ptr[0] == 'j') || (ptr[0] == 'q'))
+     console_file(console,ptr);
   return 0;
 }
 // get line with a bit of input editing

@@ -85,7 +85,7 @@ void sort_names() {
  qsort( g_names, g_name_count, sizeof(Trio),(cmp0) cmp3);
 }
 const char *zzz = "zzzz";
-int flush_users() {
+int flush_user_symbols() {
   int i;int count=0;
   for(i=0;i < g_name_count;i++) 
     if(g_names[i].type == G_TYPE_USER) {
