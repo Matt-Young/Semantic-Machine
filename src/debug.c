@@ -7,7 +7,7 @@
 #include "../src/include/debug.h"
 
 char * typeface[] = {
-  "{@SystemExec,select * from result;}",
+  "{@SystemExec,select * from square;}",
   "{def.ccc,bbb.kkk,hhh.lyu,ggg.aaa}",
   "{a=23. . c=9. . c.f,d=33}",
   "{$SystemEcho.hello}",

@@ -29,15 +29,17 @@ int square_handler(Triple *t) {
 ColInfo *c,*d;TABLE * table; void * vals[8];
 Triple ct,dt; int i;
 table = get_ready_table();
+table->stmt=get_ready_stmt();
+
 if(table->info.type[0] == G_TYPE_NONE)
     c = init_col_info(table);
 G_printf("\n");
 machine_unbind_row(table->stmt,&table->info,vals);
 for(i=0;i < table->info.col_count;i++)
   if(table->info.type[i] != G_TYPE_INTEGER)
-    G_printf("%s",(char *) vals[i]);
+    G_printf("|%s|",(char *) vals[i]);
   else
-G_printf("%d",(int) vals[i]);
+G_printf("|%d|",(int) vals[i]);
 /*
     while(c->index < c->col_count) {
 		ct = column_decoder(table,c); 

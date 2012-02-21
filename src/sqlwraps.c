@@ -130,6 +130,8 @@ void machine_unbind_row(Code stmt,ColInfo * cinfo, void * vals[]) {
     case G_TYPE_BLOB :
        vals[i]= (void *)  sqlite3_column_text( (sqlite3_stmt*) stmt, 0);
       break;
+    default:
+        G_printf("Unknown%d\n",cinfo->type[i]);
     }
   }
 }
