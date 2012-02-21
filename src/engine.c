@@ -304,10 +304,12 @@ void console_loop(){
   G_printf("Console loop\n");
   // test_qson();
 	for(;;) {
-		//G_console(&from);
+		G_console(&from);
     //debug_json_string(&from);
-    debug_console_file(&from);
+    //debug_console_file(&from);
+    machine_lock();
     system_copy_qson(&from,&to);
+       machine_unlock();
     //system_copy_qson(&to,&from);  // right back
    // init_run_table((char *) &to.addr);
     //G_free(from.buff);

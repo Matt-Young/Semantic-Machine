@@ -3,6 +3,7 @@
 #include "../src/include/g_types.h"
 #include "../src/include/names.h"
 #include "../src/include/console.h"
+#include "../src/include/debug.h"
 //#define Debug_console
 int init_console() { return(0);}
 // These are here just to keep the std lib includes in one spot
@@ -88,7 +89,6 @@ void   console_file(Webaddr * console,char * ptr) {
   char  dir[200],*name;char type;
   struct stat buf;void * buffer;
   FILE * f;int dirlen;
-  type = *ptr++;
   //ptr += strlen(ptr)+1;
   name = strtok(ptr, "\0");
   GetCurrentDir(dir,1024);
@@ -96,8 +96,7 @@ void   console_file(Webaddr * console,char * ptr) {
   dir[dirlen]='\\';
   strcpy(dir+dirlen+1,name);
   printf("\n%s\n",dir);
-  f =  fopen("c:/soft/test.txt", "r");
-
+  f =  fopen(name, "r");
   if(f){
     fstat(_fileno(f), &buf);
     console->buff = malloc(buf.st_size+1);
@@ -119,8 +118,11 @@ int console_command(Webaddr * console,char command ) {
    ptr = strtok(line," ");
    if(ptr[0] == 'q')
      exit(0);
-   else if ((ptr[0] == 'j') || (ptr[0] == 'q'))
-     console_file(console,ptr);
+   else if (ptr[0] == 'f')
+     console_file(console,ptr+1);
+   else if ((ptr[0] == 'd')) {
+     debug_enter(console,ptr);
+   }
   return 0;
 }
 // get line with a bit of input editing

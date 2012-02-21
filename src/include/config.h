@@ -11,4 +11,6 @@
 #undef TEST_ADDR
 #define NETIO
 #define WINDOWS
+#define TESTFILE "/test.txt"
+#define TESTDIR "c:/soft/testfiles"
 
