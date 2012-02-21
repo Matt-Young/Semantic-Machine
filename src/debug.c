@@ -7,7 +7,7 @@
 #include "../src/include/debug.h"
 
 char * typeface[] = {
-  "{@SystemEcho,test}",
+  "{@SystemExec,select * from result;}",
   "{def.ccc,bbb.kkk,hhh.lyu,ggg.aaa}",
   "{a=23. . c=9. . c.f,d=33}",
   "{$SystemEcho.hello}",
@@ -62,6 +62,7 @@ void debug_console_file(Webaddr *c) {
    memset(temp,0,200);
    printf("Hello debugger\n");
    strcat(strcat(temp,TESTDIR),TESTFILE);
-   console_file(c,temp);
+   //console_file(c,temp);
+   debug_json_string(c);
  }
 

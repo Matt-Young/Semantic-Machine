@@ -77,13 +77,12 @@ int call_handler(Triple *node) {
 	return EV_Ok;
 }
 int exec_handler(Triple *t) {
-	int status; Triple v2;
-	char *err;
- if(EV_Data &  machine_step(get_ready_stmt()) ) {
-        machine_triple(get_ready_stmt(),&v2);
-	status = machine_exec(g_db,v2.key,&err);
- } else G_printf("Sys Exec Error\n");
-	return status;
+	Triple Qin;  char *err;
+
+  machine_step_fetch(&Qin,0); 
+  install_sql_script((char *) Qin.key,SystemScratch) ;
+  Qin.link = SystemScratch;
+	return machine_new_operator(&Qin,square_handler);
 }
 
 int swap_handler(Triple *t) {return EV_Ok;}
@@ -96,10 +95,7 @@ int unbind_handler(Triple *node) {
     unbind_triple(get_ready_stmt(),node+1);
 	return EV_Done;
 }
-int len_handler(Triple *node) {
-node[1].key = (char * ) machine_key_len(node[0].key);
-return EV_Done;
-}
+
 int unbind_triples_handler(Triple *node) { 
   int status;int i=1;
   while(node->pointer) {
@@ -305,13 +301,12 @@ void console_loop(){
   // test_qson();
 	for(;;) {
 		G_console(&from);
-    //debug_json_string(&from);
-    //debug_console_file(&from);
-    machine_lock();
+    //machine_lock();
     system_copy_qson(&from,&to);
-       machine_unlock();
+    //system_copy_qson(&to,&from);
+    //machine_unlock();
     //system_copy_qson(&to,&from);  // right back
-   // init_run_table((char *) &to.addr);
+    init_run_table((char *) &to.addr);
     //G_free(from.buff);
     //test_qson();
     flush_user_symbols();

@@ -109,7 +109,7 @@ int machine_loop(Triple *t,Handler h) {
 	machine_reset(stmt);
   return 0;
 }
-void machine_name_info(Code * stmt, ColInfo *cinfo) {
+void machine_row_info(Code  stmt, ColInfo *cinfo) {
   int i;
   cinfo->col_count = sqlite3_column_count((sqlite3_stmt*)stmt);
   for(i=0;i< cinfo->col_count;i++) {
@@ -119,3 +119,17 @@ void machine_name_info(Code * stmt, ColInfo *cinfo) {
       cinfo->rowid = sqlite3_column_int((sqlite3_stmt*)stmt, i);
   }
 }  
+void machine_unbind_row(Code stmt,ColInfo * cinfo, void * vals[]) {
+  int i;
+  for (i=0;i < cinfo->col_count;i++) {
+    switch (cinfo->type[i]) {
+    case G_TYPE_INTEGER:
+	vals[i]= (void *) machine_column_int(stmt, 1);
+      break;
+    case G_TYPE_TEXT:
+    case G_TYPE_BLOB :
+       vals[i]= (void *)  sqlite3_column_text( (sqlite3_stmt*) stmt, 0);
+      break;
+    }
+  }
+}

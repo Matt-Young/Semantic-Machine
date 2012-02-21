@@ -25,16 +25,17 @@ void send_(char * data,int len, Webaddr * to) {
 }
 int   table_to_Json(TABLE *t,Webaddr * to) {
   // set some stuf up to restore Json brackets
-  struct {int count;int total;} brk[8];int cur;
+  struct {int count;int total;} brk[8];int cur; char prev;
   int len; int i,rows;
   Triple Qin;char * key_value;char tmp[9];
   Code stmt;
   cur = 0;
-  start_table(t,pop_operator);
+  start_table(t,select_operator);
   stmt = get_ready_stmt();
   // peek at the header
   i = machine_step_fetch(&Qin,0); 
   rows = Qin.pointer;
+  prev=Qin.link;
   brk[cur].total = Qin.pointer; brk[cur].count = 0;
   for(i=0;i<rows;i++) {
     if(i) machine_step_fetch(&Qin,0);
@@ -47,11 +48,13 @@ int   table_to_Json(TABLE *t,Webaddr * to) {
       cur--;brk[cur].count += brk[cur+1].count;
       send_("}",1,to);
     }
-    if(Qin.pointer >1) {
+    if((Qin.pointer > 1) && (prev != '.') && ( prev != ',')) {
       cur++; brk[cur].count = 0;brk[cur].total = Qin.pointer;
       send_("{",1,to);
     }
+        prev=Qin.link;
   }
+
   DebugPrint("TJ%s%c%3d\n",Qin.key,Qin.link,Qin.pointer);
 return 0;
 }

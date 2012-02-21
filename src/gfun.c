@@ -102,7 +102,9 @@ int reset_ready_set() {
 Code get_ready_stmt() {
   return ready.stmt;
 }
-
+TABLE * get_ready_table() {
+  return ready.table;
+}
 int set_ready_event(int EV_event) {
 	ready.events |= EV_event;
 	return ready.events; }
@@ -168,7 +170,7 @@ int init_run_json(Triple *triple) {
 		return status;
 }
 
-int event_exec(Triple * t) {
+int event_handler(Triple * t) {
   int g_event;
   int linkid = t->link;
   g_event =  ready.events;
@@ -196,16 +198,6 @@ void reset_G_columns(TABLE *t) {
 }
 int do_square(int mode,TABLE *);
 
-// Arrive here when some operators has produced events
-int event_handler(Triple * t) {
-  if(ready.events  & EV_Square)  {
-    if(1 == TABLE_SQUARE)  
-      return do_square(0,ready.table);
-    else if(2 == TABLE_SQUARE) 
-      return do_square(1,ready.table);
-  } else
-		return event_exec(t);
- }
 
 //G function call backs from inside sql
 enum {CallbackSelf,CallbackOther,CallbackResult,CallbackExperiment};

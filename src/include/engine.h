@@ -60,10 +60,10 @@ Webaddr  * get_web_addr();
  */
 void * set_web_addr(void  *,int);
 int set_ready_graph(void *);
-
+TABLE * get_ready_table();
 int exit_handler(Triple *node);
-
-
+int event_handler(Triple * t);
+int square_handler(Triple *t);
 /**
  * ... Stepping Machine API ...
  */
