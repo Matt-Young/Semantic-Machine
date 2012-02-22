@@ -13,7 +13,11 @@
 #include "../src/include/names.h"
 
 #include "../src/include/all.h"
-#undef Debug_engine
+
+#ifndef DBG_ENGINE
+#define G_buff_counts
+#define G_printf
+#endif
 // Will be shared Protected
 OP operands[OperatorMaximum];
 Pointer g_db;
@@ -147,7 +151,7 @@ Handler get_handler(int opid,Handler handler) {
 		return operands[opid & OperatorMask].handler;
   else return pop_handler; // Try and execute the thing
 }
-#define DebugPrint
+
 // Get the stmt
 Code get_stmt(int opid,Triple * top) {
 	if(operands[opid].properties & EV_Overload)
@@ -177,7 +181,7 @@ int  machine_set_operator(Triple top[],Handler handler) {
 		G_printf("Debug event ");
 	set_ready_code(opid);
   events = set_ready_event(events);
-  DebugPrint("New Operator %s %d %d\n",top[0].key,top[0].link,top[0].pointer);
+  G_printf("New Operator %s %d %d\n",top[0].key,top[0].link,top[0].pointer);
   return events;
 }
 int  machine_new_operator(Triple top[],Handler handler) {
@@ -255,29 +259,25 @@ Trio engine_trios[] = {
    { "return", G_TYPE_ADDR, 0},
 	{0,0,0}};
 
-	// defult operands
-extern Triple _null_graph;
+  // defult operands
+  extern Triple _null_graph;
   int ugly_handler(Triple *top);
-	int init_operands() {
-		int i; 
-		G_memset(operands,0,sizeof(operands));
-		for(i=SystemUser;i < OperatorMaximum;i++) {
-			operands[i].handler = ugly_handler;
-			if(G_isugly(i) )
-				operands[i].properties = EV_Ugly |EV_No_bind;
-			else
-				operands[i].properties= 0; 
-		}
-	//i = install_sql_script("select '_',98,0;",SystemNull);
-		return(i);
-	}
+  int init_operands() {
+    int i; 
+    G_memset(operands,0,sizeof(operands));
+    for(i=SystemUser;i < OperatorMaximum;i++) {
+      operands[i].handler = ugly_handler;
+      if(G_isugly(i) )
+        operands[i].properties = EV_Ugly |EV_No_bind;
+      else
+        operands[i].properties= 0; 
+    }
+    //i = install_sql_script("select '_',98,0;",SystemNull);
+    return(i);
+  }
 
-	// Three loops that independent processes can run in
-	void netio_loop() {G_printf("No network\n");}
+
 	void debug_loop() {
-	//Console c;
-	//Triple t;
-	//int status;
 	for(;;) {}  // no debugger!!
 }
  
@@ -299,7 +299,7 @@ extern Triple _null_graph;
       flush_user_symbols();
       sort_names();
       post_io_struct();
-      G_buff_counts();
+      G_buff_counts(0);
     }
   }
 int init_machine() {

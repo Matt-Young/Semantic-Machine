@@ -7,7 +7,7 @@
 #include "../src/include/console.h"
 #include "../src/include/names.h"
 #include <ctype.h>
-#define DebugPrint
+
 #define DISCARD 0xff
 const char  *uglies = "\"._,{}$!:@";
 char * null_key = "_";
@@ -127,8 +127,8 @@ char * debugs[]=
        {"None","New","App","Del","AppClose","NewApp","DelApp","AppNew",
      "CloseNew","CloseNewApp","AppDel""AppDelClose",
      "AppCloseNew","AppClosePrev","Name"};
-   // DebugPrint("Case: %s ",debugs[hindex]);
-   // DebugPrint("p %x c %x n %x\n",cprev,ccurr,cnext);
+   // G_printf("Case: %s ",debugs[hindex]);
+   // G_printf("p %x c %x n %x\n",cprev,ccurr,cnext);
 
     switch(hindex) {
     case None: 
@@ -194,8 +194,8 @@ case DelApp:
      append_graph(inner,current);
      break;
    }
- //DebugPrint("%dPC %c %c|",hindex,ccurr,graph_variable(*inner));
-// DebugPrint("p %x c %x n %x\n",cprev,ccurr,cnext);
+ //G_printf("%dPC %c %c|",hindex,ccurr,graph_variable(*inner));
+// G_printf("p %x c %x n %x\n",cprev,ccurr,cnext);
     return 0;
  }
    int json_rules(char cin, PGRAPH *inner) {

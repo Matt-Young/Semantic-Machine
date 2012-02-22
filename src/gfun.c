@@ -265,7 +265,7 @@ int ugly_handler(Triple *top){
     // pop_ready();
     // incr_row(v0.pointer);
   }  else if(linkid == ':') {
-      v1.key = new_string(top->key);
+      v1.key = new_string(v0.key);
       if(EV_Data &  machine_step(stmt) ) 
         machine_triple(stmt,&v2);
         if(G_isdigit(v2.key[0])) 

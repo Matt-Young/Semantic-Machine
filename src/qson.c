@@ -9,7 +9,10 @@
 #include "../src/include/tables.h"
 #include "../src/include/engine.h"
 #include "../socketx/socket_x.h"
-#define DebugPrint
+
+#ifndef DBG_QSON
+#define G_printf
+#endif
 int parser(char * ,TABLE *);  
 #ifdef BUFFER_TRACKING
 void G_free_buff(void* p);
@@ -61,7 +64,7 @@ int   table_to_Json(TABLE *t,IO_Structure * to) {
         prev=Qin.link;
   }
 
-  DebugPrint("TJ%s%c%3d\n",Qin.key,Qin.link,Qin.pointer);
+  G_printf("TJ%s%c%3d\n",Qin.key,Qin.link,Qin.pointer);
 return 0;
 }
 int qson_to_table(TABLE * table,char  * buff,int count) {
@@ -102,7 +105,7 @@ int mem_to_net(int fd,int *buff,int protocol) {
     }
     else
       sendx(fd,key_value+4,len,0);
-    DebugPrint("MN%s%c%3d%\n",key_value,Qson->link,Qson->pointer);
+    G_printf("MN%s%c%3d%\n",key_value,Qson->link,Qson->pointer);
   }
   closesocketx(fd);
   return 0;
@@ -126,7 +129,7 @@ int * file_to_mem(FILE *fd) {
     fread(key_value+4,1,len,fd);  // bytes (from fixed length key values
     Qson->key = key_value;
     //Qson->key[len+4]=0;
-    DebugPrint("FM%s%c%3d\n",Qson->key,Qson->link,Qson->pointer);
+    G_printf("FM%s%c%3d\n",Qson->key,Qson->link,Qson->pointer);
     Qson++;
   }
   return buff;
@@ -147,7 +150,7 @@ int mem_to_file( FILE * dest,int * buff,int mode){
     if (total = (len & 0x3))
       fwrite("___",1,4-total,dest);  // keep at four byte boudary
     if(mode != AF_CONSOLE)
-      DebugPrint("MF%s%c%3d%\n",key_value,Qson->link,Qson->pointer);
+      G_printf("MF%s%c%3d%\n",key_value,Qson->link,Qson->pointer);
   }
 
   if(mode == AF_FILE)
@@ -178,7 +181,7 @@ int  * table_to_mem(TABLE *t) {
     Qout->key[len+4]=0;
     sprintf(Qout->key,"%4d",len);
     memcpy(Qout->key+4,Qin.key,len);
-    DebugPrint("TM%s%c%3d\n",Qout->key,Qin.link,Qout->pointer);
+    G_printf("TM%s%c%3d\n",Qout->key,Qin.link,Qout->pointer);
     Qout++;
   }
   sprintf(tmp,"%8d",long_count);
@@ -199,7 +202,7 @@ int mem_to_table(TABLE* table,int * buff,int mode) {
   rows = Qson[0].pointer; total = 0;
   for(i=0;i<rows;i++) {
     *data = Qson[i];
-    DebugPrint("MT%s%c%3d\n",Qson[i].key,Qson[i].link,Qson[i].pointer);
+    G_printf("MT%s%c%3d\n",Qson[i].key,Qson[i].link,Qson[i].pointer);
     //len = (int) Qson.key; // for blob bind
     machine_reset(table->stmt);
     bind_code(&(table)->operators[append_operator],table->stmt);
@@ -247,7 +250,7 @@ int system_copy_qson(IO_Structure *from,IO_Structure *to ) {
   } else if ((from->sa_family== AF_INET) || (from->sa_family== AF_CONSOLE)) {
     if( to->sa_family== AF_TABLE) { 
       TABLE * table;
-      printf("New Table  %s\n",(char *)  to->addr);
+      G_printf("New Table  %s\n",(char *)  to->addr);
       init_table((char *) to->addr,1,&table);
       to->buff = (int*) table;
       if(from->format == Json_IO) 

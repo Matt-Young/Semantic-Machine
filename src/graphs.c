@@ -6,6 +6,10 @@
 #include "../src/include/graphs.h"
 #include "../src/include/engine.h"
 #include "../src/include/console.h"
+#undef DBG_GRAPHS
+#ifndef DBG_GRAPHS
+#define G_printf
+#endif
 void list_graphs(PGRAPH  *list,char*);
 // every graph is an open subraph of its parent. 
 // graph map sqlson sub graphs in the database

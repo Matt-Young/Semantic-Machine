@@ -217,8 +217,6 @@ void  del_io_structs() {
     del_io_struct(anchor);
 }
 
-
-
 int mem_delete(IO_Structure *w) {
   int rows; int i;
   if(!w->buff)

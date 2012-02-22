@@ -97,9 +97,11 @@ int run_table(TABLE * t,Handler handler){
 int init_run_table(IO_Structure * w) {
   int status; Triple *t;
   TABLE * table = w->buff;
-  if(table)
+  if(!table)
     G_printf("No table\n");
   else {
+    if(!table->list)
+       new_child_graph((PGRAPH *) &table->list,(void *) '_');
     t  = &table->operators[pop_operator];
     status = set_ready_graph(table);
     machine_new_operator(t,ugly_handler);

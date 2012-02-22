@@ -1,4 +1,5 @@
-  /*! \defgroup  Graph
+
+/*! \defgroup  Graph
  * Manage nested groups in tables
  */
 typedef struct {int row;int end;int rowoffset;} RowSequence;

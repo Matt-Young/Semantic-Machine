@@ -59,7 +59,7 @@ void * handle_data(void * arg) {
   Pending *p = (Pending *) arg;
   fd = p->remote_addr.fd;
   BC.new_thread_count++;
-  DebugPrint("handler count %d\n",p->count);
+  G_printf("handler count %d\n",p->count);
   fd = p->remote_addr.fd;
   dest.buff = (int *) G_malloc(p->count);
   BC.new_data_count++;
@@ -80,7 +80,7 @@ void * handle_data(void * arg) {
      strcpy((char *) dest.addr,"netio");
     system_copy_qson(&p->remote_addr,&dest ); 
     //machine_unlock();
-    DebugPrint(" Action %d ",status);
+    G_printf(" Action %d ",status);
 //    print_triple(&t);
   }
  // free(t.key);
