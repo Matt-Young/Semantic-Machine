@@ -54,7 +54,7 @@ int bind_code(Triple *,Code );
 /*! \ingroup  Readyset
  * A generic hold holding information needed to move a Qson along
  */
-Webaddr  * get_web_addr();
+IO_Structure  * get_web_addr();
 /*! \ingroup  Readyset
  * The webaddr is kept in the ready set
  */

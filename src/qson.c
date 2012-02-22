@@ -23,13 +23,13 @@ void* G_new_buff(int size);
 //
 // Move a Qson graph form net to Qstore
 //
-void send_(char * data,int len, Webaddr * to) {
+void send_(char * data,int len, IO_Structure * to) {
   if((to->sa_family == AF_FILE) || (to->sa_family == AF_CONSOLE)) 
     fwrite(data,1,len,(FILE *) to->fd);
   if(to->sa_family == AF_INET)
     send(to->fd,data,1,len);
 }
-int   table_to_Json(TABLE *t,Webaddr * to) {
+int   table_to_Json(TABLE *t,IO_Structure * to) {
   // set some stuf up to restore Json brackets
   struct {int count;int total;} brk[8];int cur; char prev;
   int len; int i,rows;
@@ -208,7 +208,7 @@ int mem_to_table(TABLE* table,int * buff,int mode) {
   return  rows;
 }
 
-int system_copy_qson(Webaddr *from,Webaddr *to ) {
+int system_copy_qson(IO_Structure *from,IO_Structure *to ) {
   machine_reset(get_ready_stmt());  // big deal, start fresh
   // if the source is memory format
   if(from->sa_family ==  AF_MEMORY) {

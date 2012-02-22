@@ -29,15 +29,15 @@ enum qson_base_types {G_TYPE_NONE,G_TYPE_INTEGER,G_TYPE_FLOAT,
 
 #define AF_INET6 23
 
-typedef struct Webaddr {   
+typedef struct IO_Structure {   
   unsigned short  sa_family; unsigned short port;
   long addr[5]; int fd; int format;
-  int * buff; int count; int size; char * fill; char * empty;struct  Webaddr *link; 
-  } Webaddr;
-  Webaddr * new_webaddr();
-  Webaddr * del_webaddr(Webaddr *);
+  int * buff; int count; int size; char * fill; char * empty;struct  IO_Structure *link; 
+  } IO_Structure;
+  IO_Structure * new_webaddr();
+  IO_Structure * del_webaddr(IO_Structure *);
   void del_webaddrs();
-  int mem_delete(Webaddr *w);
+  int mem_delete(IO_Structure *w);
 
 
   // Qson io formas
@@ -46,9 +46,9 @@ typedef struct Webaddr {
 #define AF_CONSOLE 0x70e2
 #define AF_TABLE   0x70e1
 #define AF_MEMORY  0x70e0
-int system_copy_qson(Webaddr *,Webaddr * );
+int system_copy_qson(IO_Structure *,IO_Structure * );
 
-// Two sub types on Webaddr
+// Two sub types on IO_Structure
 enum SerializedFormat { Json_IO,Bson_IO,Qson_IO};
 
 // The null value and other defaults

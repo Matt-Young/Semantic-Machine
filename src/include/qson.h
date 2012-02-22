@@ -32,13 +32,13 @@ int mem_to_table(void * dest,int * buff,int mode);
  * Straight from a table using the stepping api
 
  */
-int   table_to_Json(TABLE *t,Webaddr * to) ;
+int   table_to_Json(TABLE *t,IO_Structure * to) ;
 /*! \ingroup  Qson
  * General call for a Qson move, restores full Json proocol
 
  */
 
-int system_copy_qson(Webaddr *from,Webaddr *to );
+int system_copy_qson(IO_Structure *from,IO_Structure *to );
 int test_qson(); 
 
 struct Format { 

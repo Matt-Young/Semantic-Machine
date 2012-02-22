@@ -119,7 +119,7 @@ int script_handler(Triple *node) {
 }
 // echo an table back
 int echo_handler(Triple *node) {
-  Triple Qin; Webaddr from;
+  Triple Qin; IO_Structure from;
   from.sa_family = AF_TABLE;
 
   G_printf("\nEcho %s ",from.addr);
@@ -280,47 +280,34 @@ extern Triple _null_graph;
 	//int status;
 	for(;;) {}  // no debugger!!
 }
-  void set_return(Webaddr *w);
-
-#define TestAddr  "2001:db8:8714:3a90::12"
-
-int test_qson() ;
-void console_loop(){
-	Webaddr *from,*to;int i;
-  char ch[200];
-  char * ptr;
-  G_printf("Console loop\n");
-  // test_qson();
-	for(;;) {
-  from = new_webaddr();
-  to = new_webaddr();
-  from->sa_family = AF_CONSOLE;
-  to->sa_family = AF_TABLE;
-  from->fd = (int) G_stdout();
-  from->format = Json_IO;
-  G_strcpy((char *) to->addr,"console"); 
-		G_console(from);
-    machine_lock();
-    system_copy_qson(from,to);
-   //system_copy_qson(&to,&from);  // right back
-    init_run_table(to);
-        machine_unlock();
-    //test_qson();
-    del_webaddrs();
-    flush_user_symbols();
-    sort_names();
-    G_buff_counts();
-	}
-}
+ 
+  int test_qson();
+  void console_loop(){
+    IO_Structure *from,*to;
+    G_printf("Console loop\n");
+    // test_qson();
+    for(;;) {
+      G_console(&from);
+      machine_lock();
+       to = new_webaddr();
+      to->sa_family = AF_TABLE;
+      G_strcpy((char *) to->addr,"console"); 
+      system_copy_qson(from,to);
+      init_run_table(to);
+      machine_unlock();
+      del_io_structs();
+      flush_user_symbols();
+      sort_names();
+      post_io_struct();
+      G_buff_counts();
+    }
+  }
 int init_machine() {
 	int status;
 	status = init_handlers(); if(status != EV_Ok) return status;
 	status = init_binder(); if(status != EV_Ok) return status;
 	status = init_gfun(); if(status != EV_Ok) return status;
 	status = init_tables(); if(status != EV_Ok) return status;
-  sort_names(); 
-  if(status != EV_Ok) return status;
-	init_console();
 	return status;
 }
 
@@ -337,9 +324,8 @@ void engine_init() {
 		add_trios(engine_trios);
 		status = init_machine();
 		op = operands[GCHAR];
-
     sort_names();
-
+    init_io_struct();
   }
 #ifndef TEST_ADDR
 char * TEST_ADDR = "127.0.0.1";
@@ -349,6 +335,7 @@ int port = TEST_PORT;
 int main(int argc, char * argv[]) {
   int i;
   G_memset((char *) &BC,0,sizeof(BufferCount));
+
   for(i=1; i < argc;i++) {
      G_printf("Arg: %s\n",argv[i]);
     if(!G_strcmp(argv[i], "-V")) {
@@ -361,7 +348,7 @@ int main(int argc, char * argv[]) {
     } else if(!G_strcmp(argv[i], "-port") )
   {  G_printf("Port changed %s\n",argv[i+1]);port = G_strtol(argv[i+1]); i++;}
    else if(!G_strcmp(argv[i], "-file") ) {
-  Webaddr c;
+  IO_Structure c;
   c.buff = (int *) G_malloc(400);
   G_InitConsole(&c);
   console_file(&c,argv[i+1]); 

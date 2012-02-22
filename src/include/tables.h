@@ -46,7 +46,7 @@ Code start_table(TABLE * t,int index);
  * Set up and run this table.
  */
 
-int init_run_table(Webaddr*);
+int init_run_table(IO_Structure*);
 TABLE * get_table_context(char *);
 //TABLE * get_table_name(const char * name);
 void release_table_context(void *table);

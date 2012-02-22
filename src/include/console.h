@@ -1,8 +1,8 @@
 
-int * G_InitConsole(Webaddr * console);
-int console_command(Webaddr * console,char command );
-void   console_file(Webaddr * console,char * ptr) ;
-int G_console(Webaddr * console);
+int * G_InitConsole(IO_Structure * console);
+int console_command(IO_Structure * console,char command );
+void   console_file(IO_Structure * console,char * ptr) ;
+int G_console(IO_Structure ** console);
 #define Line_size 256
 int  G_isugly(char ch);
 void G_exit();
@@ -34,3 +34,7 @@ void G_buff_counts();
 void G_qsort( void * base, int n, int size);
 void * G_bsearch(const void * key,const void* base,int n, int size);
 void G_graph_counts();
+void init_io_struct();
+void wait_io_struct();
+void post_io_struct();
+void del_io_structs();

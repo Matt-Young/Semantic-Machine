@@ -94,7 +94,7 @@ int run_table(TABLE * t,Handler handler){
  return 0;
 }
 
-int init_run_table(Webaddr * w) {
+int init_run_table(IO_Structure * w) {
   int status; Triple *t;
   TABLE * table = w->buff;
   if(table)

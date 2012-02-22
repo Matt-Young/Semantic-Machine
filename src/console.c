@@ -20,8 +20,7 @@
 #include <stdio.h> 
 #include <stdlib.h> 
 #include <string.h> 
-#include <stdarg.h>
-#include <sys/stat.h>
+#include "../socketx/socket_x.h"
 char * G_debug_line(char *,int);
 
 char * G_line(char * line,int n) {return(fgets(line, n, stdin));}
@@ -66,16 +65,8 @@ void G_debug(void * format){};
 // Is it a character known to the syntax? '
 //#define Line_size 256
 //int line[Line_size]; 
-int * G_InitConsole(Webaddr * console) {
-  console->buff = calloc(Line_size,1);
-	console->size=Line_size;
-	console->empty= (char *)console->buff;
-  console->fill=console->empty;
-	console->count=0;
-	printf("\nInit:");
-	return (int *) console->buff;
-}
-char * G_AddConsole(Webaddr * console,char cin) {
+int * G_InitConsole(IO_Structure * console);
+char * G_AddConsole(IO_Structure * console,char cin) {
 	console->empty[0] = cin; 
 	console->empty++; console->count++;
 	return console->empty;
@@ -85,7 +76,7 @@ int isin(char c,const char *str) {
 	while((*str)  && (*str != c) ) str++;
 	return *str;
 }
-void   console_file(Webaddr * console,char * ptr) { 
+void   console_file(IO_Structure * console,char * ptr) { 
   char  dir[200],*name;
   struct stat buf;
   FILE * f;int dirlen;
@@ -111,7 +102,7 @@ void   console_file(Webaddr * console,char * ptr) {
     perror("Open error ");
   }
 }
-int console_command(Webaddr * console,char command ) {
+int console_command(IO_Structure * console,char command ) {
   char  line[200];
   char *ptr;
    fgets(line, 100, stdin);
@@ -126,25 +117,33 @@ int console_command(Webaddr * console,char command ) {
   return 0;
 }
 // get line with a bit of input editing
-int G_console(Webaddr * console) { 
+int G_console(IO_Structure * *out) { 
+  IO_Structure  console;
 	char * ptr,cin,cprev;
 	int left,right;
 	left = 0; right = 0;
 	cin = 0;
   
-	ptr = (char *) G_InitConsole(console);
+	ptr = (char *) G_InitConsole(&console);
   cprev = 0;
 	for(;;) {
     cin = fgetc(stdin);
     //printf("%x\n",cin);
-    if(  (cin == '\n') &&  ( (cprev == '\n') ||  (left == right)) )
-        return(console->count);  // two in a row terminate
+    if(  (cin == '\n') &&  ( (cprev == '\n') ||  (left == right)) ) {
+      IO_Structure *w;
+      wait_io_struct();
+      w = new_webaddr();
+      *out = w;
+      console.link = w->link;
+      *w = console;
+     return(console.count);  // two in a row terminate
+    }
     else if( (cin == '.') && (left==0))
-          return(console_command(console,cin));
-    else if(cin == '{') {left++;G_AddConsole(console,cin);}
-    else if(cin == '}') {right++;G_AddConsole(console,cin);}
+          return(console_command(&console,cin));
+    else if(cin == '{') {left++;G_AddConsole(&console,cin);}
+    else if(cin == '}') {right++;G_AddConsole(&console,cin);}
     else if((left > right) && (cin != '\n'))  // if client has an open curly
-      G_AddConsole(console,cin);
+      G_AddConsole(&console,cin);
     cprev = cin;
   } 
 
@@ -166,18 +165,37 @@ void G_buff_counts(){
   printf("D: %d %d",BC.del_data_count,BC.new_data_count);
    printf("Names: %d %d\n",BC.del_name_count,BC.new_name_count);
 }
-Webaddr *anchor;
-Webaddr * new_webaddr(){
-  Webaddr * w = (Webaddr *) calloc(1,sizeof(Webaddr));
+#ifdef BUFFER_TRACKING
+#define free G_free_buff
+#define malloc G_new_buff
+#endif
+int * G_InitConsole(IO_Structure * console) {
+  console->buff = (int *) malloc(Line_size,1);
+  memset(console->buff,0,Line_size);
+	console->size=Line_size;
+	console->empty= (char *)console->buff;
+  console->fill=console->empty;
+	console->count=0;
+  console->fd = (int) G_stdout();
+  console->sa_family = AF_CONSOLE;
+  console->format = Json_IO;
+  strcpy((char *) console->addr,"console");
+	printf("\nInit:");
+	return (int *) console->buff;
+}
+IO_Structure *anchor;
+IO_Structure * new_webaddr(){
+  IO_Structure * w = (IO_Structure *) malloc(sizeof(IO_Structure));
+  memset(w,0,sizeof(IO_Structure));
   if(anchor)
     w->link = anchor;
   anchor = w;
   BC.new_web_count++;
   return w;
 }
-int mem_delete(Webaddr *w);
+int mem_delete(IO_Structure *w);
 void release_table_context(void *);
-Webaddr * del_webaddr(Webaddr *w){
+IO_Structure * del_io_struct(IO_Structure *w){
 if(!anchor)
   printf("web link error \n");
 if(BC.del_web_count >= BC.new_web_count)
@@ -194,16 +212,14 @@ BC.del_web_count++;
 return anchor;
 };
 // delete webaddr chain
-void  del_webaddrs() {
+void  del_io_structs() {
   while(anchor) 
-    del_webaddr(anchor);
+    del_io_struct(anchor);
 }
-int init_console() { return(0);}
 
-#ifdef BUFFER_TRACKING
-#define free G_free_buff
-#endif
-int mem_delete(Webaddr *w) {
+
+
+int mem_delete(IO_Structure *w) {
   int rows; int i;
   if(!w->buff)
     return 0;
@@ -219,4 +235,16 @@ int mem_delete(Webaddr *w) {
     free((int*)w->buff);
   w->buff=0;
   return 0;
+}
+
+sem_t IO_Struct_mutex;
+void init_io_struct() {
+    anchor=0;
+    sem_init(&IO_Struct_mutex, 1, 1);
+  }
+void wait_io_struct() {
+    sem_wait(&IO_Struct_mutex);  // wait for lock
+}
+void post_io_struct() {
+    sem_post(&IO_Struct_mutex);  // wait for lock
 }

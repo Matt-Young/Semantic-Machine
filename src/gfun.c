@@ -21,7 +21,7 @@ typedef struct ReadySet {
   Code stmt;
   int opid;
   Triple *buff; // an output
-  Webaddr return_addr;
+  IO_Structure return_addr;
   TABLE *table;
 }  Readyset;
 
@@ -130,7 +130,7 @@ void * set_web_addr(void *w,int size) {
   G_memcpy(&ready.return_addr,w,size);
   return &ready.return_addr;
 }
-Webaddr * get_web_addr() {
+IO_Structure * get_web_addr() {
   return &ready.return_addr;
 }
 int key_match(const char * k,const char * g) {

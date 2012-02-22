@@ -5,6 +5,7 @@
 #include "../src/include/g_types.h"
 #include "../src/include/config.h"
 #include "../src/include/debug.h"
+#include "../socketx/socket_x.h"
 
 char * typeface[] = {
   "{@SystemExec,select * from square;}",
@@ -21,7 +22,7 @@ char * typeface[] = {
 #define DLINE 1
 static int debug_counter=DLINE;
 
-void debug_json_string(Webaddr * w) {
+void debug_json_string(IO_Structure * w) {
  w->buff = (int *) malloc(400);
  w->size=400;
  memset((char *) w->buff,0,400);
@@ -30,7 +31,7 @@ void debug_json_string(Webaddr * w) {
 
 
 int test_qson() {
-  Webaddr w1,w2;
+  IO_Structure w1,w2;
   char filname[40];
   printf("Test qson\n");
   strcpy((char *) w1.addr,"test");
@@ -54,11 +55,11 @@ int test_qson() {
   system_copy_qson(&w1,&w2);  //file to mem
   return 0;
 }
-void debug_console_file(Webaddr *c) {
+void debug_console_file(IO_Structure *c) {
   console_file(c,TESTFILE);}
 
 
- void debug_enter(Webaddr *c,char *ptr) {
+ void debug_enter(IO_Structure *c,char *ptr) {
    char temp[200];
    memset(temp,0,200);
    printf("Hello debugger\n");
@@ -70,4 +71,16 @@ void look_buff(void * buff) {
   char ch[200];char *ptr; int i;
      ptr = (char *) buff;
     for(i=0; i <200;i++) ch[i]= ptr[i];
+}
+#include <sys/stat.h>
+#include  <fcntl.h> 
+
+  sem_t *ab, ac, *ad, *bf, *ce, *de, *ef;
+void try_semaphoe() {
+    sem_wait(&ac);  // wait for lock
+    return;
+}
+void post_semaphoe() {
+    sem_post(&ac);  // wait for lock
+    return;
 }

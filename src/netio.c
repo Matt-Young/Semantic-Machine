@@ -17,7 +17,7 @@ the lab configuratio, the threads only and the netio
 #include "../src/include/config.h"
 //#include "../src/include/engine.h"
 #include "../src/include/http_hdrs.h"
-int set_web_addr(Webaddr *,int );
+int set_web_addr(IO_Structure *,int );
 #define error printf
 #define warn printf
 #define NTHREAD 16 
@@ -26,7 +26,7 @@ int set_web_addr(Webaddr *,int );
 int sockfd = -1;
 static void crit(char * message);
 typedef struct { 
-  Webaddr remote_addr; 
+  IO_Structure remote_addr; 
   int count;
   int type;
 } Pending;  // Holds things a thread needs
@@ -55,7 +55,7 @@ int event_handler(Triple *t);
 void * handle_data(void * arg) {
   int status=0;
     int fd;int rv,rm;
-    Webaddr dest;
+    IO_Structure dest;
   Pending *p = (Pending *) arg;
   fd = p->remote_addr.fd;
   BC.new_thread_count++;
