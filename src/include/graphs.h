@@ -32,7 +32,7 @@ void close_update_graph(PGRAPH *);
  * Write the actualy key bytes,link and pointer to the table.
  */
 int append_graph(PGRAPH *,Triple );
-int release_graph_list(PGRAPH *);
+int release_graph_list(void *);
 void * graph_variable(PGRAPH  inner);
 
 int count_graph(PGRAPH );

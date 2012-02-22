@@ -26,8 +26,9 @@ Triple column_decoder(TABLE *t,ColInfo *c) {
 
 // defaut grammar is to descend a row with the default Dot
 int square_handler(Triple *t) {
-ColInfo *c,*d;TABLE * table; void * vals[8];
-Triple ct,dt; int i;
+ColInfo *c;TABLE * table; void * vals[8];
+//Triple ct,dt; 
+int i;
 table = get_ready_table();
 table->stmt=get_ready_stmt();
 

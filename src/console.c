@@ -5,7 +5,7 @@
 #include "../src/include/console.h"
 #include "../src/include/debug.h"
 //#define Debug_console
-int init_console() { return(0);}
+
 // These are here just to keep the std lib includes in one spot
 // and run test sequences
 
@@ -63,15 +63,15 @@ void G_debug(void * format){};
 // Below are specific console operations for the parser
 // Is it a character known to the syntax? '
 //#define Line_size 256
-int line[Line_size]; 
+//int line[Line_size]; 
 int * G_InitConsole(Webaddr * console) {
-	memset(line,0,Line_size);
+  console->buff = calloc(Line_size,1);
 	console->size=Line_size;
-	console->buff=line;
-	console->empty=line;
+	console->empty= (char *)console->buff;
+  console->fill=console->empty;
 	console->count=0;
 	printf("\nInit:");
-	return console->buff;
+	return (int *) console->buff;
 }
 char * G_AddConsole(Webaddr * console,char cin) {
 	console->empty[0] = cin; 
@@ -173,13 +173,45 @@ Webaddr * new_webaddr(){
   BC.new_web_count++;
   return w;
 }
-Webaddr * delete_webadrr(Webaddr *w){
+int mem_delete(Webaddr *w) {
+  int rows; int i;
+  if(!w->buff)
+    return 0;
+  if( w->sa_family == AF_MEMORY) {
+    Triple *Qson; 
+    Qson = (Triple *) w->buff+2;
+    rows = Qson[0].pointer;
+    for(i=0;i<rows;i++) 
+      free( Qson[i].key);
+    free(w->buff);
+  }
+  else 
+    free((int*)w->buff);
+  w->buff=0;
+  return 0;
+}
+void release_table_context(void *);
+Webaddr * del_webaddr(Webaddr *w){
 if(!anchor)
   printf("web link error \n");
-if(BC.delete_web_count >= BC.new_web_count)
+if(BC.del_web_count >= BC.new_web_count)
   printf("web count error \n");
-anchor->link = w->link;
-BC.delete_web_count++;
+if(w->buff ) { 
+  if( w->sa_family == AF_MEMORY)
+    mem_delete((int *) w->buff);
+  else if( w->sa_family == AF_INET)
+    free((int*)w->buff);
+  else if( w->sa_family == AF_TABLE)
+    release_table_context( w->buff);
+}
+anchor = w->link;
 free(w);
+BC.del_web_count++;
 return anchor;
 };
+// delete webaddr chain
+void  del_webaddrs() {
+  while(anchor) 
+    del_webaddr(anchor);
+}
+int init_console() { return(0);}

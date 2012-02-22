@@ -72,8 +72,7 @@ int call_handler(Triple *node) {
 	return EV_Ok;
 }
 int exec_handler(Triple *t) {
-	Triple Qin;  char *err;
-
+	Triple Qin;
   machine_step_fetch(&Qin,0); 
   install_sql_script((char *) Qin.key,SystemScratch) ;
   Qin.link = SystemScratch;
@@ -287,24 +286,27 @@ extern Triple _null_graph;
 
 int test_qson() ;
 void console_loop(){
-	Webaddr from,to;
-  from.sa_family = AF_CONSOLE;
-  to.sa_family = AF_TABLE;
-  from.fd = (int) G_stdout();
-  from.format = Json_IO;
-  G_strcpy((char *) to.addr,"console"); 
+	Webaddr *from,*to;
+  from = new_webaddr();
+  to = new_webaddr();
+  from->sa_family = AF_CONSOLE;
+  to->sa_family = AF_TABLE;
+  from->fd = (int) G_stdout();
+  from->format = Json_IO;
+  G_strcpy((char *) to->addr,"console"); 
   G_printf("Console loop\n");
   // test_qson();
 	for(;;) {
-		G_console(&from);
+		G_console(from);
     //machine_lock();
-    system_copy_qson(&from,&to);
+    system_copy_qson(from,to);
     //system_copy_qson(&to,&from);
     //machine_unlock();
     //system_copy_qson(&to,&from);  // right back
-    init_run_table((char *) &to.addr);
+    init_run_table((char *) to->addr);
     //G_free(from.buff);
     //test_qson();
+    del_webaddrs();
     flush_user_symbols();
     sort_names();
     G_buff_counts();

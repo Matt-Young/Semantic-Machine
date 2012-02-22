@@ -70,8 +70,8 @@ PGRAPH delete_graph(PGRAPH *list) {
 	free_graph_context(child);
     list_graphs(list,"del ");
 	return *list;
-
 }
+
 void close_update_graph(PGRAPH *list) { 
 	int status;
   PGRAPH parent;
@@ -89,8 +89,9 @@ void close_update_graph(PGRAPH *list) {
    }
     list_graphs(list,"cu");
 }
-int release_graph_list(PGRAPH *inner) {
-	if(*inner) {
+int release_graph_list(void *i) {
+  PGRAPH * inner =(PGRAPH *) i;
+	if( *inner) {
 		while(*inner)
 			*inner = delete_graph(inner);
 	}

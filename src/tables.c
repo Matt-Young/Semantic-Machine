@@ -42,7 +42,10 @@ TABLE * get_table_context(char * name) {
   triple_tables[i] = pt;
   return pt;
 }
+int release_graph_list(void *);
 void release_table_context(TABLE *pt) {
+  if(pt->list)
+    release_graph_list(&pt->list);
    triple_tables[pt->index]=0;
     G_free((void *) pt->name);
 	G_free((void *) pt);

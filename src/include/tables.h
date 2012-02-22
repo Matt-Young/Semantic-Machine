@@ -49,5 +49,5 @@ Code start_table(TABLE * t,int index);
 int init_run_table(char * name);
 TABLE * get_table_context(char *);
 TABLE * get_table_name(const char * name);
-void release_table_context(TABLE *pt);
+void release_table_context(void *table);
 Pointer new_table_graph(TABLE *table);
