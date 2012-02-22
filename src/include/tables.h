@@ -11,7 +11,7 @@ enum PreparedTableOps {
 	spare_operator,spare_data};
 
   typedef struct Tables  {
-  char * name;
+ // char * name;
   int attribute;
   Triple operators[spare_data+1];  /*!< Prepared statements for the table*/
   int index;
@@ -46,8 +46,8 @@ Code start_table(TABLE * t,int index);
  * Set up and run this table.
  */
 
-int init_run_table(char * name);
+int init_run_table(Webaddr*);
 TABLE * get_table_context(char *);
-TABLE * get_table_name(const char * name);
+//TABLE * get_table_name(const char * name);
 void release_table_context(void *table);
 Pointer new_table_graph(TABLE *table);

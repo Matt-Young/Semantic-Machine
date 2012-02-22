@@ -252,7 +252,7 @@ int ugly_handler(Triple *top){
   machine_triple(stmt, &v0);
   linkid =  v0.link;
   if(linkid == '@'){
-    Trio * s1; 
+   // Trio * s1; 
     // update and push the ready set
     // look up the named destination and make a webaddr
     // call the specified handler by name

@@ -287,6 +287,10 @@ extern Triple _null_graph;
 int test_qson() ;
 void console_loop(){
 	Webaddr *from,*to;
+
+  G_printf("Console loop\n");
+  // test_qson();
+	for(;;) {
   from = new_webaddr();
   to = new_webaddr();
   from->sa_family = AF_CONSOLE;
@@ -294,16 +298,13 @@ void console_loop(){
   from->fd = (int) G_stdout();
   from->format = Json_IO;
   G_strcpy((char *) to->addr,"console"); 
-  G_printf("Console loop\n");
-  // test_qson();
-	for(;;) {
 		G_console(from);
     //machine_lock();
     system_copy_qson(from,to);
     //system_copy_qson(&to,&from);
     //machine_unlock();
     //system_copy_qson(&to,&from);  // right back
-    init_run_table((char *) to->addr);
+    init_run_table(to);
     //G_free(from.buff);
     //test_qson();
     del_webaddrs();

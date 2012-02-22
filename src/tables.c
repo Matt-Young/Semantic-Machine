@@ -32,8 +32,8 @@ void free_table_context(TABLE *pt) {
 TABLE * get_table_context(char * name) {
   TABLE *pt; int i;
   pt = new_table_context();
-  pt->name = (char *) G_calloc(G_strlen(name));
-  G_strcpy(pt->name,name);
+ // pt->name = (char *) G_calloc(G_strlen(name));
+//  G_strcpy(pt->name,name);
   pt->list = 0;
   pt->attribute = G_TYPE_TABLE;
 
@@ -47,7 +47,7 @@ void release_table_context(TABLE *pt) {
   if(pt->list)
     release_graph_list(&pt->list);
    triple_tables[pt->index]=0;
-    G_free((void *) pt->name);
+//    G_free((void *) pt->name);
 	G_free((void *) pt);
 	BC.del_table_count++;
 }
@@ -94,14 +94,18 @@ int run_table(TABLE * t,Handler handler){
  return 0;
 }
 
- int init_run_table(char * name) {
-	  TABLE * table; int status; Triple *t;
-	  init_table(name,0,&table);
-	  t  = &table->operators[pop_operator];
-	  status = set_ready_graph(table);
-	  machine_new_operator(t,ugly_handler);
-	  return 0;
+int init_run_table(Webaddr * w) {
+  int status; Triple *t;
+  TABLE * table = w->buff;
+  if(table)
+    G_printf("No table\n");
+  else {
+    t  = &table->operators[pop_operator];
+    status = set_ready_graph(table);
+    machine_new_operator(t,ugly_handler);
   }
+  return 0;
+}
 
 Code   start_table(TABLE * t,int index){
   PGRAPH  g;
@@ -113,7 +117,7 @@ Code   start_table(TABLE * t,int index){
  t->stmt=get_ready_stmt();
  return t->stmt;
 }
-
+/*
 #define Sql_delete_rows "delete from %s;"
 int del_table_rows(TABLE *table) {
   char buff[400], *err; int status;
@@ -121,8 +125,9 @@ int del_table_rows(TABLE *table) {
     status = machine_exec(g_db,buff,&err);
 	return(status);
 }
-
+*/
 TABLE * TABLE_POINTER(int i) { return triple_tables[i];}
+/*
 TABLE * get_table_name(const char * name) { 
 	int i=0;
 	while(triple_tables[i]) {
@@ -132,7 +137,7 @@ TABLE * get_table_name(const char * name) {
 		}
 	return (0);
 }
-
+*/
 const struct new_install{
 	int opindex;
 	int opid;
