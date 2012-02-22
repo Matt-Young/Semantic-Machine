@@ -77,15 +77,30 @@ void machine_result_int(Pointer context, int value);
  */
 int machine_value_int(Pointer  v);
 /*! \ingroup  Machine
- * Run the egin statement.
+ * Run the Begin statement.
  */
 int machine_lock();
 int machine_unlock();
 char * machine_script(Pointer stmt);
 int machine_triple(Code stmt,Triple * t);
+/*! \ingroup  Machine
+ * Keys hold the variable length value bytes.
+ */
 int machine_key_len(Code stmt); 
 int machine_bind_int(Code stmt,int index,int value);
+/*! \ingroup  Machine
+ * Version bind text.
+ */
 int machine_bind_text(Code stmt,int index,char * ch);
+/*! \ingroup  Machine
+ *And bind blob
+ */
 int machine_bind_blob(Code stmt,int index,void * blob,int size);
+/*! \ingroup  Machine
+ * Get the column types and names for a square.
+ */
 void machine_row_info(Code  stmt, ColInfo *cinfo);
+/*! \ingroup  Machine
+ * Grabp a row of longs from a square table.
+ */
 void machine_unbind_row(Code stmt,ColInfo * cinfo, void * vals[]);

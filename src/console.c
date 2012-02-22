@@ -40,6 +40,7 @@ void G_sprintf(char *s, const char *fmt, ...)
  vsprintf(s,fmt, argptr);
  va_end(argptr);
 }
+void * G_stdout() {return stdout;}
 void* G_malloc(int size){return malloc(size);}
 void* G_calloc(int size){return  calloc(1,size); }
 void G_free(void* p){free(p);}
@@ -77,17 +78,14 @@ char * G_AddConsole(Webaddr * console,char cin) {
 	console->empty++; console->count++;
 	return console->empty;
 }
-void G_Test() {
-G_printf("%d ",fgetc(stdin));
-}
 
 int isin(char c,const char *str) {
 	while((*str)  && (*str != c) ) str++;
 	return *str;
 }
 void   console_file(Webaddr * console,char * ptr) { 
-  char  dir[200],*name;char type;
-  struct stat buf;void * buffer;
+  char  dir[200],*name;
+  struct stat buf;
   FILE * f;int dirlen;
   //ptr += strlen(ptr)+1;
   name = strtok(ptr, "\0");
@@ -136,7 +134,7 @@ int G_console(Webaddr * console) {
   cprev = 0;
 	for(;;) {
     cin = fgetc(stdin);
-    printf("%x\n",cin);
+    //printf("%x\n",cin);
     if(  (cin == '\n') &&  ( (cprev == '\n') ||  (left == right)) )
         return(console->count);  // two in a row terminate
     else if( (cin == '.') && (left==0))
@@ -151,28 +149,37 @@ int G_console(Webaddr * console) {
 }
 
 // Track memory here, this is not c++
-int old_filter_count,new_filter_count;
-int del_graph_count,new_graph_count;
-int del_table_count,new_table_count;
-int del_data_count,new_data_count;
-int del_thread_count,new_thread_count;
-int del_name_count,new_name_count;
+
+BufferCount BC;
+
+//int newcount=0;int oldcount=0;
 void G_graph_counts(){
-	printf("Gr: %d %d ",del_graph_count,new_graph_count);
+	printf("Gr: %d %d ",BC.del_graph_count,BC.new_graph_count);
 }
-int newcount=0;
-int oldcount=0;
+
 void G_buff_counts(){
-	printf("\nFilt: %d %d ",old_filter_count,new_filter_count);
-	printf("Gr: %d %d ",del_graph_count,new_graph_count);
-	printf("Tbl: %d %d ",del_table_count,new_table_count);
-  printf("Thr: %d %d ",del_thread_count,new_thread_count);
-  printf("D: %d %d",del_data_count,new_data_count);
-   printf("Names: %d %d\n",del_name_count,new_name_count);
+	printf("Gr: %d %d ",BC.del_graph_count,BC.new_graph_count);
+	printf("Tbl: %d %d ",BC.del_table_count,BC.new_table_count);
+  printf("Thr: %d %d ",BC.del_thread_count,BC.new_thread_count);
+  printf("D: %d %d",BC.del_data_count,BC.new_data_count);
+   printf("Names: %d %d\n",BC.del_name_count,BC.new_name_count);
 }
-void * G_stdout() {return stdout;}
-#define Debug_console
-
-#ifdef Debug_console
-
-#endif
+Webaddr *anchor;
+Webaddr * new_webaddr(){
+  Webaddr * w = (Webaddr *) calloc(1,sizeof(Webaddr));
+  if(anchor)
+    w->link = anchor;
+  anchor = w;
+  BC.new_web_count++;
+  return w;
+}
+Webaddr * delete_webadrr(Webaddr *w){
+if(!anchor)
+  printf("web link error \n");
+if(BC.delete_web_count >= BC.new_web_count)
+  printf("web count error \n");
+anchor->link = w->link;
+BC.delete_web_count++;
+free(w);
+return anchor;
+};

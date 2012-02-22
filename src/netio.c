@@ -24,8 +24,6 @@ int set_web_addr(Webaddr *,int );
 
 /* Globals */
 int sockfd = -1;
-extern int del_data_count,new_data_count;
-extern int del_thread_count,new_thread_count;
 static void crit(char * message);
 typedef struct { 
   Webaddr remote_addr; 
@@ -60,11 +58,11 @@ void * handle_data(void * arg) {
     Webaddr dest;
   Pending *p = (Pending *) arg;
   fd = p->remote_addr.fd;
-  new_thread_count++;
+  BC.new_thread_count++;
   DebugPrint("handler count %d\n",p->count);
   fd = p->remote_addr.fd;
   dest.buff = (int *) malloc(p->count);
-  new_data_count++;
+  BC.new_data_count++;
   rv = recv(fd, (char *) dest.buff, p->count,0);
   if(rv < p->count) {
     if((rm = send(fd, BAD_MSG, strlen(OK_MSG), 0)) == -1) 
@@ -86,8 +84,8 @@ void * handle_data(void * arg) {
 //    print_triple(&t);
   }
  // free(t.key);
-  del_data_count++;
-  del_thread_count++;
+  BC.del_data_count++;
+  BC.del_thread_count++;
   p->count = 0;
   return 0;
 }

@@ -346,6 +346,7 @@ int port = TEST_PORT;
 
 int main(int argc, char * argv[]) {
   int i;
+  G_memset((char *) &BC,0,sizeof(BufferCount));
   for(i=1; i < argc;i++) {
      G_printf("Arg: %s\n",argv[i]);
     if(!G_strcmp(argv[i], "-V")) {

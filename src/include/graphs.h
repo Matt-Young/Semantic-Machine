@@ -1,5 +1,11 @@
-
+  /*! \defgroup  Graph
+ * Manage nested groups in tables
+ */
 typedef struct {int row;int end;int rowoffset;} RowSequence;
+/*! \ingroup  Graph
+ * Graph context.
+
+ */
 typedef struct  Graph {
   RowSequence rdx;
   TABLE * table;
@@ -7,9 +13,7 @@ typedef struct  Graph {
   void * context;
 } GRAPH;
 typedef GRAPH * PGRAPH; 
-  /*! \defgroup  Graph
- * Manage nested groups in tables
- */
+
 /*! \ingroup  Graph
  * Set the srow and end pointers.
  */
@@ -31,13 +35,11 @@ int append_graph(PGRAPH *,Triple );
 int release_graph_list(PGRAPH *);
 void * graph_variable(PGRAPH  inner);
 
+int count_graph(PGRAPH );
+void graph_counts() ;
+PGRAPH dup_graph(PGRAPH l1,PGRAPH l2);
+PGRAPH new_graph_by_index(int);
 
-int count_graph(PGRAPH );//</li> <li>
-void graph_counts() ;//</li> <li>
-PGRAPH dup_graph(PGRAPH l1,PGRAPH l2);//</li> <li>
-PGRAPH new_graph_by_index(int);//</li>  </ul> <!--
-// layout of triplet installed in table contaxts
-//-->
 
 
 

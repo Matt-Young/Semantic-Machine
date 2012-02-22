@@ -14,19 +14,19 @@
 // Keep a limited set o table open
 TABLE *triple_tables[NUMBER_TABLES];
 
-extern int del_table_count,new_table_count;
+//extern int del_table_count,new_table_count;
 TABLE  *new_table_context() {
   TABLE *pt;
   pt = (TABLE *) G_calloc(sizeof(TABLE));
-  new_table_count++;
+  BC.new_table_count++;
 return(pt);}
 
 void free_table_context(TABLE *pt) {
-   if(del_table_count >= new_table_count)
+   if(BC.del_table_count >= BC.new_table_count)
 		G_printf("Bad table",EV_Error);
    delete_graph((PGRAPH *) pt->list);
 	G_free((void *) pt);
-	del_table_count++;
+	BC.del_table_count++;
 }
 
 TABLE * get_table_context(char * name) {
@@ -46,7 +46,7 @@ void release_table_context(TABLE *pt) {
    triple_tables[pt->index]=0;
     G_free((void *) pt->name);
 	G_free((void *) pt);
-	del_table_count++;
+	BC.del_table_count++;
 }
 
 // direct sql utilities
@@ -187,7 +187,7 @@ int init_tables() {
 	int status;
 	add_trios(table_trios);
 	G_memset(triple_tables,0,sizeof(triple_tables));
-	del_table_count=0,new_table_count=0;
+	BC.del_table_count=0,BC.new_table_count=0;
 	status = machine_install_callback(g_db,GFUN,2,gfunction);
 	return status;
 }

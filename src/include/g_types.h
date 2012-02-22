@@ -1,7 +1,7 @@
 /**
  * ... g_types.h basic type unique to qson
  */
-
+#define GTYPES
 typedef struct {
     int link;
   int pointer;
@@ -29,9 +29,11 @@ enum qson_base_types {G_TYPE_NONE,G_TYPE_INTEGER,G_TYPE_FLOAT,
 
 #define AF_INET6 23
 
-typedef struct Webaddr {   unsigned short  sa_family; 
-long addr[8]; int fd; int format;
-void * buff; int count; int size; char * fill; char * empty; } Webaddr;
+typedef struct Webaddr {   unsigned short  sa_family; unsigned short port;
+long addr[5]; int fd; int format;
+void * buff; int count; int size; char * fill; char * empty;struct  Webaddr *link; } Webaddr;
+Webaddr * new_webaddr();
+Webaddr * delete_webadrr(Webaddr *);
 
 
 // Qson io formas
@@ -76,3 +78,11 @@ extern Triple _null_graph;
 #define EV_FormZero 0x2000
 #define EV_FormOne 0x4000
 #define EV_FormTwo 0x6000
+typedef struct {
+int del_graph_count,new_graph_count;
+int del_table_count,new_table_count;
+int del_data_count,new_data_count;
+int del_thread_count,new_thread_count;
+int del_name_count,new_name_count;
+int new_web_count,delete_web_count; } BufferCount;
+extern   BufferCount BC;
