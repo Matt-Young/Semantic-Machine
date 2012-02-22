@@ -44,7 +44,7 @@ int init_trios() {
 
 char * new_string(const char * key) {
 	int size = strlen(key)+1;
-	char * p = (char *) malloc(size);
+	char * p = (char *) G_malloc(size);
 	strncpy(p,key,size);
 	BC.new_name_count++;
 	return(p);

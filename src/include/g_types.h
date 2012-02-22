@@ -32,7 +32,7 @@ enum qson_base_types {G_TYPE_NONE,G_TYPE_INTEGER,G_TYPE_FLOAT,
 typedef struct Webaddr {   
   unsigned short  sa_family; unsigned short port;
   long addr[5]; int fd; int format;
-  void * buff; int count; int size; char * fill; char * empty;struct  Webaddr *link; 
+  int * buff; int count; int size; char * fill; char * empty;struct  Webaddr *link; 
   } Webaddr;
   Webaddr * new_webaddr();
   Webaddr * del_webaddr(Webaddr *);

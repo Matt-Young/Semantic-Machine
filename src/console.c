@@ -44,6 +44,8 @@ void * G_stdout() {return stdout;}
 void* G_malloc(int size){return malloc(size);}
 void* G_calloc(int size){return  calloc(1,size); }
 void G_free(void* p){free(p);}
+void* G_new_buff(int size){BC.new_data_count++;return malloc(size);}
+void G_free_buff(void* p){BC.del_data_count++;free(p);}
 char* G_strncpy(char* s, const char* ct, int n){return strncpy(s,ct,n);}
 char * G_strcpy(char* s, const char* ct){return strcpy(s, ct);}
 int G_strcmp(const char* cs, const char* ct){return strcmp( cs, ct);}
@@ -97,7 +99,7 @@ void   console_file(Webaddr * console,char * ptr) {
   f =  fopen(name, "r");
   if(f){
     fstat(_fileno(f), &buf);
-    console->buff = malloc(buf.st_size+1);
+    console->buff = G_malloc(buf.st_size+1);
     console->size = buf.st_size;
     console->count = fread(console->buff,1, console->size, f);
     ptr = (char *) console->buff;// defeating the typecastin error
@@ -173,23 +175,7 @@ Webaddr * new_webaddr(){
   BC.new_web_count++;
   return w;
 }
-int mem_delete(Webaddr *w) {
-  int rows; int i;
-  if(!w->buff)
-    return 0;
-  if( w->sa_family == AF_MEMORY) {
-    Triple *Qson; 
-    Qson = (Triple *) w->buff+2;
-    rows = Qson[0].pointer;
-    for(i=0;i<rows;i++) 
-      free( Qson[i].key);
-    free(w->buff);
-  }
-  else 
-    free((int*)w->buff);
-  w->buff=0;
-  return 0;
-}
+int mem_delete(Webaddr *w);
 void release_table_context(void *);
 Webaddr * del_webaddr(Webaddr *w){
 if(!anchor)
@@ -197,11 +183,9 @@ if(!anchor)
 if(BC.del_web_count >= BC.new_web_count)
   printf("web count error \n");
 if(w->buff ) { 
-  if( w->sa_family == AF_MEMORY)
-    mem_delete((int *) w->buff);
-  else if( w->sa_family == AF_INET)
-    free((int*)w->buff);
-  else if( w->sa_family == AF_TABLE)
+  if( w->sa_family != AF_TABLE)
+    mem_delete( w);
+  else
     release_table_context( w->buff);
 }
 anchor = w->link;
@@ -215,3 +199,24 @@ void  del_webaddrs() {
     del_webaddr(anchor);
 }
 int init_console() { return(0);}
+
+#ifdef BUFFER_TRACKING
+#define free G_free_buff
+#endif
+int mem_delete(Webaddr *w) {
+  int rows; int i;
+  if(!w->buff)
+    return 0;
+  if( w->sa_family == AF_MEMORY) {
+    Triple *Qson; 
+    Qson = (Triple *) &w->buff[2];
+    rows = Qson[0].pointer;
+    for(i=0;i<rows;i++) 
+      free( Qson[i].key);
+    free(w->buff);
+  }
+  else 
+    free((int*)w->buff);
+  w->buff=0;
+  return 0;
+}

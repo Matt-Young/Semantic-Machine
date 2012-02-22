@@ -13,4 +13,5 @@
 #define WINDOWS
 #define TESTFILE "/test.txt"
 #define TESTDIR "c:/soft/testfiles"
+#define BUFFER_TRACKING
 

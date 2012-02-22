@@ -66,4 +66,8 @@ void debug_console_file(Webaddr *c) {
    //console_file(c,temp);
    debug_json_string(c);
  }
-
+void look_buff(void * buff) {
+  char ch[200];char *ptr; int i;
+     ptr = (char *) buff;
+    for(i=0; i <200;i++) ch[i]= ptr[i];
+}

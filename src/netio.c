@@ -61,7 +61,7 @@ void * handle_data(void * arg) {
   BC.new_thread_count++;
   DebugPrint("handler count %d\n",p->count);
   fd = p->remote_addr.fd;
-  dest.buff = (int *) malloc(p->count);
+  dest.buff = (int *) G_malloc(p->count);
   BC.new_data_count++;
   rv = recv(fd, (char *) dest.buff, p->count,0);
   if(rv < p->count) {
