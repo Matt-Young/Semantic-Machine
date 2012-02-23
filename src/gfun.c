@@ -268,6 +268,8 @@ int ugly_handler(Triple *top){
       v1.key = new_string(v0.key);
       if(EV_Data &  machine_step(stmt) ) 
         machine_triple(stmt,&v2);
+      else
+        return 0;
         if(G_isdigit(v2.key[0])) 
           add_trio( 
           v1.key ,

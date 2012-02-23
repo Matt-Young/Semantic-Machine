@@ -9,7 +9,7 @@ the lab configuratio, the threads only and the netio
 #define DebugPrint 
 
 
-
+int http_hdr_grunge(char * buff,int *len,char ** type) ;
 #include "./include/config.h"
 #include "../socketx/socket_x.h"
 
@@ -34,21 +34,38 @@ Pending pendings[NTHREAD];
 int thread_count=0;
 int triple(Triple *top,Handler);
 int header_magic(int newfd,int * count) {
-  char inbuffer[HEADER_SIZE];
-  int rv; int type;
+  char inbuffer[HEADER_SIZE*20];
+  int rv; int type; char * header;char * data; char * content; int len;int i;
   type = -1;
-  rv = recv(newfd, inbuffer, HEADER_SIZE,0);
+  
+ 
+/*    content=done}
+  else if(!application  && strstr(const char* cs, "Application/json")
+    application doen
+  else if(clength && application)
+  if(strstr(const char* cs, "\r\n\r\n") 
+    ee read more
+    */
+
+  rv = recv(newfd, inbuffer, HEADER_SIZE*20,0);
+  http_hdr_grunge(inbuffer,&len,&content,&data);
+  // send(newfd, OK_MSG, strlen(OK_MSG), 0);
+  /*for(i=0;i < len;i++) printf("%c",data[i]);
+  
+   //fwrite(strstr(inbuffer, "Content",1,7),stdout);
   if(rv != -1 && rv == HEADER_SIZE) {
     if(!strncmp(inbuffer,JSON_TYPE,MAGIC_SIZE)) type = Json_IO;
     else if(!strncmp(inbuffer,BSON_TYPE,MAGIC_SIZE)) type = Bson_IO;
     else if(!strncmp(inbuffer,BSON_TYPE,MAGIC_SIZE)) type = Qson_IO;
   }
+  */
+  if(count ) type = Json_IO; else type = -1;
   if(type != -1)
     sscanf(inbuffer+ MAGIC_SIZE,"%8d",count);
   else
     *count=0;
-  printf("\nCOUNT ");
-  fwrite(inbuffer,1,*count,stdout);
+ // printf("\nCount %d Type %d\n ",rv,type);
+//  fwrite(inbuffer,1,*count,stdout);
   return (type);
 }
 int event_handler(Triple *t);
@@ -59,13 +76,13 @@ void * handle_data(void * arg) {
   Pending *p = (Pending *) arg;
   fd = p->remote_addr.fd;
   BC.new_thread_count++;
-  G_printf("handler count %d\n",p->count);
+  printf("handler count %d\n",p->count);
   fd = p->remote_addr.fd;
-  dest.buff = (int *) G_malloc(p->count);
+  dest.buff = (int *) malloc(p->count);
   BC.new_data_count++;
   rv = recv(fd, (char *) dest.buff, p->count,0);
   if(rv < p->count) {
-    if((rm = send(fd, BAD_MSG, strlen(OK_MSG), 0)) == -1) 
+    if((rm = send(fd, OK_MSG, strlen(OK_MSG), 0)) == -1) 
       warn("Error sending data to client.");
     closesocket(fd);
   }
@@ -80,7 +97,7 @@ void * handle_data(void * arg) {
      strcpy((char *) dest.addr,"netio");
     system_copy_qson(&p->remote_addr,&dest ); 
     //machine_unlock();
-    G_printf(" Action %d ",status);
+    printf(" Action %d ",status);
 //    print_triple(&t);
   }
  // free(t.key);
@@ -129,7 +146,9 @@ void * net_service (void * port)  {
     type = header_magic(newfd,&count); // Consume header
     printf("Connection %d\n",type);
     if(type < 0) {
-      if((rv = send(newfd, BAD_MSG, strlen(BAD_MSG), 0)) == -1) 
+      if((rv = send(newfd, OK_MSG, strlen(OK_MSG), 0)) == -1) 
+        warn("Error sending data to client.");
+            if((rv = send(newfd, HELLO_MSG, strlen(HELLO_MSG), 0)) == -1) 
         warn("Error sending data to client.");
       closesocket(newfd);
     } else if(type >= 0){
@@ -137,7 +156,7 @@ void * net_service (void * port)  {
       i=0;
       while(pendings[i].count && i < NTHREAD) i++;
       if(i==NTHREAD) {
-        if((rv = send(newfd, PORT_MSG, strlen(PORT_MSG), 0)) == -1)  
+        if((rv = send(newfd, OK_MSG, strlen(PORT_MSG), 0)) == -1)  
           warn("Error sending data to client.");
         closesocket(newfd);
       } 
