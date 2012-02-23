@@ -9,7 +9,7 @@ the lab configuratio, the threads only and the netio
 #define DebugPrint 
 
 
-int http_hdr_grunge(char * buff,int *len,char ** type) ;
+int http_hdr_grunge(char * buff,int *len,char ** type,char ** data) ;
 #include "./include/config.h"
 #include "../socketx/socket_x.h"
 
@@ -35,37 +35,18 @@ int thread_count=0;
 int triple(Triple *top,Handler);
 int header_magic(int newfd,int * count) {
   char inbuffer[HEADER_SIZE*20];
-  int rv; int type; char * header;char * data; char * content; int len;int i;
+  int rv; int type; char * data; char * content; int len;int i;
   type = -1;
-  
- 
-/*    content=done}
-  else if(!application  && strstr(const char* cs, "Application/json")
-    application doen
-  else if(clength && application)
-  if(strstr(const char* cs, "\r\n\r\n") 
-    ee read more
-    */
 
-  rv = recv(newfd, inbuffer, HEADER_SIZE*20,0);
+  i=4;
+  rv = recv(newfd, inbuffer,4,0);
+    do {
+  rv = recv(newfd, &inbuffer[i],4,0);
+  i += 4;
+    } while(!strstr(&inbuffer[i-8],"\r\n\r\n"));
   http_hdr_grunge(inbuffer,&len,&content,&data);
-  // send(newfd, OK_MSG, strlen(OK_MSG), 0);
-  /*for(i=0;i < len;i++) printf("%c",data[i]);
-  
-   //fwrite(strstr(inbuffer, "Content",1,7),stdout);
-  if(rv != -1 && rv == HEADER_SIZE) {
-    if(!strncmp(inbuffer,JSON_TYPE,MAGIC_SIZE)) type = Json_IO;
-    else if(!strncmp(inbuffer,BSON_TYPE,MAGIC_SIZE)) type = Bson_IO;
-    else if(!strncmp(inbuffer,BSON_TYPE,MAGIC_SIZE)) type = Qson_IO;
-  }
-  */
-  if(count ) type = Json_IO; else type = -1;
-  if(type != -1)
-    sscanf(inbuffer+ MAGIC_SIZE,"%8d",count);
-  else
-    *count=0;
- // printf("\nCount %d Type %d\n ",rv,type);
-//  fwrite(inbuffer,1,*count,stdout);
+
+  if(count > 0 ) type = Json_IO; else type = -1;
   return (type);
 }
 int event_handler(Triple *t);
