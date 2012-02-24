@@ -15,7 +15,7 @@
 #include "../src/include/all.h"
 
 #ifndef DBG_ENGINE
-#define G_buff_counts
+//#define G_buff_counts
 #define G_printf
 #endif
 // Will be shared Protected

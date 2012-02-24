@@ -1,4 +1,5 @@
 // Console, set up
+#undef BUFFER_TRACKING
 #include "../src/include/config.h"
 #include "../src/include/g_types.h"
 #include "../src/include/names.h"
@@ -165,12 +166,13 @@ void G_buff_counts(){
   printf("D: %d %d",BC.del_data_count,BC.new_data_count);
    printf("Names: %d %d\n",BC.del_name_count,BC.new_name_count);
 }
+#define BUFFER_TRACKING
 #ifdef BUFFER_TRACKING
 #define free G_free_buff
 #define malloc G_new_buff
 #endif
 int * G_InitConsole(IO_Structure * console) {
-  console->buff = (int *) malloc(Line_size,1);
+  console->buff = (int *) malloc(Line_size);
   memset(console->buff,0,Line_size);
 	console->size=Line_size;
 	console->empty= (char *)console->buff;
@@ -201,10 +203,9 @@ if(!anchor)
 if(BC.del_web_count >= BC.new_web_count)
   printf("web count error \n");
 if(w->buff ) { 
-  if( w->sa_family != AF_TABLE)
-    mem_delete( w);
-  else
-    release_table_context( w->buff);
+  if( w->sa_family == AF_TABLE)
+       release_table_context( w->buff);
+  else mem_delete( w);
 }
 anchor = w->link;
 free(w);
@@ -230,7 +231,7 @@ int mem_delete(IO_Structure *w) {
     free(w->buff);
   }
   else 
-    free((int*)w->buff);
+    free(w->buff);
   w->buff=0;
   return 0;
 }

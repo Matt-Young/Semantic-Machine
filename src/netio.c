@@ -1,13 +1,11 @@
 /*
-engine netio start up
+engine netio 
 git push git@github.com:Matt-Young/Semantic-Machine
 
-In the lab, stand alone configuration runs under windows studio on the cheap
-setting either threads or netio then you need to run under cygwin or under linux.
-the lab configuratio, the threads only and the netio
+It uses a header interface to perform the compile
+switch between windows and linux
 */
-#define DebugPrint 
-
+#define BUFFER_TRACKING
 #include "./include/config.h"
 #include "../src/include/g_types.h"
 #include "../socketx/socket_x.h"
@@ -16,18 +14,17 @@ the lab configuratio, the threads only and the netio
 int set_web_addr(IO_Structure *,int );
 #define error printf
 #define warn printf
-#define NTHREAD 16 
-
-/* Globals */
-int sockfd = -1;
+#define error printf
 static void crit(char * message);
+
+// Hold the context of a finite set of threads
 typedef struct  { 
   int count;
   int type;
   int fd;
   struct sockaddr_in remote_addr;
 } TH_Struct;  // Holds things a thread needs
-TH_Struct  thread_context[NTHREAD];
+TH_Struct  thread_context[THREAD_MAX];
 int thread_count=0;
 int triple(Triple *top,Handler);
 int header_magic(int newfd,int * count) {
@@ -45,24 +42,24 @@ int header_magic(int newfd,int * count) {
   http_hdr_grunge(inbuffer,&len,&content,&type);
   *count = len;
   //if(*count > 0 ) type = Json_IO; else type = -1;
-  printf("\n content: %s type %d count &d\n",content,type,len);
+  printf("type %d count %d\n",type,len);
+
   return (type);
 }
-
+ int init_run_table(IO_Structure *);
+ void G_buff_counts();
 void * handle_data(void * arg) {
   int status=0; char * buff;
-    int fd;int rv,rm;
+    int fd,rv;
     IO_Structure *from,*to;
 TH_Struct *p = (TH_Struct *) arg;
   fd = p->fd;
   BC.new_thread_count++;
   printf("handler count %d\n",p->count);
   buff = (char *) malloc(p->count+4);
-  BC.new_data_count++;
   rv = recv(fd, (char* )buff, p->count,0);
   if(rv < p->count) {
-    if((rm = send(fd, OK_MSG, strlen(OK_MSG), 0)) == -1) 
-      warn("Error sending data to client.");
+send_valid_http_msg(fd) ;
     free(buff);
     closesocket(fd);
   }
@@ -72,7 +69,6 @@ TH_Struct *p = (TH_Struct *) arg;
     from = new_IO_Struct();
     to = new_IO_Struct();
     machine_lock();
-//     set_web_addr(&p->remote_addr,sizeof(p->remote_addr));
     memcpy(from->addr,&p->remote_addr,sizeof(struct sockaddr_in));
      to->sa_family = AF_TABLE;
      from->sa_family= AF_INET;
@@ -80,16 +76,15 @@ TH_Struct *p = (TH_Struct *) arg;
      from->buff = (int *) buff;
      strcpy((char *) to->addr,"netio");  // Table name
     system_copy_qson(from,to); 
+     //init_run_table(to);
     machine_unlock();
-   if((rm = send(fd, OK_MSG, strlen(OK_MSG), 0)) == -1) 
-      warn("Error sending data to client.");
+send_valid_http_msg(fd) ;
      del_io_structs();
     post_io_struct();
     closesocket(fd);
+          G_buff_counts();
     printf(" Action %d ",status);
   }
- // free(t.key);
-  BC.del_data_count++;
   BC.del_thread_count++;
   p->count = 0;
   return 0;
@@ -101,17 +96,17 @@ static void crit(char * message) {
 }
 
 void * net_service (void * port)  {
-  TH_Struct thread_context[NTHREAD];
+  TH_Struct thread_context[THREAD_MAX];
   int sockfd = -1;
   int status=0;
   struct sockaddr_in my_addr;
-   struct sockaddr_in remote_addr;
+//   struct sockaddr_in remote_addr;
   int newfd,count,type;
-  int i, rv,sin_size;
+  int thread_index,sin_size;
   pthread_t thread;
   printf("Net Service\n");
   memset(thread_context,0,sizeof(thread_context));
-  SocketStart();
+  SocketStart();  // Linux dummy call, WAS all for windows
   sockfd = socket (AF_INET, SOCK_STREAM, 0);
   if(sockfd == -1) printf("Couldn't create socket.");
   memset (&(my_addr.sin_zero),0, sizeof(my_addr));
@@ -127,40 +122,37 @@ void * net_service (void * port)  {
   printf("Listening for connections on port %d...\n", port);
 
   while(1) {
-   // i=0;while(thread_context[i].count && i < NTHREAD) i++;
+    thread_index=0;
+    while(thread_context[thread_index].count && thread_index < THREAD_MAX) thread_index++;
+    if(thread_index== THREAD_MAX) {
+      wait_io_struct();
+      post_io_struct();
+      warn("Error sending data to client.");
+
+      continue;}
     newfd = accept(sockfd, 
-      (struct sockaddr *) &remote_addr, 
-    &sin_size);
-    if(newfd == -1) printf("Couldn't accept connection!");
-        printf("Connection %d\n",sin_size);
+      (struct sockaddr *) &thread_context[thread_index].remote_addr, 
+      &sin_size);
+    if(newfd == -1) { 
+      printf("Couldn't accept connection!"); 
+      continue; }
+     printf("\n Connection! \n");
     type = header_magic(newfd,&count); // Consume header
 
     if(type < 0) {
-      if((rv = send(newfd, OK_MSG, strlen(OK_MSG), 0)) == -1) 
-        warn("Error sending data to client.");
-            if((rv = send(newfd, HELLO_MSG, strlen(HELLO_MSG), 0)) == -1) 
-        warn("Error sending data to client.");
+      send_valid_http_msg(newfd) ;
       closesocket(newfd);
     } else if(type >= 0){
-      printf("Count: %d\n",count);
-      i=0;
-
-      if(i==NTHREAD) {
-        if((rv = send(newfd, OK_MSG, strlen(PORT_MSG), 0)) == -1)  
-          warn("Error sending data to client.");
-        closesocket(newfd);
-      } 
-      else {
-        printf("Doing %d\n",status);
-        thread_context[i].type = type; 
-        thread_context[i].count = count;
-         thread_context[i].fd = newfd;
-        status = pthread_create(&thread,0,handle_data, &thread_context[i]);//&thread_context[i]);
-        printf("Done %d\n",status);
-      }
+      thread_context[thread_index].type = type; 
+      thread_context[thread_index].count = count;
+      thread_context[thread_index].fd = newfd;
+      status = pthread_create(
+        &thread,0,handle_data, 
+        &thread_context[thread_index]);
+      printf("Done %d\n",status);
     }
   }
-  return 0;
+return 0;
 }
 
 int net_start(void * port) {
@@ -176,9 +168,8 @@ int net_start(void * port) {
   return 0;
 }
 
-#define error printf
+
 // Little sender
-int Sqlson_to_Bson(Triple t[],char ** buff);
 int send_buff(char *buffer,int count,void * ip_addr)
 {
   struct sockaddr_in ip4addr;

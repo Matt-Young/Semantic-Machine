@@ -13,5 +13,11 @@
 #define WINDOWS
 #define TESTFILE "/test.txt"
 #define TESTDIR "c:/soft/testfiles"
-#define BUFFER_TRACKING
+#define THREAD_MAX 16 
+#ifdef BUFFER_TRACKING
+//void G_free_buff(void* p);
+//void* G_new_buff(int size);
+#define malloc G_new_buff
+#define free G_free_buff
+#endif
 

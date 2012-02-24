@@ -87,19 +87,19 @@ int json_rules(char cin, PGRAPH *inner);
 Triple prev,current,next;
 unsigned int cprev,ccurr,cnext;
 
-#define ParserHeader "table:parser"
+#define ParserHeader "parser"
 int parser(char * Json, TABLE *table) {
 	int nchars;
 	PGRAPH *inner; // points to first child
   G_printf("\nparse start\n");
 	inner = (PGRAPH *) &table->list;
 	nchars=0;cprev=1,ccurr=1,cnext=1;
-  (*inner)->context=(void *) ':';
+  (*inner)->context=(void *) '_';
   (*inner)->table=table;
   prev = _null_graph;
   current.key = ParserHeader;
-  current.link = ':';
-  ccurr = ':';
+  current.link = '_';
+  ccurr = '_';
 	while(nchars >= 0) {
     nchars = G_keyop(&Json,&next);
 		next.pointer=1;

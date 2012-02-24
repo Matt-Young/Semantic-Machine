@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#define BUFFER_TRACKING
 #include "../src/include/config.h"
 #include "../src/include/g_types.h"
 #include "../src/include/names.h"
@@ -14,12 +14,7 @@
 #define G_printf
 #endif
 int parser(char * ,TABLE *);  
-#ifdef BUFFER_TRACKING
-void G_free_buff(void* p);
-void* G_new_buff(int size);
-#define malloc G_new_buff
-#define free G_free_buff
-#endif
+
 //*******************************
 // Qson Switch
 //***********************
