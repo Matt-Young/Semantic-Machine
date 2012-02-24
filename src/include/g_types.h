@@ -34,9 +34,9 @@ typedef struct IO_Structure {
   long addr[5]; int fd; int format;
   int * buff; int count; int size; char * fill; char * empty;struct  IO_Structure *link; 
   } IO_Structure;
-  IO_Structure * new_webaddr();
-  IO_Structure * del_webaddr(IO_Structure *);
-  void del_webaddrs();
+  IO_Structure * new_IO_Struct();
+  IO_Structure * del_IO_Struct(IO_Structure *);
+  void del_IO_Structs();
   int mem_delete(IO_Structure *w);
 
 
@@ -47,7 +47,10 @@ typedef struct IO_Structure {
 #define AF_TABLE   0x70e1
 #define AF_MEMORY  0x70e0
 int system_copy_qson(IO_Structure *,IO_Structure * );
-
+void init_io_struct();
+void wait_io_struct();
+void post_io_struct();
+void del_io_structs();
 // Two sub types on IO_Structure
 enum SerializedFormat { Json_IO,Bson_IO,Qson_IO};
 

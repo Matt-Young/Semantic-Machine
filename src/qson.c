@@ -36,7 +36,7 @@ int   table_to_Json(TABLE *t,IO_Structure * to) {
   // set some stuf up to restore Json brackets
   struct {int count;int total;} brk[8];int cur; char prev;
   int len; int i,rows;
-  Triple Qin;char * key_value;char tmp[9];
+  Triple Qin;char tmp[9];
   Code stmt;
   cur = 0;
   start_table(t,select_operator);

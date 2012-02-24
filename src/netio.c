@@ -9,13 +9,11 @@ the lab configuratio, the threads only and the netio
 #define DebugPrint 
 
 
-int http_hdr_grunge(char * buff,int *len,char ** type,char ** data) ;
+int http_hdr_grunge(char * buff,int *len,char ** type) ;
 #include "./include/config.h"
-#include "../socketx/socket_x.h"
-
 #include "../src/include/g_types.h"
-#include "../src/include/config.h"
-//#include "../src/include/engine.h"
+#include "../socketx/socket_x.h"
+#include "../src/include/machine.h"
 #include "../src/include/http_hdrs.h"
 int set_web_addr(IO_Structure *,int );
 #define error printf
@@ -25,61 +23,69 @@ int set_web_addr(IO_Structure *,int );
 /* Globals */
 int sockfd = -1;
 static void crit(char * message);
-typedef struct { 
-  IO_Structure remote_addr; 
+typedef struct  { 
   int count;
   int type;
-} Pending;  // Holds things a thread needs
-Pending pendings[NTHREAD];
+  int fd;
+  struct sockaddr_in remote_addr;
+} TH_Struct;  // Holds things a thread needs
+TH_Struct  thread_context[NTHREAD];
 int thread_count=0;
 int triple(Triple *top,Handler);
 int header_magic(int newfd,int * count) {
-  char inbuffer[HEADER_SIZE*20];
-  int rv; int type; char * data; char * content; int len;int i;
+  char inbuffer[HEADER_SIZE];
+  int rv; int type; char * content; int len;int i;
   type = -1;
 
-  i=4;
+  i=4; memset(inbuffer,0,sizeof(inbuffer));
   rv = recv(newfd, inbuffer,4,0);
-    do {
-  rv = recv(newfd, &inbuffer[i],4,0);
-  i += 4;
-    } while(!strstr(&inbuffer[i-8],"\r\n\r\n"));
-  http_hdr_grunge(inbuffer,&len,&content,&data);
-
-  if(count > 0 ) type = Json_IO; else type = -1;
+  while(!strstr(&inbuffer[i-4],"\r\n\r\n")) {
+  rv = recv(newfd, &inbuffer[i],1,0);
+  i += 1;
+    }
+  http_hdr_grunge(inbuffer,&len,&content);
+  *count = len;
+  if(*count > 0 ) type = Json_IO; else type = -1;
   return (type);
 }
-int event_handler(Triple *t);
+
 void * handle_data(void * arg) {
-  int status=0;
+  int status=0; void * buff;
     int fd;int rv,rm;
-    IO_Structure dest;
-  Pending *p = (Pending *) arg;
-  fd = p->remote_addr.fd;
+    IO_Structure *from,*to;
+TH_Struct *p = (TH_Struct *) arg;
+  fd = p->fd;
   BC.new_thread_count++;
   printf("handler count %d\n",p->count);
-  fd = p->remote_addr.fd;
-  dest.buff = (int *) malloc(p->count);
+  buff = (int *) malloc(p->count);
   BC.new_data_count++;
-  rv = recv(fd, (char *) dest.buff, p->count,0);
+  rv = recv(fd, (char* )buff, p->count,0);
   if(rv < p->count) {
     if((rm = send(fd, OK_MSG, strlen(OK_MSG), 0)) == -1) 
       warn("Error sending data to client.");
+    free(buff);
     closesocket(fd);
   }
   else {
     if((rm = send(fd, OK_MSG, strlen(OK_MSG), 0)) == -1) 
       warn("Error sending data to client.");
+ 
+    wait_io_struct();
+    from = new_IO_Struct();
+    to = new_IO_Struct();
+    machine_lock();
+//     set_web_addr(&p->remote_addr,sizeof(p->remote_addr));
+    memcpy(from->addr,&p->remote_addr,sizeof(struct sockaddr_in));
+     to->sa_family = AF_TABLE;
+     from->count = p->count;
+     from->buff = (int *) buff;
+     strcpy((char *) to->addr,"netio");  // Table name
+    system_copy_qson(from,to); 
+    machine_unlock();
+    del_io_structs();
+    post_io_struct();
     closesocket(fd);
-    //machine_lock();
-     set_web_addr(&p->remote_addr,sizeof(p->remote_addr));
-     dest.sa_family = AF_TABLE;
-     p->remote_addr.count = p->count;
-     strcpy((char *) dest.addr,"netio");
-    system_copy_qson(&p->remote_addr,&dest ); 
-    //machine_unlock();
     printf(" Action %d ",status);
-//    print_triple(&t);
   }
  // free(t.key);
   BC.del_data_count++;
@@ -94,16 +100,15 @@ static void crit(char * message) {
 }
 
 void * net_service (void * port)  {
-  Pending pendings[NTHREAD];
+  TH_Struct thread_context[NTHREAD];
   int sockfd = -1;
   int status=0;
   struct sockaddr_in my_addr;
-  struct sockaddr_in remote_addr;
   int newfd,count,type;
   int i, rv,sin_size;
   pthread_t thread;
   printf("Net Service\n");
-  memset(pendings,0,sizeof(pendings));
+  memset(thread_context,0,sizeof(thread_context));
   SocketStart();
   sockfd = socket (AF_INET, SOCK_STREAM, 0);
   if(sockfd == -1) printf("Couldn't create socket.");
@@ -116,14 +121,15 @@ void * net_service (void * port)  {
     error("Stern: Couldn't bind to specified port.");
   sin_size = sizeof(struct sockaddr_in);
   if(listen(sockfd, 25) == -1) printf("Couldn't listen on specified port.");
-  memset(pendings,0,sizeof(pendings));
+  memset(thread_context,0,sizeof(thread_context));
   printf("Listening for connections on port %d...\n", port);
 
   while(1) {
-    newfd = accept(sockfd, (struct sockaddr *)&remote_addr, &sin_size);
+    i=0;while(thread_context[i].count && i < NTHREAD) i++;
+    newfd = accept(sockfd, 
+      (struct sockaddr *) &thread_context[i].remote_addr, 
+    &sin_size);
     if(newfd == -1) printf("Couldn't accept connection!");
-
-
     type = header_magic(newfd,&count); // Consume header
     printf("Connection %d\n",type);
     if(type < 0) {
@@ -135,7 +141,7 @@ void * net_service (void * port)  {
     } else if(type >= 0){
       printf("Count: %d\n",count);
       i=0;
-      while(pendings[i].count && i < NTHREAD) i++;
+
       if(i==NTHREAD) {
         if((rv = send(newfd, OK_MSG, strlen(PORT_MSG), 0)) == -1)  
           warn("Error sending data to client.");
@@ -143,11 +149,10 @@ void * net_service (void * port)  {
       } 
       else {
         printf("Doing %d\n",status);
-        pendings[i].type = type; 
-        pendings[i].count = count;
-        memcpy(&pendings[i].remote_addr,&remote_addr,sizeof(remote_addr));
-         pendings[i].remote_addr.fd = newfd;
-        status = pthread_create(&thread,0,handle_data, &pendings[i]);//&pendings[i]);
+        thread_context[i].type = type; 
+        thread_context[i].count = count;
+         thread_context[i].fd = newfd;
+        status = pthread_create(&thread,0,handle_data, &thread_context[i]);//&thread_context[i]);
         printf("Done %d\n",status);
       }
     }

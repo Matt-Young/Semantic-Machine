@@ -34,7 +34,3 @@ void G_buff_counts();
 void G_qsort( void * base, int n, int size);
 void * G_bsearch(const void * key,const void* base,int n, int size);
 void G_graph_counts();
-void init_io_struct();
-void wait_io_struct();
-void post_io_struct();
-void del_io_structs();

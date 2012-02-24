@@ -289,7 +289,7 @@ Trio engine_trios[] = {
     for(;;) {
       G_console(&from);
       machine_lock();
-       to = new_webaddr();
+       to = new_IO_Struct();
       to->sa_family = AF_TABLE;
       G_strcpy((char *) to->addr,"console"); 
       system_copy_qson(from,to);

@@ -96,7 +96,7 @@ int run_table(TABLE * t,Handler handler){
 
 int init_run_table(IO_Structure * w) {
   int status; Triple *t;
-  TABLE * table = w->buff;
+  TABLE * table = (TABLE *) w->buff;
   if(!table)
     G_printf("No table\n");
   else {

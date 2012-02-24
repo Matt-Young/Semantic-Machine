@@ -1,9 +1,6 @@
-/**
- * ... Magic headers
- */
 
 #define JSON_TYPE "application/json"
-#define BSON_TYPE ":application/bson"
+#define BSON_TYPE "application/bson"
 #define QSON_TYPE "application/qson"
 #define MULTI_TYPE "multipart/form-data"
 #define OK_MSG    "HTTP/1.0 200 OK\r\nContent-Type:text/html\r\nContent-Length:000\r\n\r\n"

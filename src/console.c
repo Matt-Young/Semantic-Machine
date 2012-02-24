@@ -132,7 +132,7 @@ int G_console(IO_Structure * *out) {
     if(  (cin == '\n') &&  ( (cprev == '\n') ||  (left == right)) ) {
       IO_Structure *w;
       wait_io_struct();
-      w = new_webaddr();
+      w = new_IO_Struct();
       *out = w;
       console.link = w->link;
       *w = console;
@@ -184,7 +184,7 @@ int * G_InitConsole(IO_Structure * console) {
 	return (int *) console->buff;
 }
 IO_Structure *anchor;
-IO_Structure * new_webaddr(){
+IO_Structure * new_IO_Struct(){
   IO_Structure * w = (IO_Structure *) malloc(sizeof(IO_Structure));
   memset(w,0,sizeof(IO_Structure));
   if(anchor)
