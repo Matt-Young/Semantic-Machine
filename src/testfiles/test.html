@@ -2,6 +2,7 @@
  <head>                   
 <link rel="shortcut icon" href="#" /> 
  <script type="text/javascript" >   
+ document.domain=localhost
 function displayDate()
 {
 document.getElementById("demo").innerHTML=Date();
@@ -10,25 +11,22 @@ document.getElementById("demo").innerHTML=Date();
    // This function is built based off code that can be found here: http://msdn.microsoft.com/library/default.asp?url=/workshop/author/dhtml/overview/aboutxmlhttp.asp
     function http_io()
     {
-
+document.getElementById("output").innerHTML= "no Text";
     obj = new XMLHttpRequest();
 	obj.onreadystatechange = function() {
 	//alert('on change ' + obj.status + obj.getAllResponseHeaders());
 	 if (obj.readyState==4) {
 	 if (obj.status!=404) {
-    alert(obj.responseText);
+	 //document.getElementById("output").innerHTML= "Got Text";
+    document.getElementById("output").innerHTML = obj.responseText;
    } else {
     alert("Whoops");
    }
  }
    }
-	//alert('new ' + obj.readyState);
-	 obj.open("POST", "http://localhost:8000", true);
-	// alert('open ' + obj.readyState);
-	 obj.setRequestHeader( "Content-Type", "multipart/form-data");
-	obj.send( document.getElementById("input").value); //text/plain;charset=UTF-8;charset=UTF-8
-	//obj.send();
-	alert("sent " + obj.readyState);
+	 obj.open("POST", "/c:/soft/test.html", true);
+	 obj.setRequestHeader( "Content-Type", "application/json");
+	obj.send( document.getElementById("input").value); 
     }
 
 
@@ -36,25 +34,17 @@ document.getElementById("demo").innerHTML=Date();
  
  </head>                                                                 
  <body onload=""> 
- </h1> Hello World</h1>
- <form action="http://localhost:8000/index.html" method=POST enctype = "multipart/form-data">
-    <p>
-   Name: <input id = "demo1"type="text" name="New"value="hello from the browser" size="25" maxlength="50" />
-   </p>
-<input type="submit" name="submit" value="Submit" />
- </form>
- <textarea id = "input" rows="2" cols="20">
-Some input
-</textarea>
-  <a href="" onClick=http_io()>Link</a>    
- <p id="demo2">Hello this is a dem</p>
- <p >Hello this is a dem</p>
+ </h1> Lazy J</h1>
 
-<script type="text/javascript" >
-//displayDate();//<form action="http://www.w3schools.com/html/html_form_action.asp" method=GET>
-//document.getElementById("demo").innerHTML=http_io();
-</script>
-
+ <textarea id = "input" rows="2" cols="20" >
+ {Some,input.and,more}
+ </textarea>
+ 
+   <input type="submit" onClick=http_io()></input>   
+ <textarea id = "output" rows="2" cols="20" enctype = "text/plain">
+ 
+ </textarea>
+ 
  <a href="" onClick=http_io()>Link</a>                                   
  </body>                                                                 
  </html>
