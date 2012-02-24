@@ -26,7 +26,6 @@ typedef struct  {
 } TH_Struct;  // Holds things a thread needs
 TH_Struct  thread_context[THREAD_MAX];
 int thread_count=0;
-int triple(Triple *top,Handler);
 int header_magic(int newfd,int * count) {
   char inbuffer[HEADER_SIZE];
   int rv; int type; char * content; int len;int i;
@@ -34,11 +33,13 @@ int header_magic(int newfd,int * count) {
 
   i=4; memset(inbuffer,0,sizeof(inbuffer));
   rv = recv(newfd, inbuffer,4,0);
-  if(rv == 0 ) return 0;
+  if(rv <= 0 ) {printf("Bad Header\n");return 0;}
   while(!strstr(&inbuffer[i-4],"\r\n\r\n")) {
   rv = recv(newfd, &inbuffer[i],1,0);
+  if(rv <= 0 ) {printf("Bad Header\n");return 0;}
   i += 1;}
   inbuffer[i] = 0;
+  for(len=0;len < i;len++) printf("%c",inbuffer[len]);
   http_hdr_grunge(inbuffer,&len,&content,&type);
   *count = len;
   //if(*count > 0 ) type = Json_IO; else type = -1;
@@ -55,15 +56,17 @@ void * handle_data(void * arg) {
 TH_Struct *p = (TH_Struct *) arg;
   fd = p->fd;
   BC.new_thread_count++;
-  printf("handler count %d\n",p->count);
+  //printf("handler count %d\n",p->count);
   buff = (char *) malloc(p->count+4);
   rv = recv(fd, (char* )buff, p->count,0);
   if(rv < p->count) {
 send_valid_http_msg(fd) ;
     free(buff);
     closesocket(fd);
+        printf(" Bad data \n");
   }
   else {
+    printf(" Good data \n");
     buff[p->count]=0;
     wait_io_struct();
     from = new_IO_Struct();
@@ -76,6 +79,7 @@ send_valid_http_msg(fd) ;
      from->buff = (int *) buff;
      strcpy((char *) to->addr,"netio");  // Table name
     system_copy_qson(from,to); 
+       printf(" Action\n ");
      //init_run_table(to);
     machine_unlock();
 send_valid_http_msg(fd) ;
@@ -83,7 +87,7 @@ send_valid_http_msg(fd) ;
     post_io_struct();
     closesocket(fd);
           G_buff_counts();
-    printf(" Action %d ",status);
+ 
   }
   BC.del_thread_count++;
   p->count = 0;
@@ -109,7 +113,7 @@ void * net_service (void * port)  {
   SocketStart();  // Linux dummy call, WAS all for windows
   sockfd = socket (AF_INET, SOCK_STREAM, 0);
   if(sockfd == -1) printf("Couldn't create socket.");
-  memset (&(my_addr.sin_zero),0, sizeof(my_addr));
+  memset (&(my_addr),0, sizeof(my_addr));
   my_addr.sin_family = AF_INET;
   my_addr.sin_port = htons ((int) port);
   my_addr.sin_addr.s_addr = INADDR_ANY;
@@ -136,13 +140,15 @@ void * net_service (void * port)  {
     if(newfd == -1) { 
       printf("Couldn't accept connection!"); 
       continue; }
-     printf("\n Connection! \n");
+
     type = header_magic(newfd,&count); // Consume header
 
-    if(type < 0) {
+    if(type < 0 || count == 0) {
       send_valid_http_msg(newfd) ;
       closesocket(newfd);
+     printf("\n Rejection! \n");
     } else if(type >= 0){
+      printf("\n Connection! \n");
       thread_context[thread_index].type = type; 
       thread_context[thread_index].count = count;
       thread_context[thread_index].fd = newfd;

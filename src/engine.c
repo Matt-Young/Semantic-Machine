@@ -16,7 +16,7 @@
 
 #ifndef DBG_ENGINE
 //#define G_buff_counts
-#define G_printf
+//#define G_printf
 #endif
 // Will be shared Protected
 OP operands[OperatorMaximum];
@@ -181,7 +181,7 @@ int  machine_set_operator(Triple top[],Handler handler) {
 		G_printf("Debug event ");
 	set_ready_code(opid);
   events = set_ready_event(events);
-  G_printf("New Operator %s %d %d\n",top[0].key,top[0].link,top[0].pointer);
+  //G_printf("New Operator %s %d %d\n",top[0].key,top[0].link,top[0].pointer);
   return events;
 }
 int  machine_new_operator(Triple top[],Handler handler) {
@@ -335,43 +335,45 @@ int port = TEST_PORT;
 int main(int argc, char * argv[]) {
   int i;
   G_memset((char *) &BC,0,sizeof(BufferCount));
-
+  G_printf("Main engine\n");
   for(i=1; i < argc;i++) {
-     G_printf("Arg: %s\n",argv[i]);
+    G_printf("Arg: %s\n",argv[i]);
     if(!G_strcmp(argv[i], "-V")) {
       G_printf("You are using %s.\n",VERSION);
       G_exit();
-    } else if( !G_strcmp(argv[i], "--help")  || !G_strcmp(argv[i], "-h") ) {
+    } 
+    if( !G_strcmp(argv[i], "--help")  || !G_strcmp(argv[i], "-h") ) {
       G_printf("Usage: graphs\n");
       G_printf("\n");
       G_printf("Please see https://github.com/Matt-Young/Semantic-Machine/wiki .\n");
-    } else if(!G_strcmp(argv[i], "-port") )
-  {  G_printf("Port changed %s\n",argv[i+1]);port = G_strtol(argv[i+1]); i++;}
-   else if(!G_strcmp(argv[i], "-file") ) {
-  IO_Structure c;
-  c.buff = (int *) G_malloc(400);
-  G_InitConsole(&c);
-  console_file(&c,argv[i+1]); 
-  G_free(c.buff);
-    return(0);
-   }
-
-      G_printf("Port %d\n",port);
-     engine_init();
-		// Main loop
-
-     print_trios();
+       G_exit();
+    } 
+    if(!G_strcmp(argv[i], "-port") )
+    {  G_printf("Port changed %s\n",argv[i+1]);port = G_strtol(argv[i+1]); i++;}
+    else if(!G_strcmp(argv[i], "-file") ) {
+      IO_Structure c;
+      c.buff = (int *) G_malloc(400);
+      G_InitConsole(&c);
+      G_printf("File %s\n",argv[i+1]);
+          engine_init();
+      console_file(&c,argv[i+1]); 
+      G_free(c.buff);
+      return(0);
+    }
+  }
+    G_printf("Port %d\n",port);
+    engine_init();
+   // print_trios();
     net_start((void *) port);
-   G_printf("Main engine\n");
-	  console_loop();
-   }
-		return(0);
-	}
-	void print_triple(Triple *t) { 
-		G_printf(" %10s %c %4d  ",t->key,t->link,t->pointer);}
-	// his is a little debgger, and stays ith this file
-	Handler g_debugger(Triple *t) {
-		print_triple(t);
-		return 0;
-	}
-  
+    G_printf("Main engine\n");
+    console_loop();
+  return(0);
+}
+void print_triple(Triple *t) { 
+  G_printf(" %10s %c %4d  ",t->key,t->link,t->pointer);}
+// his is a little debgger, and stays ith this file
+Handler g_debugger(Triple *t) {
+  print_triple(t);
+  return 0;
+}
+
