@@ -8,8 +8,6 @@ the lab configuratio, the threads only and the netio
 */
 #define DebugPrint 
 
-
-int http_hdr_grunge(char * buff,int *len,char ** type) ;
 #include "./include/config.h"
 #include "../src/include/g_types.h"
 #include "../socketx/socket_x.h"
@@ -39,13 +37,15 @@ int header_magic(int newfd,int * count) {
 
   i=4; memset(inbuffer,0,sizeof(inbuffer));
   rv = recv(newfd, inbuffer,4,0);
+  if(rv == 0 ) return 0;
   while(!strstr(&inbuffer[i-4],"\r\n\r\n")) {
   rv = recv(newfd, &inbuffer[i],1,0);
-  i += 1;
-    }
-  http_hdr_grunge(inbuffer,&len,&content);
+  i += 1;}
+  inbuffer[i] = 0;
+  http_hdr_grunge(inbuffer,&len,&content,&type);
   *count = len;
-  if(*count > 0 ) type = Json_IO; else type = -1;
+  //if(*count > 0 ) type = Json_IO; else type = -1;
+  printf("\n content: %s type %d count &d\n",content,type,len);
   return (type);
 }
 
@@ -77,6 +77,7 @@ TH_Struct *p = (TH_Struct *) arg;
 //     set_web_addr(&p->remote_addr,sizeof(p->remote_addr));
     memcpy(from->addr,&p->remote_addr,sizeof(struct sockaddr_in));
      to->sa_family = AF_TABLE;
+       from->sa_family== AF_INET;
      from->count = p->count;
      from->buff = (int *) buff;
      strcpy((char *) to->addr,"netio");  // Table name
@@ -104,6 +105,7 @@ void * net_service (void * port)  {
   int sockfd = -1;
   int status=0;
   struct sockaddr_in my_addr;
+   struct sockaddr_in remote_addr;
   int newfd,count,type;
   int i, rv,sin_size;
   pthread_t thread;
@@ -125,13 +127,14 @@ void * net_service (void * port)  {
   printf("Listening for connections on port %d...\n", port);
 
   while(1) {
-    i=0;while(thread_context[i].count && i < NTHREAD) i++;
+   // i=0;while(thread_context[i].count && i < NTHREAD) i++;
     newfd = accept(sockfd, 
-      (struct sockaddr *) &thread_context[i].remote_addr, 
+      (struct sockaddr *) &remote_addr, 
     &sin_size);
     if(newfd == -1) printf("Couldn't accept connection!");
+        printf("Connection %d\n",sin_size);
     type = header_magic(newfd,&count); // Consume header
-    printf("Connection %d\n",type);
+
     if(type < 0) {
       if((rv = send(newfd, OK_MSG, strlen(OK_MSG), 0)) == -1) 
         warn("Error sending data to client.");
