@@ -40,7 +40,7 @@ int header_magic(int newfd,int * count) {
   i += 1;}
   inbuffer[i] = 0;
   for(len=0;len < i;len++) printf("%c",inbuffer[len]);
-  http_hdr_grunge(inbuffer,&len,&content,&type);
+  http_hdr_grunge(newfd,inbuffer,&len,&content,&type);
   *count = len;
   //if(*count > 0 ) type = Json_IO; else type = -1;
   printf("type %d count %d\n",type,len);
@@ -60,7 +60,7 @@ TH_Struct *p = (TH_Struct *) arg;
   buff = (char *) malloc(p->count+4);
   rv = recv(fd, (char* )buff, p->count,0);
   if(rv < p->count) {
-send_valid_http_msg(fd) ;
+send_valid_http_msg(fd,0,0) ;
     free(buff);
     closesocket(fd);
         printf(" Bad data \n");
@@ -77,12 +77,14 @@ send_valid_http_msg(fd) ;
      from->sa_family= AF_INET;
      from->count = p->count;
      from->buff = (int *) buff;
+     for(rv=0;rv < p->count;rv++) printf("%c",buff[rv]);
      strcpy((char *) to->addr,"netio");  // Table name
     system_copy_qson(from,to); 
        printf(" Action\n ");
      //init_run_table(to);
     machine_unlock();
-send_valid_http_msg(fd) ;
+if(send_valid_http_msg(fd,0,0) < 0)
+  printf("Client shut\n");
      del_io_structs();
     post_io_struct();
     closesocket(fd);
@@ -131,7 +133,7 @@ void * net_service (void * port)  {
     if(thread_index== THREAD_MAX) {
       wait_io_struct();
       post_io_struct();
-      warn("Error sending data to client.");
+      warn("running out of thread space");
 
       continue;}
     newfd = accept(sockfd, 
@@ -144,9 +146,9 @@ void * net_service (void * port)  {
     type = header_magic(newfd,&count); // Consume header
 
     if(type < 0 || count == 0) {
-      send_valid_http_msg(newfd) ;
+     // send_valid_http_msg(newfd,0,0) ;
       closesocket(newfd);
-     printf("\n Rejection! \n");
+     printf("\n Handled elsewhere \n");
     } else if(type >= 0){
       printf("\n Connection! \n");
       thread_context[thread_index].type = type; 
