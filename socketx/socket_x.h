@@ -1,4 +1,7 @@
 #include <pthread.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <semaphore.h>
 #define WINDOWS
 #ifdef WINDOWS
 #include <winsock2.h>
@@ -17,8 +20,8 @@
 
 #include <dirent.h>
 #include <signal.h>
-#include <sys/stat.h>
-#include <fcntl.h>
+
+
 #include <sys/socket.h>
 #include <netdb.h>
 #include <arpa/inet.h>
@@ -28,6 +31,8 @@
 /**
  * ... Interfaces to make windows and linux compatible...
  */
-
+int http_hdr_grunge(char * buff,int *len,char ** type,int* itype) ;
+#define HEADER_SIZE 800
 int SocketCleanup();
 int SocketStart();
+int send_valid_http_msg(int fd) ;
