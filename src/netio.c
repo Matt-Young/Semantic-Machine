@@ -50,14 +50,14 @@ int header_magic(int newfd,int * count) {
 }
 
 void * handle_data(void * arg) {
-  int status=0; void * buff;
+  int status=0; char * buff;
     int fd;int rv,rm;
     IO_Structure *from,*to;
 TH_Struct *p = (TH_Struct *) arg;
   fd = p->fd;
   BC.new_thread_count++;
   printf("handler count %d\n",p->count);
-  buff = (int *) malloc(p->count);
+  buff = (char *) malloc(p->count+4);
   BC.new_data_count++;
   rv = recv(fd, (char* )buff, p->count,0);
   if(rv < p->count) {
@@ -67,9 +67,7 @@ TH_Struct *p = (TH_Struct *) arg;
     closesocket(fd);
   }
   else {
-    if((rm = send(fd, OK_MSG, strlen(OK_MSG), 0)) == -1) 
-      warn("Error sending data to client.");
- 
+    buff[p->count]=0;
     wait_io_struct();
     from = new_IO_Struct();
     to = new_IO_Struct();
@@ -77,13 +75,15 @@ TH_Struct *p = (TH_Struct *) arg;
 //     set_web_addr(&p->remote_addr,sizeof(p->remote_addr));
     memcpy(from->addr,&p->remote_addr,sizeof(struct sockaddr_in));
      to->sa_family = AF_TABLE;
-       from->sa_family== AF_INET;
+     from->sa_family= AF_INET;
      from->count = p->count;
      from->buff = (int *) buff;
      strcpy((char *) to->addr,"netio");  // Table name
     system_copy_qson(from,to); 
     machine_unlock();
-    del_io_structs();
+   if((rm = send(fd, OK_MSG, strlen(OK_MSG), 0)) == -1) 
+      warn("Error sending data to client.");
+     del_io_structs();
     post_io_struct();
     closesocket(fd);
     printf(" Action %d ",status);
