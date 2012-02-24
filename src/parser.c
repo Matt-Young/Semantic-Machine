@@ -40,6 +40,7 @@ int G_keyop(char * *Json,Triple *t) {
 	char *  start= ptr;
 	int i=0;
 	int events=0;
+  white(ptr);
   if(*ptr == 0) {
     *t = _null_graph;
 				return -1;
