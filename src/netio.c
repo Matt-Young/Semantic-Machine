@@ -33,10 +33,10 @@ int header_magic(int newfd,int * count) {
 
   i=4; memset(inbuffer,0,sizeof(inbuffer));
   rv = recv(newfd, inbuffer,4,0);
-  if(rv <= 0 ) {printf("Bad Header\n");return 0;}
+  if(rv <= 0 ) {printf("Bad Header\n");return -1;}
   while(!strstr(&inbuffer[i-4],"\r\n\r\n")) {
   rv = recv(newfd, &inbuffer[i],1,0);
-  if(rv <= 0 ) {printf("Bad Header\n");return 0;}
+  if(rv <= 0 ) {printf("Bad Header\n");return -1;}
   i += 1;}
   inbuffer[i] = 0;
   for(len=0;len < i;len++) printf("%c",inbuffer[len]);
