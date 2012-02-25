@@ -20,7 +20,11 @@ int msg_id(int sqlite_msg) {
 void unbind_triple(Code stmt,Triple *t);
 typedef void (*xFunc)(sqlite3_context*,int,sqlite3_value**);
 //void gfunction(sqlite3_context* context,int n,sqlite3_value** v);
+extern char  DirOrigin[];
 int open_machine_layer(char * name,Pointer  g_db) {
+ char  complete_name[400];
+   G_strcpy(complete_name,DirOrigin);
+   G_strcat(complete_name,name);
 	return msg_id(sqlite3_open(name,(sqlite3 **)g_db));}
 
 Pointer machine_column_text(Code stmt,int colid) {

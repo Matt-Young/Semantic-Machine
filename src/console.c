@@ -17,8 +17,7 @@
     #include <unistd.h>
     #define GetCurrentDir getcwd
  #endif
-char  DirOrigin[200];
-int origin_length;
+
 
 #include <ctype.h>
 #include <stdio.h> 
@@ -50,6 +49,7 @@ void G_free(void* p){free(p);}
 void* G_new_buff(int size){BC.new_data_count++;return malloc(size);}
 void G_free_buff(void* p){BC.del_data_count++;free(p);}
 char* G_strncpy(char* s, const char* ct, int n){return strncpy(s,ct,n);}
+char* G_strcat(char* s, const char* ct){return strcat(s,ct);}
 char * G_strcpy(char* s, const char* ct){return strcpy(s, ct);}
 int G_strcmp(const char* cs, const char* ct){return strcmp( cs, ct);}
 int G_strlen(const char* cs){return strlen(cs);}
@@ -80,7 +80,8 @@ int isin(char c,const char *str) {
 	while((*str)  && (*str != c) ) str++;
 	return *str;
 }
-
+char  DirOrigin[200];
+int origin_length;
 char * find_origin() {
 #ifdef ORIGIN
   strcpy(DirOrigin,ORIGIN);
@@ -92,21 +93,23 @@ origin_length = strlen(DirOrigin);
   return DirOrigin;
   }
 int   G_file(IO_Structure ** out,char * name) { 
-  char * dir;
+   char  complete_name[400];
   struct stat buf;
   FILE * f;
-  dir = DirOrigin;
-  f =  fopen(name, "r");
+   G_strcpy(complete_name,DirOrigin);
+   G_strcat(complete_name,name);
+  f =  fopen(complete_name, "r");
+
   if(f){
       IO_Structure *w;
       wait_io_struct();
       w = new_IO_Struct();
       *out = w;
     fstat(_fileno(f), &buf);
-    w->buff = (int *) G_malloc(buf.st_size+1);
-    w->size = buf.st_size;
+     w->size = buf.st_size;
+    w->buff = (int *) G_malloc(w->size+1);
     w->count = fread(w->buff,1, w->size, f);
-    w->buff[w->size] =0;
+    ((char *)&w->buff)[w->size] = 0;
   w->fd = (int) G_stdout();  // default valut
   w->sa_family = AF_FILE;
   w->format = Json_IO;
@@ -129,6 +132,7 @@ int console_command(char * line,char command ) {
    else if ((line[0] == 'd')) 
      //debug_enter(console,lnei);
   return 0;
+   return 0;
 }
 // get line with a bit of input editing
 int G_console(IO_Structure * *out) { 
@@ -254,7 +258,8 @@ int port = TEST_PORT;
 int engine_init();
 int net_start(void *);
 int console_loop();  // this, starting  thread
-char * argv[] = {"g","-O"};
+int file_loop(char *);  // this, starting  thread
+char * argv[] = {"g","-file","test.txt"};
 int argc = 2;
  
 int test_qson();
@@ -279,11 +284,9 @@ int main() {
     if(!G_strcmp(argv[i], "-port") )
     {  G_printf("Port changed %s\n",argv[i+1]);port = G_strtol(argv[i+1]); i++;}
     if(!G_strcmp(argv[i], "-file") ) {
-      IO_Structure c;
       G_printf("File %s\n",argv[i+1]);
         engine_init();
-      file_loop(&c,argv[i+1]); 
-      G_free(c.buff);
+      file_loop(argv[i+1]); 
     }
   }
     G_printf("Port %d\n",port);

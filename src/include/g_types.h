@@ -56,7 +56,7 @@ enum SerializedFormat { Json_IO,Bson_IO,Qson_IO};
 
 // The null value and other defaults
 #define G_TYPE_NULL 95
-#define GBASE "c:/soft/gbase"
+
 #define GFUN "gfun"
 #define SystemNameSpace "local"
 #define LocalSymbolCount 100
