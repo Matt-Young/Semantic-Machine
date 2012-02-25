@@ -17,6 +17,9 @@
     #include <unistd.h>
     #define GetCurrentDir getcwd
  #endif
+char  DirOrigin[200];
+int origin_length;
+
 #include <ctype.h>
 #include <stdio.h> 
 #include <stdlib.h> 
@@ -66,7 +69,7 @@ void G_debug(void * format){};
 // Is it a character known to the syntax? '
 //#define Line_size 256
 //int line[Line_size]; 
-int * G_InitConsole(IO_Structure * console);
+int * console_io_struct(IO_Structure * console);
 char * G_AddConsole(IO_Structure * console,char cin) {
 	console->empty[0] = cin; 
 	console->empty++; console->count++;
@@ -77,55 +80,64 @@ int isin(char c,const char *str) {
 	while((*str)  && (*str != c) ) str++;
 	return *str;
 }
-void   console_file(IO_Structure * console,char * ptr) { 
-  char  dir[200],*name;
+
+char * find_origin() {
+#ifdef ORIGIN
+  strcpy(DirOrigin,ORIGIN);
+#else
+  GetCurrentDir(origin,1024);  // returns back slashes in windows
+#endif
+origin_length = strlen(DirOrigin);
+  printf("\n%s\n",DirOrigin);
+  return DirOrigin;
+  }
+int   G_file(IO_Structure ** out,char * name) { 
+  char * dir;
   struct stat buf;
-  FILE * f;int dirlen;
-  //ptr += strlen(ptr)+1;
-  name = strtok(ptr, "\0");
-  GetCurrentDir(dir,1024);
-  dirlen = strlen(dir);
-  dir[dirlen]='\\';
-  strcpy(dir+dirlen+1,name);
-  printf("\n%s\n",dir);
+  FILE * f;
+  dir = DirOrigin;
   f =  fopen(name, "r");
   if(f){
+      IO_Structure *w;
+      wait_io_struct();
+      w = new_IO_Struct();
+      *out = w;
     fstat(_fileno(f), &buf);
-    console->buff = G_malloc(buf.st_size+1);
-    console->size = buf.st_size;
-    console->count = fread(console->buff,1, console->size, f);
-    ptr = (char *) console->buff;// defeating the typecastin error
-    ptr[console->size] =0;
-    printf("\nSize%d\n%s\nCount%d\n",console->size,console->buff,console->count);
+    w->buff = (int *) G_malloc(buf.st_size+1);
+    w->size = buf.st_size;
+    w->count = fread(w->buff,1, w->size, f);
+    w->buff[w->size] =0;
+  w->fd = (int) G_stdout();  // default valut
+  w->sa_family = AF_FILE;
+  w->format = Json_IO;
+    printf("\nSize%d\n%s\nCount%d\n",w->size,w->buff,w->count);
   }
   else {
     printf("f %s\n",name);
     perror("Open error ");
   }
+  return 0;
 }
-int console_command(IO_Structure * console,char command ) {
-  char  line[200];
-  char *ptr;
+int file_loop(char * name);
+int console_command(char * line,char command ) {
    fgets(line, 100, stdin);
-   ptr = strtok(line," ");
-   if(ptr[0] == 'q')
+   line = strtok(line," ");
+   if(line[0] == 'q')
      exit(0);
-   else if (ptr[0] == 'f')
-     console_file(console,ptr+1);
-   else if ((ptr[0] == 'd')) {
-     debug_enter(console,ptr);
-   }
+   else if (line[0] == 'f') 
+     file_loop(line+1);
+   else if ((line[0] == 'd')) 
+     //debug_enter(console,lnei);
   return 0;
 }
 // get line with a bit of input editing
 int G_console(IO_Structure * *out) { 
-  IO_Structure  console;
-	char * ptr,cin,cprev;
+	char * ptr; char * pstart; char cin,cprev;
 	int left,right;
 	left = 0; right = 0;
 	cin = 0;
-  
-	ptr = (char *) G_InitConsole(&console);
+	ptr =(char *) malloc(Line_size);
+  pstart = ptr;
   cprev = 0;
 	for(;;) {
     cin = fgetc(stdin);
@@ -135,19 +147,20 @@ int G_console(IO_Structure * *out) {
       wait_io_struct();
       w = new_IO_Struct();
       *out = w;
-      console.link = w->link;
-      *w = console;
-     return(console.count);  // two in a row terminate
-    }
-    else if( (cin == '.') && (left==0))
-          return(console_command(&console,cin));
-    else if(cin == '{') {left++;G_AddConsole(&console,cin);}
-    else if(cin == '}') {right++;G_AddConsole(&console,cin);}
+      w->sa_family=AF_CONSOLE;
+      w->buff = (int *) pstart;
+      w->count = ptr-pstart;
+       w->format = Json_IO;
+       w->fd = (int) G_stdout();
+     return(w->count);  // two in a row terminate
+    } else if( (cin == '.') && (left==0) )
+          return(console_command(pstart,cin) );
+     else if(cin == '{') {left++;*ptr=cin;}
+    else if(cin == '}') {right++;*ptr=cin;}
     else if((left > right) && (cin != '\n'))  // if client has an open curly
-      G_AddConsole(&console,cin);
-    cprev = cin;
+      *ptr=cin;
+    ptr++;
   } 
-
 }
 
 // Track memory here, this is not c++
@@ -171,20 +184,7 @@ void G_buff_counts(){
 #define free G_free_buff
 #define malloc G_new_buff
 #endif
-int * G_InitConsole(IO_Structure * console) {
-  console->buff = (int *) malloc(Line_size);
-  memset(console->buff,0,Line_size);
-	console->size=Line_size;
-	console->empty= (char *)console->buff;
-  console->fill=console->empty;
-	console->count=0;
-  console->fd = (int) G_stdout();
-  console->sa_family = AF_CONSOLE;
-  console->format = Json_IO;
-  strcpy((char *) console->addr,"console");
-	printf("\nInit:");
-	return (int *) console->buff;
-}
+
 IO_Structure *anchor;
 IO_Structure * new_IO_Struct(){
   IO_Structure * w = (IO_Structure *) malloc(sizeof(IO_Structure));
@@ -246,4 +246,59 @@ void wait_io_struct() {
 }
 void post_io_struct() {
     sem_post(&IO_Struct_mutex);  // wait for lock
+}
+#ifndef TEST_ADDR
+char * TEST_ADDR = "127.0.0.1";
+#endif
+int port = TEST_PORT;
+int engine_init();
+int net_start(void *);
+int console_loop();  // this, starting  thread
+char * argv[] = {"g","-O"};
+int argc = 2;
+ 
+int test_qson();
+int main() {
+//    int main(int argc, char * argv[]) {
+  int i;
+  find_origin();
+  G_memset((char *) &BC,0,sizeof(BufferCount));
+  G_printf("Main engine\n");
+  for(i=1; i < argc;i++) {
+    G_printf("Arg: %s\n",argv[i]);
+    if(!G_strcmp(argv[i], "-V")) {
+      G_printf("V: %s.\n",VERSION);
+    } 
+     if(!G_strcmp(argv[i], "-O")) {
+      G_printf("O: %s.\n",DirOrigin);
+    } 
+    if( !G_strcmp(argv[i], "-help")  || !G_strcmp(argv[i], "-h") ) {
+      G_printf("help: graphs\n");
+      G_printf("Please see https://github.com/Matt-Young/Semantic-Machine/wiki .\n");
+    } 
+    if(!G_strcmp(argv[i], "-port") )
+    {  G_printf("Port changed %s\n",argv[i+1]);port = G_strtol(argv[i+1]); i++;}
+    if(!G_strcmp(argv[i], "-file") ) {
+      IO_Structure c;
+      G_printf("File %s\n",argv[i+1]);
+        engine_init();
+      file_loop(&c,argv[i+1]); 
+      G_free(c.buff);
+    }
+  }
+    G_printf("Port %d\n",port);
+    engine_init();
+   // print_trios();
+    net_start((void *) port);
+    G_printf("Main engine\n");
+    for(;;)
+    console_loop();
+  return(0);
+}
+void print_triple(Triple *t) { 
+  G_printf(" %10s %c %4d  ",t->key,t->link,t->pointer);}
+// his is a little debgger, and stays ith this file
+Handler g_debugger(Triple *t) {
+  print_triple(t);
+  return 0;
 }

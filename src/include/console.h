@@ -1,7 +1,4 @@
-
-int * G_InitConsole(IO_Structure * console);
-int console_command(IO_Structure * console,char command );
-void   console_file(IO_Structure * console,char * ptr) ;
+int  G_file(IO_Structure ** console,char * name);
 int G_console(IO_Structure ** console);
 #define Line_size 256
 int  G_isugly(char ch);

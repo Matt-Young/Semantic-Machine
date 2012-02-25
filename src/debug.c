@@ -55,9 +55,6 @@ int test_qson() {
   system_copy_qson(&w1,&w2);  //file to mem
   return 0;
 }
-void debug_console_file(IO_Structure *c) {
-  console_file(c,TESTFILE);}
-
 
  void debug_enter(IO_Structure *c,char *ptr) {
    char temp[200];
