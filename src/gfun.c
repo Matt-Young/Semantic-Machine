@@ -21,8 +21,9 @@ typedef struct ReadySet {
   Code stmt;
   int opid;
   Triple *buff; // an output
-  IO_Structure return_addr;
+  IO_Structure *return_addr;
   TABLE *table;
+  char  *any_name;
 }  Readyset;
 
 Readyset ready;
@@ -66,16 +67,12 @@ Mapper map_other_start(Pointer * p,int *type) {
 	return 0;
 	}
 Mapper map_return_addr(Pointer * p,int *type) {
-	*p = (Pointer) (&ready.return_addr);
+	*p = (Pointer) ready.return_addr;
 	*type = G_TYPE_ADDR;
 	return 0;
 	}
 
-	// Selecting an  installed sql statement
-// This is called afer it is determined an installed sql
-// it is always bound to the table context
-
-// msthods on graph pointers
+	// Methods on the ready set
 int stopped_row() {
 if(ready.self->row == ready.self->end)
   return 1;
@@ -117,21 +114,24 @@ int set_ready_code(int opid) {
 Code set_ready_stmt(Code stmt) {
 	ready.stmt = stmt;
 	return ready.stmt; }
-int  set_ready_graph(TABLE * t) {
-	G_memset(&ready,0,sizeof(ready));
+int  set_ready_graph(TABLE * t,IO_Structure * to) {
+  G_memset(&ready,0,sizeof(ready));
   ready.table=t;
-  ready.return_addr.sa_family = AF_CONSOLE;
-  ready.return_addr.format=Json_IO;
-  ready.self = &((PGRAPH) t->list)->rdx;
-  ready.self->end = -1;
+  ready.return_addr = to;
+  // ready.return_addr->sa_family = AF_CONSOLE;
+  // ready.return_addr->format=Json_IO;
+  if(t) {
+    ready.self = &((PGRAPH) t->list)->rdx;
+    ready.self->end = -1;
+  }
   return  EV_Ok;
 }
-void * set_web_addr(void *w,int size) {
-  G_memcpy(&ready.return_addr,w,size);
-  return &ready.return_addr;
+void * set_web_addr(IO_Structure *w,int size) {
+  ready.return_addr=w;
+  return ready.return_addr;
 }
 IO_Structure * get_web_addr() {
-  return &ready.return_addr;
+  return ready.return_addr;
 }
 int key_match(const char * k,const char * g) {
   int klen = G_strlen(k);
@@ -162,14 +162,15 @@ int init_run_json(Triple *triple) {
 	int status;TABLE * table;
   G_printf("Json  \n");
  init_table("console",0,&table);
-	status= set_ready_graph(table);
+	status= set_ready_graph(table,0);
   G_printf("Begin Json\n");
 	status=parser(triple->key,table);
 //  run_table(table,0);
  G_printf("\nJson done\n");
 		return status;
 }
-
+// These are realy over loads, not part of the engine proper, 
+// nor part of the Ugly Set.  
 int event_handler(Triple * t) {
   int g_event;
   int linkid = t->link;
@@ -244,24 +245,25 @@ int init_gfun() {
 	return 0;
 }
 // Uglies get their own direct handler
-//Trio * find_name(char * key) ;
+//Trio * find_name(char * key) 
+Handler get_handler(int opid,Handler handler) ;
 int ugly_handler(Triple *top){
-  int linkid;
+  int linkid;Trio *s1;
   Triple v0,v1,v2;
   Code stmt = ready.stmt;   
   machine_triple(stmt, &v0);
   linkid =  v0.link;
   if(linkid == '@'){
-   // Trio * s1; 
-    // update and push the ready set
-    // look up the named destination and make a webaddr
-    // call the specified handler by name
-
-   // push_ready();
-    //s1 = 
-      //  find_name( v0.key);
+   // V0@V1,V2
+ 
+ready.any_name=new_string(top->key);
         machine_step_fetch(&v1,0);
-        call_handler_name(&v1);
+		 s1 = 
+        find_name( v0.key);
+		if(s1->type == G_TYPE_SYSTEM)
+        return get_handler((int) s1->value,0)(top);  // Call handler acquies V2
+		else { // Dunno quite yet
+    }
     // pop_ready();
     // incr_row(v0.pointer);
   }  else if(linkid == ':') {

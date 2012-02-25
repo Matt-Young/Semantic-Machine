@@ -247,8 +247,10 @@ void init_io_struct() {
     anchor=0;
     sem_init(&IO_Struct_mutex, 1, 1);
   }
+int set_ready_graph(void * t) ;
 void wait_io_struct() {
     sem_wait(&IO_Struct_mutex);  // wait for lock
+    set_ready_graph(0); 
 }
 void post_io_struct() {
     sem_post(&IO_Struct_mutex);  // wait for lock

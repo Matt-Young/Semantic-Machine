@@ -81,7 +81,7 @@ send_valid_http_msg(fd,0,0) ;
      strcpy((char *) to->addr,"netio");  // Table name
     system_copy_qson(from,to); 
        printf(" Action\n ");
-     //init_run_table(to);
+     //init_run_table(from,to);
     machine_unlock();
 send_valid_http_msg(fd,DONE_MSG,0);
      del_io_structs();

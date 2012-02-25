@@ -22,6 +22,12 @@
 OP operands[OperatorMaximum];
 Pointer g_db;
 Triple SCRATCH_Triple = {SystemScratch,0,"Scratch"};
+// each handler collects its own arguments
+    // Form zero name@SysCall.parm,_
+    // Form one name@SysCall.arg...,_
+    // Form two name@SysCall,table
+    // Form two name@SysCall.arg.arg..,table
+
 int install_sql_script(char * ch,int opid) {
 	int status;
 	status =
@@ -36,7 +42,7 @@ int SEND_ONLY = 0;  // Global environment
 // install key at installed operand position pointer
 int  config_handler(Triple t[]) {
   int status;
-  Code stmt = get_ready_stmt;
+  Code stmt = get_ready_stmt();
   const char * ch = t->key;
   int count = t[0].pointer-1; // exclude current triple
   int opid;int param; Triple var;
@@ -45,7 +51,7 @@ int  config_handler(Triple t[]) {
   while(count) {
     machine_step_fetch(&var,0);
     if(param == 0) { 
-        opid = G_atoi(var.key);
+        opid = G_atoi(var.key);  // key value is opid
       if((OperatorMaximum < opid) ) 
         return(EV_Incomplete);
     } else  if(param == 1 )  // install user script
@@ -65,7 +71,7 @@ return(status);
 int sql_handler(Triple *node) {
 	int status=EV_Ok;
 	install_sql_script((char *) node->key,SystemScratch);
-	machine_new_operator((Triple *) &SCRATCH_Triple,0);
+	machine_new_operator((Triple *) &SCRATCH_Triple,square_handler);
 	return status;
 }
 int call_handler(Triple *node) {
@@ -121,15 +127,14 @@ int script_handler(Triple *node) {
 	G_printf("Script: \n%s\n",machine_script(operands[id].stmt));
 	return EV_Ok;
 }
-// echo an table back
+// echo an table back to caller
 int echo_handler(Triple *node) {
-  Triple Qin; IO_Structure from;
-  from.sa_family = AF_TABLE;
-
-  G_printf("\nEcho %s ",from.addr);
+  Triple Qin; IO_Structure *from;
+  from = new_IO_Struct();
+  from->sa_family = AF_TABLE;
   machine_step_fetch(&Qin,0); 
-  G_strcpy((char *) from.addr,Qin.key);
-  system_copy_qson(&from,get_web_addr());
+  G_strcpy((char *) from->addr,Qin.key);
+  system_copy_qson(from,get_web_addr());
 	return set_ready_event(0);
 }
 int dup_handler(Triple *node){
@@ -218,18 +223,7 @@ const struct {
 	{"SystemConfig",SystemConfig,EV_No_bind+EV_FormOne,config_handler},
 	{"SystemEcho",SystemEcho,EV_No_bind+EV_FormOne,echo_handler}
 };
-// each handler collects its own arguments
-    // Form zero name@SysCall.parm,_
-    // Form one name@SysCall.arg...,_
-    // Form two name@SysCall,table
-    // Form two name@SysCall.arg.arg..,table
-int call_handler_name(Triple *t) {
-  Trio *s;int index;
-  s = find_name( t->key);
-  if(!s) G_printf("No system function \n:");
-  index = (int) s->value;
-  return get_handler(index,0)(t);
-}
+
 int init_handlers() {
 	int i;
 	i=0;
