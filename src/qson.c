@@ -242,7 +242,8 @@ int system_copy_qson(IO_Structure *from,IO_Structure *to ) {
 
     }
     // else this might be from the network
-  } else if ((from->sa_family== AF_INET) || (from->sa_family== AF_CONSOLE)) {
+  } else if ((from->sa_family== AF_INET) || 
+    (from->sa_family== AF_CONSOLE)|| (from->sa_family== AF_FILE) ) {
     if( to->sa_family== AF_TABLE) { 
       TABLE * table;
       G_printf("New Table  %s\n",(char *)  to->addr);
@@ -250,7 +251,7 @@ int system_copy_qson(IO_Structure *from,IO_Structure *to ) {
       to->buff = (int*) table;
       if(from->format == Json_IO) 
         parser((char *) from->buff,table);    // Json from the net
-      else if (from->fd == Qson_IO)
+      else if (from->format == Qson_IO)
         qson_to_table(table,(char *) to->buff,to->count);
     }
     // source is file

@@ -91,7 +91,7 @@ unsigned int cprev,ccurr,cnext;
 int parser(char * Json, TABLE *table) {
 	int nchars;
 	PGRAPH *inner; // points to first child
-  G_printf("\nparse start\n");
+  G_printf("\nparse start %s\n",Json);
 	inner = (PGRAPH *) &table->list;
 	nchars=0;cprev=1,ccurr=1,cnext=1;
   (*inner)->context=(void *) '_';

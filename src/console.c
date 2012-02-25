@@ -93,11 +93,12 @@ origin_length = strlen(DirOrigin);
   return DirOrigin;
   }
 int   G_file(IO_Structure ** out,char * name) { 
-   char  complete_name[400];
+   char  complete_name[400]; char *b;
   struct stat buf;
   FILE * f;
    G_strcpy(complete_name,DirOrigin);
    G_strcat(complete_name,name);
+   //strcpy(complete_name,"c:/soft/test.txt");
   f =  fopen(complete_name, "r");
 
   if(f){
@@ -108,8 +109,9 @@ int   G_file(IO_Structure ** out,char * name) {
     fstat(_fileno(f), &buf);
      w->size = buf.st_size;
     w->buff = (int *) G_malloc(w->size+1);
-    w->count = fread(w->buff,1, w->size, f);
-    ((char *)&w->buff)[w->size] = 0;
+    b = (char *) w->buff;
+    w->count = fread(b,1, w->size, f);
+    b[w->count] = 0;
   w->fd = (int) G_stdout();  // default valut
   w->sa_family = AF_FILE;
   w->format = Json_IO;
@@ -268,6 +270,7 @@ int main() {
   int i;
   find_origin();
   G_memset((char *) &BC,0,sizeof(BufferCount));
+  engine_init();
   G_printf("Main engine\n");
   for(i=1; i < argc;i++) {
     G_printf("Arg: %s\n",argv[i]);
@@ -285,12 +288,10 @@ int main() {
     {  G_printf("Port changed %s\n",argv[i+1]);port = G_strtol(argv[i+1]); i++;}
     if(!G_strcmp(argv[i], "-file") ) {
       G_printf("File %s\n",argv[i+1]);
-        engine_init();
       file_loop(argv[i+1]); 
     }
   }
     G_printf("Port %d\n",port);
-    engine_init();
    // print_trios();
     net_start((void *) port);
     G_printf("Main engine\n");

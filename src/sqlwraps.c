@@ -25,7 +25,7 @@ int open_machine_layer(char * name,Pointer  g_db) {
  char  complete_name[400];
    G_strcpy(complete_name,DirOrigin);
    G_strcat(complete_name,name);
-	return msg_id(sqlite3_open(name,(sqlite3 **)g_db));}
+	return msg_id(sqlite3_open(complete_name,(sqlite3 **)g_db));}
 
 Pointer machine_column_text(Code stmt,int colid) {
 	return (unsigned char *) sqlite3_column_text( (sqlite3_stmt*) stmt, colid);}

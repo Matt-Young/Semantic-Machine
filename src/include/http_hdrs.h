@@ -6,6 +6,7 @@
 #define HEADER_MSG "HTTP/1.0 200 OK\r\nContent-Type:text/html\r\nContent-Length:"
 #define NO_CONTENT_MSG    HEADER_TYPE,"000\r\n\r\n"
 #define PLAIN_MSG  "PLAIN MSG\r\n\r\n"
+#define DONE_MSG  "DONE MSG\r\n\r\n"
 #define HTML_MSG  "<html>HTML MSG</html>\r\n"
 #define PORT_MSG    "HTTP/1.0 989 No Ports\r\n\r\n"
 #define BAD_MSG "HTTP/1.0 200 Not Found\r\n\r\n"
