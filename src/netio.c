@@ -11,7 +11,7 @@ switch between windows and linux
 #include "../socketx/socket_x.h"
 #include "../src/include/machine.h"
 #include "../src/include/http_hdrs.h"
-int set_web_addr(IO_Structure *,int );
+int set_io_stuct(IO_Structure *,int );
 #define error printf
 #define warn printf
 #define error printf
@@ -57,11 +57,11 @@ TH_Struct *p = (TH_Struct *) arg;
   fd = p->fd;
   BC.new_thread_count++;
   //printf("handler count %d\n",p->count);
-  buff = (char *) malloc(p->count+4);
+  buff = (char *) G_malloc(p->count+4);
   rv = recv(fd, (char* )buff, p->count,0);
   if(rv < p->count) {
 send_valid_http_msg(fd,0,0) ;
-    free(buff);
+    G_free(buff);
     closesocket(fd);
         printf(" Bad data \n");
   }

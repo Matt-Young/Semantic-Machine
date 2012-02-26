@@ -119,7 +119,6 @@ int json_rules(char cin, PGRAPH *inner) {
   if((ccurr == '$') && SetAttribute(current.key))
       return 0;  // this local signal handled
   if(ccurr == '{'){
-    new_child_graph(inner,(void *) ccurr);
       append_graph(inner,current);
   } 
   // Name:Value, Name@V1,v2 
@@ -133,13 +132,16 @@ int json_rules(char cin, PGRAPH *inner) {
   if(ccurr == ',') {
     if(child_context == '@'){
       (*inner)->context =(void *) ',';
+       append_graph(inner,current);
     }
     else   {
       close_update_graph(inner);
       new_child_graph(inner,(void *) ccurr);
-      append_graph(inner,current);
+
     }
   } 
+  if(ccurr == '@')
+    append_graph(inner,current);
   if((ccurr == '.') ||  (ccurr == '$')){
       if(cnext != '{')   // .value{ is illegal
          append_graph(inner,current);
@@ -148,15 +150,6 @@ int json_rules(char cin, PGRAPH *inner) {
       (*inner)->rdx.rowoffset--; // this is a prepend
       }
   }
-  /*if(ccurr == '}') {  
-    int parent_context = (int ) graph_variable((*inner)->parent);
-    if(parent_context == '{')     delete_graph(inner);
-    else {
-      close_update_graph(inner); //follow through
-      new_child_graph(inner,(void *) ccurr);
-    }
-  } 
-  */
 
   cprev = ccurr; ccurr = cnext;
   prev = current;

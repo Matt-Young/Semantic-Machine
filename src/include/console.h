@@ -5,9 +5,6 @@ int  G_isugly(char ch);
 void G_exit();
 void G_Test();
 void * G_stdout();
-void* G_malloc(int size);
-void* G_calloc(int size);
-void G_free(void* p);
 char* G_strncpy(char* s, const char* ct, int n);
 char * G_strcpy(char* s, const char* ct);
 void G_sprintf(char* s, const char* format, ...);
@@ -26,7 +23,7 @@ char *  G_gets(char * line);
 char * G_line(char * line,int n);
 
 void G_debug(void * format);
-int G_keyop(char ** ,Triple *);
+
 void G_buff_counts();
 
 void G_qsort( void * base, int n, int size);

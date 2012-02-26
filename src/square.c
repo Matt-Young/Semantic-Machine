@@ -1,6 +1,8 @@
+#include "../src/include/config.h"
 #include "../src/include/g_types.h"
-#include "./include/machine.h"
+#include "../src/include/machine.h"
 #include "../src/include/tables.h"
+#include "../src/include/qson.h"
 #include "../src/include/engine.h"
 #include "../src/include/console.h"
 extern TABLE tables[];
@@ -26,9 +28,11 @@ Triple column_decoder(TABLE *t,ColInfo *c) {
 
 // defaut grammar is to descend a row with the default Dot
 int square_handler(Triple *t) {
-ColInfo *c;TABLE * table; void * vals[8];
+ColInfo *c;TABLE * table; void * vals[8]; int len;
+Triple triple;IO_Structure * to; char num_buff[8];
 //Triple ct,dt; 
 int i;
+to =  get_io_stuct();
 table = get_ready_table();
 table->stmt=get_ready_stmt();
 
@@ -37,10 +41,15 @@ if(table->info.type[0] == G_TYPE_NONE)
 G_printf("\n");
 machine_unbind_row(table->stmt,&table->info,vals);
 for(i=0;i < table->info.col_count;i++)
-  if(table->info.type[i] != G_TYPE_INTEGER)
-    G_printf("|%s|",(char *) vals[i]);
-  else
-G_printf("|%d|",(int) vals[i]);
+  if(table->info.type[i] != G_TYPE_INTEGER) {
+    G_sprintf(num_buff,"d",vals[i]);
+    triple.key =num_buff; len = G_strlen(num_buff);
+  }
+  else{
+    triple.key = vals[i];
+    len =machine_value_len(table->stmt,i);
+  }
+stream_json(&triple,to,len) ;
 /*
     while(c->index < c->col_count) {
 		ct = column_decoder(table,c); 

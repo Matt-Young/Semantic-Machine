@@ -54,12 +54,12 @@ int bind_code(Triple *,Code );
 /*! \ingroup  Readyset
  * A generic hold holding information needed to move a Qson along
  */
-IO_Structure  * get_web_addr();
+IO_Structure  * get_io_stuct();
 /*! \ingroup  Readyset
  * The webaddr is kept in the ready set
  */
-void * set_web_addr(void  *,int);
-int set_ready_graph(void *);
+void * set_io_stuct(void  *,int);
+int set_ready_graph(void *,IO_Structure *);
 TABLE * get_ready_table();
 int exit_handler(Triple *node);
 int event_handler(Triple * t);

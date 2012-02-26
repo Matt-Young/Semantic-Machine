@@ -17,7 +17,8 @@ TABLE *triple_tables[NUMBER_TABLES];
 //extern int del_table_count,new_table_count;
 TABLE  *new_table_context() {
   TABLE *pt;
-  pt = (TABLE *) G_calloc(sizeof(TABLE));
+  pt = (TABLE *) G_malloc(sizeof(TABLE));
+  G_memset(pt,0,sizeof(TABLE));
   BC.new_table_count++;
 return(pt);}
 
@@ -32,8 +33,6 @@ void free_table_context(TABLE *pt) {
 TABLE * get_table_context(char * name) {
   TABLE *pt; int i;
   pt = new_table_context();
- // pt->name = (char *) G_calloc(G_strlen(name));
-//  G_strcpy(pt->name,name);
   pt->list = 0;
   pt->attribute = G_TYPE_TABLE;
 
@@ -119,27 +118,9 @@ Code   start_table(TABLE * t,int index){
  t->stmt=get_ready_stmt();
  return t->stmt;
 }
-/*
-#define Sql_delete_rows "delete from %s;"
-int del_table_rows(TABLE *table) {
-  char buff[400], *err; int status;
-  G_sprintf(buff,Sql_delete_rows,table->name,table->name);
-    status = machine_exec(g_db,buff,&err);
-	return(status);
-}
-*/
+
 TABLE * TABLE_POINTER(int i) { return triple_tables[i];}
-/*
-TABLE * get_table_name(const char * name) { 
-	int i=0;
-	while(triple_tables[i]) {
-			if(!G_strcmp(triple_tables[i]->name,name))
-				return (triple_tables[i]);
-			i++;
-		}
-	return (0);
-}
-*/
+
 const struct new_install{
 	int opindex;
 	int opid;
@@ -157,7 +138,7 @@ const struct new_install{
  {append_operator,SystemMax+4,"insert into %s values( ?, ?, ?);",
 	  "BindTriple","AppendHandler",0,0},
 	{update_operator,SystemMax+5,"update %s set pointer = (?) where rowid = ?;",
-	"BindRelativeSelfRow","BindSelfStart","ExitHandler",0},
+	"BindSelfRow","BindSelfOffset","ExitHandler",0},
 	{0,0,0,0,0,0,0}
 };
 Mapper null_map(void * p,int * i);

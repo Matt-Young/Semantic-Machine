@@ -1,6 +1,6 @@
 
 #include "../src/include/g_types.h"
-
+#include "../src/include/config.h"
 #include "../src/include/machine.h"
 #include "../src/include/tables.h"
 #include "../src/include/graphs.h"
@@ -15,8 +15,11 @@ void list_graphs(PGRAPH  *list,char*);
 // graph map sqlson sub graphs in the database
 
 PGRAPH new_graph_context() {
+  PGRAPH p;
 	BC.new_graph_count++;
-	return (PGRAPH) G_calloc(sizeof(GRAPH));
+	 p= (PGRAPH) G_malloc(sizeof(GRAPH));
+   G_memset(p,0,sizeof(GRAPH));
+  return p;
 }
 PGRAPH free_graph_context(PGRAPH  child) {
 	PGRAPH parent=child->parent;

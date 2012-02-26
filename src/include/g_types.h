@@ -32,7 +32,7 @@ enum qson_base_types {G_TYPE_NONE,G_TYPE_INTEGER,G_TYPE_FLOAT,
 typedef struct IO_Structure {   
   unsigned short  sa_family; unsigned short port;
   long addr[5]; int fd; int format;
-  int * buff; int count; int size; char * fill; char * empty;struct  IO_Structure *link; 
+  void * buff; int count; int size; char * fill; char * empty;struct  IO_Structure *link; 
   } IO_Structure;
   IO_Structure * new_IO_Struct();
   IO_Structure * del_IO_Struct(IO_Structure *);

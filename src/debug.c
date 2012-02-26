@@ -8,8 +8,8 @@
 #include "../socketx/socket_x.h"
 
 char * typeface[] = {
-  "{@SystemExec,select * from square;}",
-  "{@SystemConfig,37 .\"select * from square; \" }",
+  "{@SystemExec,select * from netio;}",
+  "{@SystemConfig,37 .\"select * from netio; \" }",
   "{def.ccc,bbb.kkk,hhh.lyu,ggg.aaa}",
   "{a=23. . c=9. . c.f,d=33}",
   "{$SystemEcho.hello}",
@@ -19,7 +19,7 @@ char * typeface[] = {
 	"{abc,def,ghi}",
 	"{@config}",
 	""};
-#define DLINE 2
+#define DLINE 0
 static int debug_counter=DLINE;
 
 void debug_json_string(IO_Structure ** w) {
@@ -40,7 +40,6 @@ void debug_json_string(IO_Structure ** w) {
 
 int test_qson() {
   IO_Structure w1,w2;
-  char filname[40];
   printf("Test qson\n");
   strcpy((char *) w1.addr,"test");
   strcpy((char *) w2.addr,"console");

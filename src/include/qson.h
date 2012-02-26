@@ -39,6 +39,18 @@ int   table_to_Json(TABLE *t,IO_Structure * to) ;
  */
 
 int system_copy_qson(IO_Structure *from,IO_Structure *to );
+/*! \ingroup  Qson
+ * Start the IO_Structure fr Json st5reaming
+
+ */
+
+int init_json_stream(IO_Structure *to);
+  /*! \ingroup  Qson
+ * streal the triple having key with len bytes
+
+ */
+
+ int stream_json(Triple  * Qin,IO_Structure *to,int len); 
 int test_qson(); 
 
 struct Format { 

@@ -1,6 +1,7 @@
 
 //#include "../src/include/config.h"
 #include "../src/include/g_types.h"
+#include "../src/include/config.h"
 #include "../src/include/names.h"
 #include "./include/machine.h"
 #include "../src/include/tables.h"
@@ -51,7 +52,7 @@ Mapper map_relative_self_row(Pointer * p,int *type) {
 	*type = G_TYPE_INTEGER;
 	return 0;
 	}
-Mapper map_self_start(Pointer * p,int *type) {
+Mapper map_self_offset(Pointer * p,int *type) {
 	*p = (Pointer) (ready.self->rowoffset);
 	*type = G_TYPE_INTEGER;
 	return 0;
@@ -61,7 +62,7 @@ Mapper map_other_row(Pointer * p,int *type) {
 	*type = G_TYPE_INTEGER;
 	return 0;
 	}
-Mapper map_other_start(Pointer * p,int *type) {
+Mapper map_other_offset(Pointer * p,int *type) {
 	*p = (Pointer) (ready.other->rowoffset);
 	*type = G_TYPE_INTEGER;
 	return 0;
@@ -106,8 +107,9 @@ int set_ready_event(int EV_event) {
 	ready.events |= EV_event;
 	return ready.events; }
 int reset_ready_event(int EV_event) {
+  int events=ready.events;
 	ready.events &= ~EV_event;
-	return ready.events; }
+	return events; }
 int set_ready_code(int opid) {
 	ready.opid = opid;
 	return ready.opid; }
@@ -126,11 +128,11 @@ int  set_ready_graph(TABLE * t,IO_Structure * to) {
   }
   return  EV_Ok;
 }
-void * set_web_addr(IO_Structure *w,int size) {
+void * set_io_stuct(IO_Structure *w,int size) {
   ready.return_addr=w;
   return ready.return_addr;
 }
-IO_Structure * get_web_addr() {
+IO_Structure * get_io_stuct() {
   return ready.return_addr;
 }
 int key_match(const char * k,const char * g) {
@@ -234,9 +236,9 @@ void gfunction(Pointer context,int n, Pointer v[]) {
 }
 Trio gfun_accessor_list[] = {
 	{"BindSelfRow",G_TYPE_MAPPER,(Mapper) map_self_row},
-	{"BindSelfStart",G_TYPE_MAPPER,(Mapper) map_self_start}, 
+	{"BindSelfOffset",G_TYPE_MAPPER,(Mapper) map_self_offset}, 
 	{"BindOtherRow",G_TYPE_MAPPER,(Mapper) map_other_row},
-	{"BindOtherStart",G_TYPE_MAPPER,(Mapper) map_other_start},
+	{"BindOtherOffset",G_TYPE_MAPPER,(Mapper) map_other_offset},
   {"BindRelativeSelfRow",G_TYPE_MAPPER,(Mapper)  map_relative_self_row},
   {"BindReturnAddr",G_TYPE_ADDR,(Mapper) map_return_addr},
 	{0,00,} };
@@ -256,16 +258,15 @@ int ugly_handler(Triple *top){
   if(linkid == '@'){
    // V0@V1,V2
  
-ready.any_name=new_string(top->key);
-        machine_step_fetch(&v1,0);
+ready.any_name=new_string(v0.key);
+
 		 s1 = 
         find_name( v0.key);
 		if(s1->type == G_TYPE_SYSTEM)
         return get_handler((int) s1->value,0)(top);  // Call handler acquies V2
 		else { // Dunno quite yet
     }
-    // pop_ready();
-    // incr_row(v0.pointer);
+
   }  else if(linkid == ':') {
       v1.key = new_string(v0.key);
       if(EV_Data &  machine_step(stmt) ) 
@@ -289,7 +290,7 @@ ready.any_name=new_string(top->key);
             (int) find_trio_value( top->key);
           machine_new_operator(top,0);
       }  else 
-        print_triple(top);
+        print_triple(&v0);
       reset_ready_event(EV_Ugly);
       return 0;
     }

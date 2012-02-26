@@ -104,3 +104,4 @@ void machine_row_info(Code  stmt, ColInfo *cinfo);
  * Grabp a row of longs from a square table.
  */
 void machine_unbind_row(Code stmt,ColInfo * cinfo, void * vals[]);
+int machine_value_len(Code stmt,int i);

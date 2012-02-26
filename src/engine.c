@@ -1,11 +1,9 @@
 // G engine
-
 #include "../src/include/config.h"
-
 #include "../src/include/g_types.h"
-
 #include "./include/machine.h"
 #include "../src/include/tables.h"
+#include "./include/qson.h"
 #include "../src/include/graphs.h"
 #include "../src/include/engine.h"
 #include "../src/include/console.h"
@@ -85,8 +83,7 @@ int exec_handler(Triple *t) {
 	Triple Qin;
   machine_step_fetch(&Qin,0); 
   install_sql_script((char *) Qin.key,SystemScratch) ;
-  Qin.link = SystemScratch;
-	return machine_new_operator(&Qin,square_handler);
+	return machine_new_operator(&SCRATCH_Triple,square_handler);
 }
 
 int swap_handler(Triple *t) {return EV_Ok;}
@@ -134,7 +131,7 @@ int echo_handler(Triple *node) {
   from->sa_family = AF_TABLE;
   machine_step_fetch(&Qin,0); 
   G_strcpy((char *) from->addr,Qin.key);
-  system_copy_qson(from,get_web_addr());
+  system_copy_qson(from,get_io_stuct());
 	return set_ready_event(0);
 }
 int dup_handler(Triple *node){
@@ -246,7 +243,7 @@ Handler g_debugger(Triple *);
 int g_debugger_state;
 Trio engine_trios[] = { 
 	{ "Debug", G_TYPE_HANDLER, g_debugger},
-	{ "Run_Table", G_TYPE_BIT, (Pointer) EV_Run_Table},
+	{ "RunTable", G_TYPE_BIT, (Pointer) EV_Run_Table},
   { "UnbindTriple", G_TYPE_HANDLER, (Handler) unbind_handler},
   { "AppendHandler", G_TYPE_HANDLER, (Handler) append_handler},
   { "ExitHandler", G_TYPE_HANDLER, (Handler) exit_handler},
@@ -287,7 +284,10 @@ Trio engine_trios[] = {
       to->sa_family = AF_TABLE;
       G_strcpy((char *) to->addr,"console"); 
       system_copy_qson(from,to);
-      init_run_table(to);
+      if(EV_Run_Table & reset_ready_event(EV_Run_Table)) {
+        init_json_stream(to);
+        init_run_table(to);
+      }
       machine_unlock();
       del_io_structs();
       flush_user_symbols();
