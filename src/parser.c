@@ -83,8 +83,6 @@ int json_rules(char cin, PGRAPH *inner);
 // builds a subgraph on inner from user text
 Triple prev,current,next;
 unsigned int cprev,ccurr,cnext;
-
-#define ParserHeader "parser"
 int parser(char * Json, TABLE *table) {
   int link;int nchars=0;
   PGRAPH *inner; // points to first child
@@ -94,10 +92,7 @@ int parser(char * Json, TABLE *table) {
   (*inner)->context=(void *) '_';
   (*inner)->table=table;
   prev = _null_graph;
-  current.key = ParserHeader;
-  current.link = '_';
-  link = '_';
-  ccurr = '_';
+  G_keyop(&Json,&current.key,&link);
   while(nchars >= 0) {
     next.link = link;
     nchars = G_keyop(&Json,&next.key,&link);
@@ -121,15 +116,15 @@ int json_rules(char cin, PGRAPH *inner) {
   int child_context;
   child_context = (int ) graph_variable(*inner);
   cnext = cin;
-  if(ccurr == '$') 
-    if(SetAttribute(current.key))
+  if((ccurr == '$') && SetAttribute(current.key))
       return 0;  // this local signal handled
-  if(ccurr == '{')
+  if(ccurr == '{'){
     new_child_graph(inner,(void *) ccurr);
+      append_graph(inner,current);
+  } 
   // Name:Value, Name@V1,v2 
   if ((cnext == ':') || (cnext == '@')) 
     new_child_graph(inner,(void *) cnext);
-
   // One append through this series
   if( (ccurr == ':')   ) {
     append_graph(inner,current);
@@ -137,7 +132,6 @@ int json_rules(char cin, PGRAPH *inner) {
   }
   if(ccurr == ',') {
     if(child_context == '@'){
-
       (*inner)->context =(void *) ',';
     }
     else   {
@@ -145,10 +139,16 @@ int json_rules(char cin, PGRAPH *inner) {
       new_child_graph(inner,(void *) ccurr);
       append_graph(inner,current);
     }
-  } else if((ccurr == '.') ||  (ccurr == '$')||  (ccurr == '{'))// yyy,xxx.xxx
-
-    append_graph(inner,current);
-  if(ccurr == '}') {  
+  } 
+  if((ccurr == '.') ||  (ccurr == '$')){
+      if(cnext != '{')   // .value{ is illegal
+         append_graph(inner,current);
+      else {
+      new_child_graph(inner,(void *) ccurr);
+      (*inner)->rdx.rowoffset--; // this is a prepend
+      }
+  }
+  /*if(ccurr == '}') {  
     int parent_context = (int ) graph_variable((*inner)->parent);
     if(parent_context == '{')     delete_graph(inner);
     else {
@@ -156,6 +156,7 @@ int json_rules(char cin, PGRAPH *inner) {
       new_child_graph(inner,(void *) ccurr);
     }
   } 
+  */
 
   cprev = ccurr; ccurr = cnext;
   prev = current;

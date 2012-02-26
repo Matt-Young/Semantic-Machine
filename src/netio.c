@@ -87,8 +87,7 @@ send_valid_http_msg(fd,DONE_MSG,0);
      del_io_structs();
     post_io_struct();
     closesocket(fd);
-          G_buff_counts();
- 
+      G_buff_counts();
   }
   BC.del_thread_count++;
   p->count = 0;

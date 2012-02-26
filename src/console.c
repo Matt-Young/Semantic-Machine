@@ -156,6 +156,7 @@ int G_console(IO_Structure * *out) {
       w->sa_family=AF_CONSOLE;
       w->buff = (int *) pstart;
       w->count = ptr-pstart;
+      pstart[w->count]=0;
        w->format = Json_IO;
        w->fd = (int) G_stdout();
      return(w->count);  // two in a row terminate
