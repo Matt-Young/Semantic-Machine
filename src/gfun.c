@@ -196,9 +196,7 @@ int event_handler(Triple * t) {
   }
   return(g_event);
 }
-void reset_G_columns(TABLE *t) { 
-  t->info.col_count = 0;
-}
+
 int do_square(int mode,TABLE *);
 
 

@@ -6,7 +6,7 @@
  * Report the types and names of a square row.
  */
 typedef struct  ColInfo {
-  int col_count;
+  int count;
   int rowid;
   const char * name[8]; 
   int type[8];
@@ -101,7 +101,11 @@ int machine_bind_blob(Code stmt,int index,void * blob,int size);
  */
 void machine_row_info(Code  stmt, ColInfo *cinfo);
 /*! \ingroup  Machine
- * Grabp a row of longs from a square table.
+ * Grab a row of longs from a square table.
  */
 void machine_unbind_row(Code stmt,ColInfo * cinfo, void * vals[]);
+/*! \ingroup  Machine
+ * Return current col value as text.
+ */
+char * machine_text(Code stmt,int colid);
 int machine_value_len(Code stmt,int i);

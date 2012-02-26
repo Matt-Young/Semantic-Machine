@@ -117,8 +117,8 @@ int machine_loop(Triple *t,Handler h) {
 }
 void machine_row_info(Code  stmt, ColInfo *cinfo) {
   int i;
-  cinfo->col_count = sqlite3_column_count((sqlite3_stmt*)stmt);
-  for(i=0;i< cinfo->col_count;i++) {
+  cinfo->count = sqlite3_column_count((sqlite3_stmt*)stmt);
+  for(i=0;i< cinfo->count;i++) {
     cinfo->name[i] = sqlite3_column_name((sqlite3_stmt*) stmt, i);
     cinfo->type[i] = sqlite3_column_type((sqlite3_stmt*) stmt, i);
     if(i == 3)
@@ -127,7 +127,7 @@ void machine_row_info(Code  stmt, ColInfo *cinfo) {
 }  
 void machine_unbind_row(Code stmt,ColInfo * cinfo, void * vals[]) {
   int i;
-  for (i=0;i < cinfo->col_count;i++) {
+  for (i=0;i < cinfo->count;i++) {
     switch (cinfo->type[i]) {
     case G_TYPE_INTEGER:
 	vals[i]= (void *) machine_column_int(stmt, 1);

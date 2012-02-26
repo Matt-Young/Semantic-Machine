@@ -46,11 +46,11 @@ int system_copy_qson(IO_Structure *from,IO_Structure *to );
 
 int init_json_stream(IO_Structure *to);
   /*! \ingroup  Qson
- * streal the triple having key with len bytes
+ * stream a segment of Json to a IO_Structu out, describing a flat memory file
 
  */
 
- int stream_json(Triple  * Qin,IO_Structure *to,int len); 
+int stream_json(int opid,int row_count,int key_len,char * key,IO_Structure *out);
 int test_qson(); 
 
 struct Format { 
