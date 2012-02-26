@@ -19,14 +19,22 @@ char * typeface[] = {
 	"{abc,def,ghi}",
 	"{@config}",
 	""};
-#define DLINE 1
+#define DLINE 2
 static int debug_counter=DLINE;
 
-void debug_json_string(IO_Structure * w) {
- w->buff = (int *) malloc(400);
- w->size=400;
- memset((char *) w->buff,0,400);
- strcpy((char *) w->buff,typeface[DLINE]);
+void debug_json_string(IO_Structure ** w) {
+  IO_Structure * x;
+  wait_io_struct();
+  x  = new_IO_Struct();
+  x->buff = (int *) malloc(400);
+  x->size=400;
+  memset((char *) x->buff,0,400);
+  strcpy((char *) x->buff,typeface[DLINE]);
+  *w=x;
+  x->sa_family=AF_CONSOLE;
+  x->count = strlen(x->buff);
+  x->format = Json_IO;
+  x->fd = (int) G_stdout();
 }
 
 
@@ -50,20 +58,13 @@ int test_qson() {
   w1.sa_family = AF_TABLE;
   system_copy_qson(&w2,&w1);  //mem to table
   strcpy((char *) w1.addr,TESTDIR);
-  strcat(w1.addr,"/result");
+  strcat((char *)w1.addr,"/result");
   w1.sa_family = AF_FILE;
   system_copy_qson(&w1,&w2);  //file to mem
   return 0;
 }
 
- void debug_enter(IO_Structure *c,char *ptr) {
-   char temp[200];
-   memset(temp,0,200);
-   printf("Hello debugger\n");
-   strcat(strcat(temp,TESTDIR),TESTFILE);
-   //console_file(c,temp);
-   debug_json_string(c);
- }
+
 void look_buff(void * buff) {
   char ch[200];char *ptr; int i;
      ptr = (char *) buff;

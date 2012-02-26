@@ -39,7 +39,7 @@ int header_magic(int newfd,int * count) {
   if(rv <= 0 ) {printf("Bad Header\n");return -1;}
   i += 1;}
   inbuffer[i] = 0;
- // for(len=0;len < i;len++) printf("%c",inbuffer[len]);
+  for(len=0;len < i;len++) printf("%c",inbuffer[len]);
   http_hdr_grunge(newfd,inbuffer,&len,&content,&type);
   *count = len;
   //if(*count > 0 ) type = Json_IO; else type = -1;

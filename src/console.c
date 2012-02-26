@@ -131,8 +131,7 @@ int console_command(char * line,char command ) {
      exit(0);
    else if (line[0] == 'f') 
      file_loop(line+1);
-   else if ((line[0] == 'd')) 
-     //debug_enter(console,lnei);
+   else if ((line[0] == 'd')) {}// debug?
   return 0;
    return 0;
 }
@@ -145,6 +144,7 @@ int G_console(IO_Structure * *out) {
 	ptr =(char *) malloc(Line_size);
   pstart = ptr;
   cprev = 0;
+
 	for(;;) {
     cin = fgetc(stdin);
     //printf("%x\n",cin);
@@ -255,16 +255,14 @@ void wait_io_struct() {
 void post_io_struct() {
     sem_post(&IO_Struct_mutex);  // wait for lock
 }
-#ifndef TEST_ADDR
-char * TEST_ADDR = "127.0.0.1";
-#endif
+
 int port = TEST_PORT;
 int engine_init();
 int net_start(void *);
 int console_loop();  // this, starting  thread
 int file_loop(char *);  // this, starting  thread
-char * argv[] = {"g","-file","test.txt"};
-int argc = 2;
+char * argv[] = {"g","-V","-O","-help"};
+int argc = 4;
  
 int test_qson();
 int main() {
@@ -275,19 +273,26 @@ int main() {
   engine_init();
   G_printf("Main engine\n");
   for(i=1; i < argc;i++) {
-    G_printf("Arg: %s\n",argv[i]);
     if(!G_strcmp(argv[i], "-V")) {
       G_printf("V: %s.\n",VERSION);
+      continue;
     } 
+     if(!G_strcmp(argv[i], "-exit")) 
+      G_exit();
      if(!G_strcmp(argv[i], "-O")) {
-      G_printf("O: %s.\n",DirOrigin);
+      G_printf("O: %s\n",DirOrigin);
+     continue;
     } 
     if( !G_strcmp(argv[i], "-help")  || !G_strcmp(argv[i], "-h") ) {
       G_printf("help: graphs\n");
       G_printf("Please see https://github.com/Matt-Young/Semantic-Machine/wiki .\n");
+      continue;
     } 
     if(!G_strcmp(argv[i], "-port") )
-    {  G_printf("Port changed %s\n",argv[i+1]);port = G_strtol(argv[i+1]); i++;}
+    { G_printf("Old port %d ",port); 
+    port = G_strtol(argv[i+1]); i++; 
+    G_printf("New port %d\n",port);
+    continue;}
     if(!G_strcmp(argv[i], "-file") ) {
       G_printf("File %s\n",argv[i+1]);
       file_loop(argv[i+1]); 

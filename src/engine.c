@@ -217,11 +217,11 @@ const struct {
 	{"SystemCall",SystemCall,EV_No_bind,call_handler},
 	{"SystemDup",SystemDup,EV_No_bind,dup_handler},
 	{"SystemPop",SystemPop,EV_No_bind,pop_handler},
-	{"SystemExec",SystemExec,EV_No_bind+EV_FormZero,exec_handler},
-	{"SystemScript",SystemScript,EV_No_bind+EV_FormZero,sql_handler},
-	{"SystemDecode",SystemDecode,EV_No_bind+EV_FormZero,script_handler},
-	{"SystemConfig",SystemConfig,EV_No_bind+EV_FormOne,config_handler},
-	{"SystemEcho",SystemEcho,EV_No_bind+EV_FormOne,echo_handler}
+	{"SystemExec",SystemExec,EV_No_bind,exec_handler},
+	{"SystemScript",SystemScript,EV_No_bind,sql_handler},
+	{"SystemDecode",SystemDecode,EV_No_bind,script_handler},
+	{"SystemConfig",SystemConfig,EV_No_bind,config_handler},
+	{"SystemEcho",SystemEcho,EV_No_bind,echo_handler}
 };
 
 int init_handlers() {
@@ -246,7 +246,7 @@ Handler g_debugger(Triple *);
 int g_debugger_state;
 Trio engine_trios[] = { 
 	{ "Debug", G_TYPE_HANDLER, g_debugger},
-	{ "Testing", G_TYPE_BIT, (Pointer) EV_Debug},
+	{ "Run_Table", G_TYPE_BIT, (Pointer) EV_Run_Table},
   { "UnbindTriple", G_TYPE_HANDLER, (Handler) unbind_handler},
   { "AppendHandler", G_TYPE_HANDLER, (Handler) append_handler},
   { "ExitHandler", G_TYPE_HANDLER, (Handler) exit_handler},
@@ -280,6 +280,7 @@ Trio engine_trios[] = {
       IO_Structure* from;
       IO_Structure* to;
       G_printf("Console loop\n");
+      //debug_json_string(&from);
       G_console(&from);
       machine_lock();
        to = new_IO_Struct();
