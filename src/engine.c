@@ -276,16 +276,19 @@ Trio engine_trios[] = {
   void console_loop(){
       IO_Structure* from;
       IO_Structure* to;
+      IO_Structure* json;
       G_printf("Console loop\n");
-      //debug_json_string(&from);
-      G_console(&from);
-      machine_lock();
+      debug_json_string(&from);
+      //G_console(&from);
+      //machine_lock();
        to = new_IO_Struct();
       to->sa_family = AF_TABLE;
       G_strcpy((char *) to->addr,"console"); 
       system_copy_qson(from,to);
       if(EV_Run_Table & reset_ready_event(EV_Run_Table)) {
-        init_json_stream(to);
+        json = new_IO_Struct();
+        init_json_stream(json);
+        set_io_struct(json);
         init_run_table(to);
       }
       machine_unlock();

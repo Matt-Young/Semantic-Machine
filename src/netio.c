@@ -11,7 +11,7 @@ switch between windows and linux
 #include "../socketx/socket_x.h"
 #include "../src/include/machine.h"
 #include "../src/include/http_hdrs.h"
-int set_io_stuct(IO_Structure *,int );
+int set_io_struct(IO_Structure * );
 #define error printf
 #define warn printf
 #define error printf

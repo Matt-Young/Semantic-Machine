@@ -69,7 +69,7 @@ int dup_table(char * in,char * out) {
 }
 int make_stmt(TABLE * table,int format,char * table_name);
 int init_table(char * name,int options,TABLE **table) {
-	 int status = EV_Ok;
+	 int status = EV_Ok;PGRAPH g;
 	 int i; TABLE *in;
    if(options)
 		 del_create_table(name);
@@ -77,8 +77,11 @@ int init_table(char * name,int options,TABLE **table) {
 	 for(i=0; i < (spare_operator)/2;i++) {
 		 make_stmt(in,i,name);
 	 }
-   new_child_graph((PGRAPH *) &in->list,(void *) '_');
+   g = new_child_graph((PGRAPH *) &in->list,(void *) '_');
+   in->list = g;
+   g->table=in;
    *table = in;
+   //g->table=in;
 	 return status;
  }
 int run_table(TABLE * t,Handler handler){
@@ -138,7 +141,7 @@ const struct new_install{
  {append_operator,SystemMax+4,"insert into %s values( ?, ?, ?);",
 	  "BindTriple","AppendHandler",0,0},
 	{update_operator,SystemMax+5,"update %s set pointer = (?) where rowid = ?;",
-	"BindSelfRow","BindSelfOffset","ExitHandler",0},
+	"BindRelativeSelfRow","BindSelfOffset","ExitHandler",0},
 	{0,0,0,0,0,0,0}
 };
 Mapper null_map(void * p,int * i);

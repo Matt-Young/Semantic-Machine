@@ -56,9 +56,9 @@ int bind_code(Triple *,Code );
  */
 IO_Structure  * get_io_stuct();
 /*! \ingroup  Readyset
- * The webaddr is kept in the ready set
+ * An output io struct is kept in the ready set
  */
-void * set_io_stuct(void  *,int);
+void * set_io_struct(void  *);
 int set_ready_graph(void *,IO_Structure *);
 TABLE * get_ready_table();
 int exit_handler(Triple *node);

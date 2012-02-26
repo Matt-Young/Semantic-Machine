@@ -8,7 +8,7 @@
 #include "../socketx/socket_x.h"
 
 char * typeface[] = {
-  "{@SystemExec,select * from netio;}",
+  "{$RunTable@SystemExec,select * from netio;}",
   "{@SystemConfig,37 .\"select * from netio; \" }",
   "{def.ccc,bbb.kkk,hhh.lyu,ggg.aaa}",
   "{a=23. . c=9. . c.f,d=33}",
@@ -19,7 +19,7 @@ char * typeface[] = {
 	"{abc,def,ghi}",
 	"{@config}",
 	""};
-#define DLINE 0
+#define DLINE 2
 static int debug_counter=DLINE;
 
 void debug_json_string(IO_Structure ** w) {

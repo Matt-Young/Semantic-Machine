@@ -21,13 +21,11 @@ int set_ready_event(int );
 // apply known attribute when detected in the input stream
 int SetAttribute(char * key) {
   Trio * trio;
-  if( G_strcmp(key,SystemNameSpace) )
-    return 0;
   trio= find_name(key);
   if(trio) {
     if( (int) trio->type == G_TYPE_BIT) 
       set_ready_event((int) trio->value);
-      return 1;
+    return 1;
   }
   return 0;
 }
@@ -67,21 +65,21 @@ int G_keyop(char * *Json,char **key,int *link) {
   if(i==0)
     *key = "_";  // valid null key
 
-   white(ptr);
+  white(ptr);
   if((*ptr == 0)|| !G_isugly(*ptr) ){
     *link = '_';
     return -1;
   }
-    // next operator
-   *link = *ptr;
-   *end = 0;
-ptr++;
+  // next operator
+  *link = *ptr;
+  *end = 0;
+  ptr++;
   *Json = ptr;
   return i;
 }
 int json_rules(char cin, PGRAPH *inner);
 // builds a subgraph on inner from user text
-Triple prev,current,next;
+Triple current,next;
 unsigned int cprev,ccurr,cnext;
 int parser(char * Json, TABLE *table) {
   int link;int nchars=0;
@@ -91,7 +89,7 @@ int parser(char * Json, TABLE *table) {
   link=0;cprev=1,ccurr=1,cnext=1;
   (*inner)->context=(void *) '_';
   (*inner)->table=table;
-  prev = _null_graph;
+
   G_keyop(&Json,&current.key,&link);
   while(nchars >= 0) {
     next.link = link;
@@ -116,44 +114,44 @@ int json_rules(char cin, PGRAPH *inner) {
   int child_context;
   child_context = (int ) graph_variable(*inner);
   cnext = cin;
-  if((ccurr == '$') && SetAttribute(current.key))
+  if(ccurr == '$') 
+    if(SetAttribute(current.key)) {
+      cprev = ccurr; ccurr = cnext;
+      current = next; 
       return 0;  // this local signal handled
-  if(ccurr == '{'){
+    }
+
+    // Name:Value, Name@V1,v2 
+    if ((cnext == ':') || (cnext == '@')) 
+      new_child_graph(inner,(void *) cnext);
+    // One append through this series
+    if(ccurr == '{'){
       append_graph(inner,current);
-  } 
-  // Name:Value, Name@V1,v2 
-  if ((cnext == ':') || (cnext == '@')) 
-    new_child_graph(inner,(void *) cnext);
-  // One append through this series
-  if( (ccurr == ':')   ) {
-    append_graph(inner,current);
-    close_update_graph(inner);
-  }
-  if(ccurr == ',') {
-    if(child_context == '@'){
-      (*inner)->context =(void *) ',';
-       append_graph(inner,current);
-    }
-    else   {
+    } else if( (ccurr == ':')   ) {
+      append_graph(inner,current);
       close_update_graph(inner);
-      new_child_graph(inner,(void *) ccurr);
-
-    }
-  } 
-  if(ccurr == '@')
-    append_graph(inner,current);
-  if((ccurr == '.') ||  (ccurr == '$')){
-      if(cnext != '{')   // .value{ is illegal
-         append_graph(inner,current);
-      else {
-      new_child_graph(inner,(void *) ccurr);
-      (*inner)->rdx.rowoffset--; // this is a prepend
+    } else if(ccurr == ',') {
+      if(child_context == '@'){
+        (*inner)->context =(void *) ',';
+        append_graph(inner,current);
+      }else  {
+        if(child_context == ',')
+          close_update_graph(inner);
+        new_child_graph(inner,(void *) ccurr);
+        append_graph(inner,current);
       }
-  }
-
-  cprev = ccurr; ccurr = cnext;
-  prev = current;
-  current = next; 
-  return 0;
+    } else if(ccurr == '@')
+      append_graph(inner,current);
+    else if((ccurr == '.') ||  (ccurr == '$')){
+      if(cnext != '{')   // .value{ is illegal
+        append_graph(inner,current);
+      else {
+        new_child_graph(inner,(void *) ccurr);
+        (*inner)->rdx.rowoffset--; // this is a prepend
+      }
+    }
+    cprev = ccurr; ccurr = cnext;
+    current = next; 
+    return 0;
 
 }

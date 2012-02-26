@@ -128,7 +128,7 @@ int  set_ready_graph(TABLE * t,IO_Structure * to) {
   }
   return  EV_Ok;
 }
-void * set_io_stuct(IO_Structure *w,int size) {
+void * set_io_struct(IO_Structure *w) {
   ready.return_addr=w;
   return ready.return_addr;
 }

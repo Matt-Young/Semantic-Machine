@@ -8,7 +8,7 @@
 #include "../src/include/console.h"
 #undef DBG_GRAPHS
 #ifndef DBG_GRAPHS
-#define G_printf
+//#define G_printf
 #endif
 void list_graphs(PGRAPH  *list,char*);
 // every graph is an open subraph of its parent. 
@@ -137,8 +137,8 @@ void list_graphs(PGRAPH  *list,char * arg){
   int i=0;
   g = *list;
   while(g) {
-    // G_printf("%s %d %x %x ",arg,i,g->parent); 
-     //G_printf(" %d %d %d\n",g->rdx.row,g->rdx.end,g->rdx.rowoffset); 
+    G_printf("%s %d %x %x ",arg,i,g->parent); 
+     G_printf(" %d %d %d\n",g->rdx.row,g->rdx.end,g->rdx.rowoffset); 
      g=g->parent;i++;
   }
 }
