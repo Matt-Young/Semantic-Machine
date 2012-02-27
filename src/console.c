@@ -197,7 +197,6 @@ IO_Structure * new_IO_Struct(){
   }
   else
     anchor = w;
-  printf("\new io %x\n",anchor);
   BC.new_web_count++;
   return w;
 }
@@ -215,7 +214,6 @@ if(w->buff ) {
 }
 anchor = w->link;
 free(w);
-printf("\ndel %x\n",anchor);
 BC.del_web_count++;
 return anchor;
 };
@@ -251,7 +249,6 @@ void init_IO_Struct() {
 IO_Structure * wait_IO_Struct() {
   IO_Structure * s;
     sem_wait(&IO_Struct_mutex);  // wait for lock
-    printf(" Mutex \n");
     s=new_IO_Struct();
     set_IO_Struct(s);
     return s;
@@ -271,9 +268,6 @@ void post_IO_Struct(OutputHandler h) {
     free( io->buff); //free should be thread safe!
   }
    free(io);
-    printf("Deleted IO structs\n");
-
-   printf(" No Mutex \n");
 }
 
 int port = TEST_PORT;

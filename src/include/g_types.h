@@ -17,9 +17,7 @@ typedef struct g * Pstruct;
   // Generic context to sqlite3
 extern Pointer g_db;
 
-/**
- * ... g_types.h basic type unique to qson
- */
+
 enum qson_base_types {G_TYPE_NONE,G_TYPE_INTEGER,G_TYPE_FLOAT,
 	G_TYPE_TEXT,G_TYPE_BLOB,G_TYPE_BIT,G_TYPE_TRIPLE,G_TYPE_CODE,
 	G_TYPE_MAPPER,G_TYPE_HANDLER,G_TYPE_TABLE,
@@ -28,18 +26,37 @@ enum qson_base_types {G_TYPE_NONE,G_TYPE_INTEGER,G_TYPE_FLOAT,
 #define AF_INET 2
 
 #define AF_INET6 23
+ /*! \defgroup  IO_Structures
+ * Machine API
+ */
 
 typedef struct IO_Structure {   
   unsigned short  sa_family; unsigned short port;
   long addr[5]; int fd; int format;
   void * buff; int count; int size; char * fill; char * empty;struct  IO_Structure *link; 
   } IO_Structure;
+/*! \ingroup  IO_Structures
+ * Malloc a new io struct.
+ */
   IO_Structure * new_IO_Struct();
+  /*! \ingroup  IO_Structures
+ * Sema wait to gain access to IO_Struct. 
+ * Sets up the default result io_struct
+ */
   IO_Structure * wait_IO_Struct();
   void init_IO_Struct();
+    /*! \ingroup  IO_Structures
+ * Called to wait for threads to clear.
+ */
   int clear_IO_Struct() ;
+      /*! \ingroup  IO_Structures
+ * Printf default function for returning results.
+ */
   int IO_send(int,char *,int); // default send handler
   typedef int (*OutputHandler)(int fd,char * buff,int len);
+        /*! \ingroup  IO_Structures
+ * Relese Io_Struct, call output handler, delete all used memory
+ */
   void post_IO_Struct(OutputHandler);
   IO_Structure * get_IO_Struct();
   void  set_IO_Struct(IO_Structure *);

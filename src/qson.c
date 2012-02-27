@@ -37,13 +37,18 @@ int init_json_stream() {
     char * ptr=(char *)to->buff;
    char * start;
    start = ptr;
-    //printf("\nH: |%s|%d Ss %d ",key,len,to->size);
-   if((pointer > 1) && (jc.prev != '.') && ( jc.prev != ',')) {
+    printf("\nE%d\n",jc.prev);
+    if(!jc.prev)
+      {ptr[to->size]='{';to->size++; jc.prev='{';
       jc.cur++; jc.brk[jc.cur].count = 0;jc.brk[jc.cur].total = pointer;
-      ptr[to->size]='{';to->size++;
-    } else
-   {ptr[to->size]=link;to->size++;}
-   // printf(" %d ",to->size);
+    }
+   else if((pointer > 1) && (jc.prev == '}') ) {
+      jc.cur++; jc.brk[jc.cur].count = 0;jc.brk[jc.cur].total = pointer;
+      ptr[to->size]=link;to->size++;
+      ptr[to->size]='{';to->size++; jc.prev=link;
+    } else if(jc.prev) {
+      ptr[to->size]=link;to->size++;jc.prev=link;
+   } 
     strncpy(ptr+to->size,key,len); to->size +=len;
        // printf(" %d ",to->size);
     ptr[to->size]=0;
@@ -52,12 +57,8 @@ int init_json_stream() {
     jc.brk[jc.cur].count++;
     while(jc.brk[jc.cur].count == jc.brk[jc.cur].total) {
       jc.cur--;jc.brk[jc.cur].count += jc.brk[jc.cur+1].count;
-      ptr[to->size]='}';to->size++;
+      ptr[to->size]='}';to->size++;jc.prev='}';
     }
-       // printf(" %s | %s\n",to->buff,ptr);
-     jc.prev=link;
-     //for(i=0;i < to->size;i++) printf("%c",(char )to->buff+i);
-    // printf("%s %x %d\n",start,start,to->size);
 	return 0;
 	}
 void send_(char * data,int len, IO_Structure * to) {
