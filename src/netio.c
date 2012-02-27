@@ -10,6 +10,7 @@ switch between windows and linux
 #include "../src/include/g_types.h"
 #include "../socketx/socket_x.h"
 #include "../src/include/machine.h"
+
 #include "../src/include/http_hdrs.h"
 #define error printf
 #define warn printf
@@ -79,10 +80,13 @@ send_valid_http_msg(fd,0,0) ;
      for(rv=0;rv < p->count;rv++) printf("%c",buff[rv]);
      strcpy((char *) to->addr,"netio");  // Table name
     system_copy_qson(from,to); 
-       printf(" Action\n ");
-     //init_run_table(from,to);
+      if(EV_Run_Table & reset_ready_event(EV_Run_Table)) {
+        init_json_stream();
+        init_run_table(to);
+      }
     machine_unlock();
-    post_IO_Struct(send_valid_http_msg);
+   post_IO_Struct(send_valid_http_msg);
+    //post_IO_Struct(IO_send);
     closesocket(fd);
       G_buff_counts();
   }

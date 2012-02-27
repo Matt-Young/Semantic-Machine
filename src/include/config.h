@@ -1,7 +1,7 @@
 
 #define SERVER_NAME "Joe"
 #define VERSION "Jane"
-#define ORIGIN "c:/soft/"
+#define ORIGIN "c:/qson/"
 #define GBASE "gbase"
 #define NETIO
 #define WINDOWS

@@ -38,14 +38,20 @@ typedef struct IO_Structure {
   IO_Structure * del_IO_Struct(IO_Structure *);
   IO_Structure * wait_IO_Struct();
   void init_IO_Struct();
-  void IO_send(char *,int,int); // default send handler
-  typedef void (*OutputHandler)(int fd,char * buff,int len);
+  int IO_send(int,char *,int); // default send handler
+  typedef int (*OutputHandler)(int fd,char * buff,int len);
   void post_IO_Struct(OutputHandler);
   //void del_IO_Structs();
   void del_IO_Structs();
   IO_Structure * get_IO_Struct();
   void  set_IO_Struct(IO_Structure *);
-  //int mem_delete(IO_Structure *w);
+int init_json_stream();
+  /*! \ingroup  Qson
+ * stream a segment of Json to a IO_Structu out, describing a flat memory file
+
+ */
+
+int stream_json(int opid,int row_count,int key_len,char * key,IO_Structure *to);
 
 
   // Qson io forms

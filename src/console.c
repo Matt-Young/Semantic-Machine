@@ -256,7 +256,7 @@ IO_Structure * wait_IO_Struct() {
     return s;
 }
 
-void IO_send(int fd,char *b,int l) {printf("%s",b);}
+int IO_send(int fd,char *b,int l) {printf("%s",b);return -1;}
 void post_IO_Struct(OutputHandler h) {
   IO_Structure * io;
   io = anchor;
