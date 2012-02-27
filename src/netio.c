@@ -36,10 +36,13 @@ int header_magic(int newfd,int * count) {
   if(rv <= 0 ) {printf("Bad Header\n");return -1;}
   while(!strstr(&inbuffer[i-4],"\r\n\r\n")) {
   rv = recv(newfd, &inbuffer[i],1,0);
-  if(rv <= 0 ) {printf("Bad Header\n");return -1;}
+  if(rv <= 0 ) {
+    printf("No double line\n");
+    send_valid_http_msg(newfd,0,0);
+    return -1;}
   i += 1;}
   inbuffer[i] = 0;
-  for(len=0;len < i;len++) printf("%c",inbuffer[len]);
+  //for(len=0;len < i;len++) printf("%c",inbuffer[len]);
   http_hdr_grunge(newfd,inbuffer,&len,&content,&type);
   *count = len;
   //if(*count > 0 ) type = Json_IO; else type = -1;
@@ -52,33 +55,37 @@ int header_magic(int newfd,int * count) {
 void * handle_data(void * arg) {
   int status=0; char * buff;
     int fd,rv;
-    IO_Structure *from,*to;
+    IO_Structure *from,*to,*source;
 TH_Struct *p = (TH_Struct *) arg;
   fd = p->fd;
   BC.new_thread_count++;
   //printf("handler count %d\n",p->count);
-  buff = (char *) G_malloc(p->count+4);
+  G_buff_counts();
+  printf(" NewThread \n");
+  source = wait_IO_Struct();
+  buff = (char *) malloc(p->count+4);
   rv = recv(fd, (char* )buff, p->count,0);
   if(rv < p->count) {
-send_valid_http_msg(fd,0,0) ;
-    G_free(buff);
+   post_IO_Struct(send_valid_http_msg);
     closesocket(fd);
         printf(" Bad data \n");
   }
   else {
     printf(" Good data \n");
     buff[p->count]=0;
-    from = wait_IO_Struct();
     to = new_IO_Struct();
+    from = new_IO_Struct();
     machine_lock();
     memcpy(from->addr,&p->remote_addr,sizeof(struct sockaddr_in));
-     to->sa_family = AF_TABLE;
-     from->sa_family= AF_INET;
      from->fd= fd;
+
+     from->sa_family= AF_INET;
      from->count = p->count;
+     *source = *from;
      from->buff = (int *) buff;
-     for(rv=0;rv < p->count;rv++) printf("%c",buff[rv]);
+    // for(rv=0;rv < p->count;rv++) printf("%c",buff[rv]);
      strcpy((char *) to->addr,"netio");  // Table name
+      to->sa_family = AF_TABLE;
     system_copy_qson(from,to); 
       if(EV_Run_Table & reset_ready_event(EV_Run_Table)) {
         init_json_stream();
@@ -128,13 +135,14 @@ void * net_service (void * port)  {
 
   while(1) {
     thread_index=0;
-    while(thread_context[thread_index].count && thread_index < THREAD_MAX) thread_index++;
-    if(thread_index== THREAD_MAX) {
-      wait_IO_Struct();
-      post_IO_Struct(IO_send);
-      warn("running out of thread space");
-
-      continue;}
+    while(thread_context[thread_index].count) {
+      thread_index++;
+      if(thread_index== THREAD_MAX) {
+        clear_IO_Struct();
+        warn("running out of thread space");
+          thread_index=0;
+      }
+    }
     newfd = accept(sockfd, 
       (struct sockaddr *) &thread_context[thread_index].remote_addr, 
       &sin_size);
@@ -145,9 +153,7 @@ void * net_service (void * port)  {
     type = header_magic(newfd,&count); // Consume header
 
     if(type < 0 || count == 0) {
-     // send_valid_http_msg(newfd,0,0) ;
       closesocket(newfd);
-     printf("\n Handled elsewhere \n");
     } else if(type >= 0){
       printf("\n Connection! \n");
       thread_context[thread_index].type = type; 

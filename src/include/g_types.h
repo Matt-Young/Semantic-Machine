@@ -35,14 +35,12 @@ typedef struct IO_Structure {
   void * buff; int count; int size; char * fill; char * empty;struct  IO_Structure *link; 
   } IO_Structure;
   IO_Structure * new_IO_Struct();
-  IO_Structure * del_IO_Struct(IO_Structure *);
   IO_Structure * wait_IO_Struct();
   void init_IO_Struct();
+  int clear_IO_Struct() ;
   int IO_send(int,char *,int); // default send handler
   typedef int (*OutputHandler)(int fd,char * buff,int len);
   void post_IO_Struct(OutputHandler);
-  //void del_IO_Structs();
-  void del_IO_Structs();
   IO_Structure * get_IO_Struct();
   void  set_IO_Struct(IO_Structure *);
 int init_json_stream();

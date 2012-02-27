@@ -197,7 +197,7 @@ IO_Structure * new_IO_Struct(){
   }
   else
     anchor = w;
-  printf("\new %x\n",anchor);
+  printf("\new io %x\n",anchor);
   BC.new_web_count++;
   return w;
 }
@@ -215,7 +215,7 @@ if(w->buff ) {
 }
 anchor = w->link;
 free(w);
-printf("\del %x\n",anchor);
+printf("\ndel %x\n",anchor);
 BC.del_web_count++;
 return anchor;
 };
@@ -246,28 +246,34 @@ int mem_delete(IO_Structure *w) {
 sem_t IO_Struct_mutex;
 void init_IO_Struct() {
     anchor=0;
-    sem_init(&IO_Struct_mutex, 1, 1);
+    sem_init(&IO_Struct_mutex, 0, 1);
   }
 IO_Structure * wait_IO_Struct() {
   IO_Structure * s;
     sem_wait(&IO_Struct_mutex);  // wait for lock
+    printf(" Mutex \n");
     s=new_IO_Struct();
     set_IO_Struct(s);
     return s;
 }
-
+int clear_IO_Struct() { sem_wait(&IO_Struct_mutex);return  sem_post(&IO_Struct_mutex);}
 int IO_send(int fd,char *b,int l) {printf("%s",b);return -1;}
 void post_IO_Struct(OutputHandler h) {
   IO_Structure * io;
   io = anchor;
   anchor=anchor->link;
-  io->link=0;
   del_IO_Structs();
   sem_post(&IO_Struct_mutex);  // unlock
-  h(io->fd,(char *) io->buff,io->size);
-   printf("\io %x\n",io);
-  anchor=io;
-  del_IO_Struct(io);
+  io->link=0;
+  if(io->buff) {
+    h(io->fd,(char *) io->buff,io->size);
+    printf("Output\n");
+    free( io->buff); //free should be thread safe!
+  }
+   free(io);
+    printf("Deleted IO structs\n");
+
+   printf(" No Mutex \n");
 }
 
 int port = TEST_PORT;

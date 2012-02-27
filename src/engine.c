@@ -304,7 +304,6 @@ Trio engine_trios[] = {
       G_strcpy((char *) to->addr,"file"); 
       system_copy_qson(from,to);
       machine_unlock();
-      del_IO_Structs();
       post_IO_Struct(IO_send);
       G_buff_counts();
   }
