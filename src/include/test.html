@@ -1,0 +1,54 @@
+ <html>                                                                  
+ <head>                   
+<link rel="shortcut icon" href="#" /> 
+ <script type="text/javascript" >   
+ document.domain=localhost
+function displayDate()
+{
+document.getElementById("demo").innerHTML=Date();
+} 
+                                
+   // This function is built based off code that can be found here: http://msdn.microsoft.com/library/default.asp?url=/workshop/author/dhtml/overview/aboutxmlhttp.asp
+    function http_io()
+    {
+document.getElementById("output").innerHTML= "no Text";
+    obj = new XMLHttpRequest();
+	obj.onreadystatechange = function() {
+	//alert('on change ' + obj.status + obj.getAllResponseHeaders());
+	 if (obj.readyState==4) {
+	 if (obj.status!=404) {
+	 //document.getElementById("output").innerHTML= "Got Text";
+    document.getElementById("output").innerHTML = obj.responseText;
+   } else {
+    alert("Whoops");
+   }
+ }
+   }
+	 obj.open("POST", "/c:/soft/test.html", true);
+	 obj.setRequestHeader( "Content-Type", "application/json");
+	obj.send( document.getElementById("input").value); 
+    }
+
+
+</script>
+ 
+ </head>                                                                 
+ <body onload=""> 
+ </h1> Lazy J</h1>
+
+ <textarea id = "input" rows="2" cols="20" >
+ {Some,input.and,more}
+ </textarea>
+ 
+   <input type="submit" onClick=http_io()></input>   
+ <textarea id = "output" rows="2" cols="20" enctype = "text/plain">
+ 
+ </textarea>
+ 
+ <a href="" onClick=http_io()>Link</a> 
+<form enctype="multipart/form-data">
+<input type="file" accept="text/plain">
+ <input type="submit" method = "POST" name="submit" value="Submit" enctype=""application/json"">
+</form> 
+ </body>                                                                 
+ </html>

@@ -11,7 +11,6 @@ switch between windows and linux
 #include "../socketx/socket_x.h"
 #include "../src/include/machine.h"
 #include "../src/include/http_hdrs.h"
-int set_io_struct(IO_Structure * );
 #define error printf
 #define warn printf
 #define error printf
@@ -68,13 +67,13 @@ send_valid_http_msg(fd,0,0) ;
   else {
     printf(" Good data \n");
     buff[p->count]=0;
-    wait_io_struct();
-    from = new_IO_Struct();
+    from = wait_IO_Struct();
     to = new_IO_Struct();
     machine_lock();
     memcpy(from->addr,&p->remote_addr,sizeof(struct sockaddr_in));
      to->sa_family = AF_TABLE;
      from->sa_family= AF_INET;
+     from->fd= fd;
      from->count = p->count;
      from->buff = (int *) buff;
      for(rv=0;rv < p->count;rv++) printf("%c",buff[rv]);
@@ -83,9 +82,7 @@ send_valid_http_msg(fd,0,0) ;
        printf(" Action\n ");
      //init_run_table(from,to);
     machine_unlock();
-send_valid_http_msg(fd,DONE_MSG,0);
-     del_io_structs();
-    post_io_struct();
+    post_IO_Struct(send_valid_http_msg);
     closesocket(fd);
       G_buff_counts();
   }
@@ -129,8 +126,8 @@ void * net_service (void * port)  {
     thread_index=0;
     while(thread_context[thread_index].count && thread_index < THREAD_MAX) thread_index++;
     if(thread_index== THREAD_MAX) {
-      wait_io_struct();
-      post_io_struct();
+      wait_IO_Struct();
+      post_IO_Struct(IO_send);
       warn("running out of thread space");
 
       continue;}

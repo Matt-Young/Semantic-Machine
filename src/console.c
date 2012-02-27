@@ -68,7 +68,7 @@ void G_debug(void * format){};
 // Is it a character known to the syntax? '
 //#define Line_size 256
 //int line[Line_size]; 
-int * console_io_struct(IO_Structure * console);
+int * console_IO_Struct(IO_Structure * console);
 char * G_AddConsole(IO_Structure * console,char cin) {
 	console->empty[0] = cin; 
 	console->empty++; console->count++;
@@ -102,7 +102,7 @@ int   G_file(IO_Structure ** out,char * name) {
 
   if(f){
       IO_Structure *w;
-      wait_io_struct();
+      wait_IO_Struct();
       w = new_IO_Struct();
       *out = w;
     fstat(_fileno(f), &buf);
@@ -149,7 +149,7 @@ int G_console(IO_Structure * *out) {
     //printf("%x\n",cin);
     if(  (cin == '\n') &&  ( (cprev == '\n') ||  (left == right)) ) {
       IO_Structure *w;
-      wait_io_struct();
+      wait_IO_Struct();
       w = new_IO_Struct();
       *out = w;
       w->sa_family=AF_CONSOLE;
@@ -191,15 +191,19 @@ IO_Structure *anchor;
 IO_Structure * new_IO_Struct(){
   IO_Structure * w = (IO_Structure *) malloc(sizeof(IO_Structure));
   memset(w,0,sizeof(IO_Structure));
-  if(anchor)
-    w->link = anchor;
-  anchor = w;
+  if(anchor) {
+    w->link=anchor->link;
+    anchor->link=w;
+  }
+  else
+    anchor = w;
+  printf("\new %x\n",anchor);
   BC.new_web_count++;
   return w;
 }
 int mem_delete(IO_Structure *w);
 void release_table_context(void *);
-IO_Structure * del_io_struct(IO_Structure *w){
+IO_Structure * del_IO_Struct(IO_Structure *w){
 if(!anchor)
   printf("web link error \n");
 if(BC.del_web_count >= BC.new_web_count)
@@ -211,13 +215,14 @@ if(w->buff ) {
 }
 anchor = w->link;
 free(w);
+printf("\del %x\n",anchor);
 BC.del_web_count++;
 return anchor;
 };
 // delete webaddr chain
-void  del_io_structs() {
+void  del_IO_Structs() {
   while(anchor) 
-    del_io_struct(anchor);
+    del_IO_Struct(anchor);
 }
 
 int mem_delete(IO_Structure *w) {
@@ -239,17 +244,30 @@ int mem_delete(IO_Structure *w) {
 }
 
 sem_t IO_Struct_mutex;
-void init_io_struct() {
+void init_IO_Struct() {
     anchor=0;
     sem_init(&IO_Struct_mutex, 1, 1);
   }
-int set_ready_graph(void * t,IO_Structure *) ;
-void wait_io_struct() {
+IO_Structure * wait_IO_Struct() {
+  IO_Structure * s;
     sem_wait(&IO_Struct_mutex);  // wait for lock
-    set_ready_graph(0,0); 
+    s=new_IO_Struct();
+    set_IO_Struct(s);
+    return s;
 }
-void post_io_struct() {
-    sem_post(&IO_Struct_mutex);  // wait for lock
+
+void IO_send(int fd,char *b,int l) {printf("%s",b);}
+void post_IO_Struct(OutputHandler h) {
+  IO_Structure * io;
+  io = anchor;
+  anchor=anchor->link;
+  io->link=0;
+  del_IO_Structs();
+  sem_post(&IO_Struct_mutex);  // unlock
+  h(io->fd,(char *) io->buff,io->size);
+   printf("\io %x\n",io);
+  anchor=io;
+  del_IO_Struct(io);
 }
 
 int port = TEST_PORT;

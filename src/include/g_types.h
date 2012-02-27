@@ -36,21 +36,26 @@ typedef struct IO_Structure {
   } IO_Structure;
   IO_Structure * new_IO_Struct();
   IO_Structure * del_IO_Struct(IO_Structure *);
+  IO_Structure * wait_IO_Struct();
+  void init_IO_Struct();
+  void IO_send(char *,int,int); // default send handler
+  typedef void (*OutputHandler)(int fd,char * buff,int len);
+  void post_IO_Struct(OutputHandler);
+  //void del_IO_Structs();
   void del_IO_Structs();
-  int mem_delete(IO_Structure *w);
+  IO_Structure * get_IO_Struct();
+  void  set_IO_Struct(IO_Structure *);
+  //int mem_delete(IO_Structure *w);
 
 
-  // Qson io formas
+  // Qson io forms
 #define AF_JSON  0x70e4
 #define AF_FILE  0x70e3
 #define AF_CONSOLE 0x70e2
 #define AF_TABLE   0x70e1
 #define AF_MEMORY  0x70e0
 int system_copy_qson(IO_Structure *,IO_Structure * );
-void init_io_struct();
-void wait_io_struct();
-void post_io_struct();
-void del_io_structs();
+
 // Two sub types on IO_Structure
 enum SerializedFormat { Json_IO,Bson_IO,Qson_IO};
 

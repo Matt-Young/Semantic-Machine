@@ -131,7 +131,7 @@ int echo_handler(Triple *node) {
   from->sa_family = AF_TABLE;
   machine_step_fetch(&Qin,0); 
   G_strcpy((char *) from->addr,Qin.key);
-  system_copy_qson(from,get_io_stuct());
+  system_copy_qson(from,get_IO_Struct());
 	return set_ready_event(0);
 }
 int dup_handler(Triple *node){
@@ -271,31 +271,26 @@ Trio engine_trios[] = {
 	void debug_loop() {
 	for(;;) {}  // no debugger!!
 }
- 
   int test_qson();
   void console_loop(){
       IO_Structure* from;
       IO_Structure* to;
-      IO_Structure* json;
       G_printf("Console loop\n");
-      debug_json_string(&from);
-      //G_console(&from);
+      //debug_json_string(&from);
+      G_console(&from);
       //machine_lock();
        to = new_IO_Struct();
       to->sa_family = AF_TABLE;
       G_strcpy((char *) to->addr,"console"); 
       system_copy_qson(from,to);
       if(EV_Run_Table & reset_ready_event(EV_Run_Table)) {
-        json = new_IO_Struct();
-        init_json_stream(json);
-        set_io_struct(json);
+        init_json_stream();
         init_run_table(to);
       }
       machine_unlock();
-      del_io_structs();
       flush_user_symbols();
       sort_names();
-      post_io_struct();
+      post_IO_Struct(IO_send);
       G_buff_counts();
   }
     void file_loop(char * name){
@@ -309,8 +304,8 @@ Trio engine_trios[] = {
       G_strcpy((char *) to->addr,"file"); 
       system_copy_qson(from,to);
       machine_unlock();
-      del_io_structs();
-      post_io_struct();
+      del_IO_Structs();
+      post_IO_Struct(IO_send);
       G_buff_counts();
   }
 int init_machine() {
@@ -336,7 +331,7 @@ void engine_init() {
 		status = init_machine();
 		op = operands[GCHAR];
     sort_names();
-    init_io_struct();
+    init_IO_Struct();
   }
 
 

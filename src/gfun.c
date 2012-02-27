@@ -116,23 +116,23 @@ int set_ready_code(int opid) {
 Code set_ready_stmt(Code stmt) {
 	ready.stmt = stmt;
 	return ready.stmt; }
-int  set_ready_graph(TABLE * t,IO_Structure * to) {
-  G_memset(&ready,0,sizeof(ready));
-  ready.table=t;
-  ready.return_addr = to;
-  // ready.return_addr->sa_family = AF_CONSOLE;
-  // ready.return_addr->format=Json_IO;
+int  set_ready_graph(TABLE * t) {
+
   if(t) {
-    ready.self = &((PGRAPH) t->list)->rdx;
-    ready.self->end = -1;
+     ready.table=t;
+     if(t->list) {
+      ready.self = &((PGRAPH) t->list)->rdx;
+      ready.self->end = -1;
+     }
   }
   return  EV_Ok;
 }
-void * set_io_struct(IO_Structure *w) {
+// this is also the starting initialization
+void set_IO_Struct(IO_Structure *w) {
+  G_memset(&ready,0,sizeof(ready));
   ready.return_addr=w;
-  return ready.return_addr;
 }
-IO_Structure * get_io_stuct() {
+IO_Structure * get_IO_Struct() {
   return ready.return_addr;
 }
 int key_match(const char * k,const char * g) {
@@ -164,7 +164,7 @@ int init_run_json(Triple *triple) {
 	int status;TABLE * table;
   G_printf("Json  \n");
  init_table("console",0,&table);
-	status= set_ready_graph(table,0);
+	status= set_ready_graph(table);
   G_printf("Begin Json\n");
 	status=parser(triple->key,table);
 //  run_table(table,0);

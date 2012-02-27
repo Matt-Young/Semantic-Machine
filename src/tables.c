@@ -34,7 +34,7 @@ TABLE * get_table_context(char * name) {
   TABLE *pt; int i;
   pt = new_table_context();
   pt->list = 0;
-  pt->attribute = G_TYPE_TABLE;
+  pt->attribute = EV_Ok;
 
   for(i=0;i< NUMBER_TABLES;i++) {if(triple_tables[i]==0) break;}
   pt->index = i;
@@ -96,7 +96,7 @@ int run_table(TABLE * t,Handler handler){
  return 0;
 }
 
-int init_run_table(IO_Structure * from,IO_Structure *to) {
+int init_run_table(IO_Structure *from) {
   int status; Triple *t;
   TABLE * table = (TABLE *) from->buff;
   if(!table)
@@ -105,7 +105,8 @@ int init_run_table(IO_Structure * from,IO_Structure *to) {
     if(!table->list)
        new_child_graph((PGRAPH *) &table->list,(void *) '_');
     t  = &table->operators[pop_operator];
-    status = set_ready_graph(table,to);
+    status = set_ready_graph(table);
+    printf("\ntbl %x\n",get_IO_Struct());
     machine_new_operator(t,ugly_handler);
   }
   return 0;

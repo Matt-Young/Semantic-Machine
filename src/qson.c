@@ -7,7 +7,7 @@
 #include "../src/include/tables.h"
 #include "../src/include/engine.h"
 #include "../socketx/socket_x.h"
-
+#include "../src/include/qson.h"
 #define DBG_printf
 int parser(char * ,TABLE *);  
 
@@ -23,30 +23,41 @@ struct {
    struct {int count;int total;} brk[8];
    int cur; char prev;
 } jc;
-int init_json_stream(IO_Structure *to) {
+int init_json_stream() {
+  IO_Structure *to;
   memset( &jc,0,sizeof(jc));
+  to = get_IO_Struct();  
   if(to->buff)
-    printf("Buff empty\n");
+    printf("Buff not empty\n");
   else 
-    to->buff = (void *) G_malloc(4000);
+    to->buff = (void *) G_malloc(8000);
   return 0;
 }
-   int stream_json(Triple  * Qin,IO_Structure *to,int len) {
-   char tmp[4]; char * ptr=(char *)to->buff;
-   strncpy(ptr+to->size,Qin->key,len);
- to->size+=len;
-    ptr[to->size]=Qin->link;to->size++;
+   int stream_json(int link,int pointer,int len,char * key,IO_Structure *to) {
+    char * ptr=(char *)to->buff;
+   char * start;
+   start = ptr;
+    //printf("\nH: |%s|%d Ss %d ",key,len,to->size);
+   if((pointer > 1) && (jc.prev != '.') && ( jc.prev != ',')) {
+      jc.cur++; jc.brk[jc.cur].count = 0;jc.brk[jc.cur].total = pointer;
+      ptr[to->size]='{';to->size++;
+    } else
+   {ptr[to->size]=link;to->size++;}
+   // printf(" %d ",to->size);
+    strncpy(ptr+to->size,key,len); to->size +=len;
+       // printf(" %d ",to->size);
+    ptr[to->size]=0;
+
     // restore brckets
     jc.brk[jc.cur].count++;
     while(jc.brk[jc.cur].count == jc.brk[jc.cur].total) {
       jc.cur--;jc.brk[jc.cur].count += jc.brk[jc.cur+1].count;
       ptr[to->size]='}';to->size++;
     }
-    if((Qin->pointer > 1) && (jc.prev != '.') && ( jc.prev != ',')) {
-      jc.cur++; jc.brk[jc.cur].count = 0;jc.brk[jc.cur].total = Qin->pointer;
-      ptr[to->size]='{';to->size++;
-    }
-     jc.prev=Qin->link;
+       // printf(" %s | %s\n",to->buff,ptr);
+     jc.prev=link;
+     //for(i=0;i < to->size;i++) printf("%c",(char )to->buff+i);
+    // printf("%s %x %d\n",start,start,to->size);
 	return 0;
 	}
 void send_(char * data,int len, IO_Structure * to) {

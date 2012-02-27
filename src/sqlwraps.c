@@ -104,14 +104,16 @@ int machine_append(Triple *t,Handler h) {
   return set_ready_event(0);
 }
 int machine_loop(Triple *t,Handler h) {
+  int events;
   Code stmt = get_ready_stmt();
   if(stmt)
 		do {
-      if(machine_step(stmt) & EV_Error) 
+      events=machine_step(stmt);
+      if(events & EV_Error)
 			  G_printf("err: loop ");
-      else
-        if(h) h(t);
-		}  while( !(set_ready_event(0) & EV_Done) );
+      else if((events & EV_Data) && h)
+        h(t);
+		}  while( !(events & EV_Done) );
 	machine_reset(stmt);
   return 0;
 }
@@ -130,11 +132,11 @@ void machine_unbind_row(Code stmt,ColInfo * cinfo, void * vals[]) {
   for (i=0;i < cinfo->count;i++) {
     switch (cinfo->type[i]) {
     case G_TYPE_INTEGER:
-	vals[i]= (void *) machine_column_int(stmt, 1);
+	vals[i]= (void *) machine_column_int(stmt, i);
       break;
     case G_TYPE_TEXT:
     case G_TYPE_BLOB :
-       vals[i]= (void *)  sqlite3_column_text( (sqlite3_stmt*) stmt, 0);
+       vals[i]= (void *)  sqlite3_column_text( (sqlite3_stmt*) stmt, i);
       break;
     default:
         G_printf("Unknown%d\n",cinfo->type[i]);

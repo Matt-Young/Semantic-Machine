@@ -44,13 +44,13 @@ int system_copy_qson(IO_Structure *from,IO_Structure *to );
 
  */
 
-int init_json_stream(IO_Structure *to);
+int init_json_stream();
   /*! \ingroup  Qson
  * stream a segment of Json to a IO_Structu out, describing a flat memory file
 
  */
 
-int stream_json(int opid,int row_count,int key_len,char * key,IO_Structure *out);
+int stream_json(int opid,int row_count,int key_len,char * key,IO_Structure *to);
 int test_qson(); 
 
 struct Format { 

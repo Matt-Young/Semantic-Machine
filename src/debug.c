@@ -19,12 +19,12 @@ char * typeface[] = {
 	"{abc,def,ghi}",
 	"{@config}",
 	""};
-#define DLINE 2
+#define DLINE 0
 static int debug_counter=DLINE;
 
 void debug_json_string(IO_Structure ** w) {
   IO_Structure * x;
-  wait_io_struct();
+  wait_IO_Struct();
   x  = new_IO_Struct();
   x->buff = (int *) malloc(400);
   x->size=400;

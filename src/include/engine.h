@@ -54,16 +54,17 @@ int bind_code(Triple *,Code );
 /*! \ingroup  Readyset
  * A generic hold holding information needed to move a Qson along
  */
-IO_Structure  * get_io_stuct();
+IO_Structure  * get_IO_Stuct();
 /*! \ingroup  Readyset
  * An output io struct is kept in the ready set
  */
-void * set_io_struct(void  *);
-int set_ready_graph(void *,IO_Structure *);
+
+
 TABLE * get_ready_table();
 int exit_handler(Triple *node);
 int event_handler(Triple * t);
 int square_handler(Triple *t);
+
 /**
  * ... Stepping Machine API ...
  */
